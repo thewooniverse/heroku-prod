@@ -1,14 +1,29 @@
 from flask import Flask, request, jsonify
 import requests
 
-
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = '6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4'
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 
-# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
-# https://api.telegram.org/6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+
+
+"""
+To do lists:
+- Secure environment variables
+- Different chat request sorters that sort through chat requests and call different commands and responses to the texts.
+- Integration with basic ChatGPT
+- Then using RAG to store chat history, clear data etc...
+"""
+
+
+
+
+
+
+
+
+
 
 
 
@@ -45,6 +60,8 @@ def webhook():
 
     return 'Webhook received!', 200
 
+
+
 def send_message(chat_id, text):
     """
     def send_message(chat_id, text): This function defines how to send a message back to the user. 
@@ -70,6 +87,12 @@ def send_message(chat_id, text):
 When deploying webhooks in production, consider security best practices such as
 validating incoming requests, using HTTPS, and possibly implementing authentication 
 or verification mechanisms to ensure that incoming data is from trusted sources.
+
+Setting Webhooks:
+# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+# ^ this worked, 
+# {"ok":true,"result":true,"description":"Webhook was set"}
 """
 
 
