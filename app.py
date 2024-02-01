@@ -7,6 +7,9 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = '6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4'
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 
+# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
+# https://api.telegram.org/6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+
 
 
 @app.route('/') # root directory
@@ -59,11 +62,6 @@ def send_message(chat_id, text):
     requests.post(url, json=payload)
     # requests.post(url, json=payload): Sends a POST request to the Telegram API with the constructed URL and payload. 
     # This request tells Telegram to send your message to the specified chat.
-
-
-
-
-
 
 
 
