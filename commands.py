@@ -14,8 +14,9 @@ def hello_world(message):
     """
     return {"response_text": "Hello, World!"}
 
+
 def hello_bro(message):
-    user_info = message['message']['from']
+    user_info = message['from']
     username = user_info.get('username', None)  # Using .get() is safer in case 'username' key doesn't exist
     return {"response_text": f"Whats up my G {username}"}
 
@@ -26,7 +27,7 @@ def mock(message):
     if len(text.split(' ')) > 1:
         body_text = ' '.join(text.split(' ')[1:])
     
-    user_info = message['message']['from']
+    user_info = message['from']
     username = user_info.get('username', None)  # Using .get() is safer in case 'username' key doesn't exist
     return {"response_text": f"{username} said \"{body_text}\" - LOL what a loser"}
 
