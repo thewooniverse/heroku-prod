@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import requests, os
-# heroku config:set TELEGRAM_TOKEN=your_telegram_bot_token_here --app your-app-name
+import commands
+# heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-test
 
 
 
@@ -13,22 +14,14 @@ TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 
 """
 To do lists:
-- Secure environment variables
+- Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts.
 - Integration with basic ChatGPT
 - Then using RAG to store chat history, clear data etc...
 """
 
 
-
-
-
-
-
-
-
-
-
+## Deployment: directories and webhooks ##
 
 @app.route('/') # root directory
 def hello_world():
@@ -41,8 +34,13 @@ def goodbye_world():
 # https://telebot-test-59f8f075f509.herokuapp.com/goodbye_world
 
 
+
+
 @app.route('/webhook', methods=['POST'])
 def webhook():
+    """
+    Webhook request handling, this is kept pretty simple and the various handling and functions are contained in separate functions
+    """
     #  This line defines a route in your Flask application at the endpoint /webhook. 
     #  It's set to only accept POST requests, which is the method typically used by webhooks to send data to your server. 
     #  In this context, Telegram sends updates to this endpoint whenever there's a new message for your bot.
@@ -54,18 +52,91 @@ def webhook():
     # chat_id = update['message']['chat']['id']: Extracts the chat ID from the incoming update. 
     # The chat ID is used to send replies back to the correct Telegram chat.
 
-        # Check if 'text' key exists in the message dict
-    if 'text' in update['message']:
+
+    # handle the message type coming in;
+    if 'text' in update['message']: # if it has text / is text.
         text = update['message']['text']
 
-        if text == '/hello':
-            send_message(chat_id, 'Hello, World!')
-            
-    else:
-        # If there's no text in the message, you can log it, ignore it, or handle it differently
-        print("Received a non-text message")
+        command_text = text.split(' ')[0] # e.g. (/chat What is your name?) -> /chat
+        if check_command(command_text): # check if the command exists in the supported commands map
+            payload_requirements = commands.commands_map[command_text]['payload_req']
 
-    return 'Webhook received!', 200
+            if check_payload_req(update['message'], payload_requirements):
+                # execute the function to construct and send response payload
+                response_object = commands.commands_map[command_text](update['message'])
+                send_message(chat_id, response_object['response_text'])
+
+            else:
+                    print("Payload requirements not met")
+            
+        else:
+            print(f"Command {command_text} does not exist!")
+    
+    else:
+        print("Received a non-text message")
+    
+
+    return 'Webhook received!', 200 # generally good practice to return normal response
+
+
+
+
+            
+        
+
+    
+
+"""
+When deploying webhooks in production, consider security best practices such as
+validating incoming requests, using HTTPS, and possibly implementing authentication 
+or verification mechanisms to ensure that incoming data is from trusted sources.
+
+Setting Webhooks:
+# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+# ^ this worked, 
+# {"ok":true,"result":true,"description":"Webhook was set"}
+
+Getting info
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/getWebhookInfo
+
+# test 
+# curl -X POST https://telebot-test-59f8f075f509.herokuapp.com/webhook -H "Content-Type: application/json" -d '{"key":"value"}'
+# Webhook received!%          
+"""
+
+
+### Message and Command handling logic ###
+
+
+def check_command(command_text):
+    """
+    def check_command(text): This function checks for whether the command within the text is a valid command contained within the commands folder. 
+    If the command is found and has valid prefix, returns True.
+    If the command is not found in the command mapping, returns False.
+    """
+    valid_commands = commands.commands_map.keys()
+    return command_text in valid_commands # returns True if command_text exists within valid commands
+    
+
+
+def check_payload_req(message, payload_req):
+    """
+    def check_payload_req(payload_requirements, message): This function checks whether the payload requirements passed are all within the message object.
+    It iterates through payload_req which is a list of payload requirements for a given function.
+    """
+    # if the payload requirement is an empty list, then return True because there is no addl requirement that needs to be met
+    if payload_req == []:
+        return True
+    
+    for payload in payload_req:
+        # if any of the payloads are not in, we return False.
+        if payload not in message:
+            return False
+        
+    # if we iterated through all, we pass and return True as well.
+    return True
+
 
 
 
@@ -92,28 +163,10 @@ def send_message(chat_id, text):
 
 
 
-"""
-When deploying webhooks in production, consider security best practices such as
-validating incoming requests, using HTTPS, and possibly implementing authentication 
-or verification mechanisms to ensure that incoming data is from trusted sources.
-
-Setting Webhooks:
-# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
-# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
-# ^ this worked, 
-# {"ok":true,"result":true,"description":"Webhook was set"}
-
-# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/getWebhookInfo
 
 
-"""
-
-
-
-# test 
-# curl -X POST https://telebot-test-59f8f075f509.herokuapp.com/webhook -H "Content-Type: application/json" -d '{"key":"value"}'
-# Webhook received!%                                                                                                                                              
-
+                                                                                                                                    
+# running the app
 if __name__ == '__main__':
     app.run()
 
