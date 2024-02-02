@@ -51,12 +51,16 @@ def webhook():
     # chat_id = update['message']['chat']['id']: Extracts the chat ID from the incoming update. 
     # The chat ID is used to send replies back to the correct Telegram chat.
 
-    text = update['message']['text']
-    # text = update['message']['text']: Extracts the text of the incoming Telegram message. 
-    # This is what the user sent to your bot.
+        # Check if 'text' key exists in the message dict
+    if 'text' in update['message']:
+        text = update['message']['text']
 
-    if text == '/hello':
-        send_message(chat_id, 'Hello, World!')
+        if text == '/hello':
+            send_message(chat_id, 'Hello, World!')
+            
+    else:
+        # If there's no text in the message, you can log it, ignore it, or handle it differently
+        print("Received a non-text message")
 
     return 'Webhook received!', 200
 
@@ -93,6 +97,10 @@ Setting Webhooks:
 # https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
 # ^ this worked, 
 # {"ok":true,"result":true,"description":"Webhook was set"}
+
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/getWebhookInfo
+
+
 """
 
 
