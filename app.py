@@ -1,9 +1,12 @@
 from flask import Flask, request, jsonify
-import requests
+import requests, os
+# heroku config:set TELEGRAM_TOKEN=your_telegram_bot_token_here --app your-app-name
+
+
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = '6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4'
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 
 
@@ -63,6 +66,8 @@ def webhook():
         print("Received a non-text message")
 
     return 'Webhook received!', 200
+
+
 
 
 
