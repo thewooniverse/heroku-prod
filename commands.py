@@ -40,7 +40,7 @@ def mock(message):
 commands_map = {
     '/hello_world': {"function": hello_world, "payload_req": ['text']},
     '/hello_bro': {"function": hello_bro, "payload_req": ['text', 'photo']},
-    '/hello_bro': {"function": mock, "payload_req": ['text']},
+    '/mock': {"function": mock, "payload_req": ['text']},
     '/text_with_photo': {"function": hello_world, "payload_req": ['text', 'photo']},
     }
 
