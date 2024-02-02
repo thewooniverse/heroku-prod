@@ -63,7 +63,7 @@ def webhook():
 
             if check_payload_req(update['message'], payload_requirements):
                 # execute the function to construct and send response payload
-                response_object = commands.commands_map[command_text](update['message'])
+                response_object = commands.commands_map[command_text]['function'](update['message'])
                 send_message(chat_id, response_object['response_text'])
 
             else:
@@ -77,12 +77,6 @@ def webhook():
     
 
     return 'Webhook received!', 200 # generally good practice to return normal response
-
-
-
-
-            
-        
 
     
 
