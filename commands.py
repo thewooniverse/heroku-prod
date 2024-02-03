@@ -50,12 +50,12 @@ commands_map = {
     '/mock': {"function": mock, "payload_req": ['text']},
 
     # AI commands
-    '/vision': {"function": ai_commands.vision_agent, "payload_req": ['text', 'photo']},
+    # '/vision': {"function": ai_commands.vision_agent, "payload_req": ['text', 'photo']},
     '/depict': {"function": ai_commands.generate_image, "payload_req": ['text']},
     '/chat': {'function': ai_commands.chat_agent, 'payload_req': ['text']}
 
     # config commands
-    
+
     }
 
 
