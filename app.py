@@ -102,47 +102,47 @@ def goodbye_world():
 
 
 
-@app.route('/webhook', methods=['POST'])
-def webhook():
-    """
-    Webhook request handling, this is kept pretty simple and the various handling and functions are contained in separate functions
-    """
-    #  This line defines a route in your Flask application at the endpoint /webhook. 
-    #  It's set to only accept POST requests, which is the method typically used by webhooks to send data to your server. 
-    #  In this context, Telegram sends updates to this endpoint whenever there's a new message for your bot.
+# @app.route('/webhook', methods=['POST'])
+# def webhook():
+#     """
+#     Webhook request handling, this is kept pretty simple and the various handling and functions are contained in separate functions
+#     """
+#     #  This line defines a route in your Flask application at the endpoint /webhook. 
+#     #  It's set to only accept POST requests, which is the method typically used by webhooks to send data to your server. 
+#     #  In this context, Telegram sends updates to this endpoint whenever there's a new message for your bot.
 
-    update = request.get_json() #  This line retrieves the JSON data sent by Telegram to your webhook. 
-    # This data (update) contains information about the incoming message, such as the sender's chat ID and the message text.
+#     update = request.get_json() #  This line retrieves the JSON data sent by Telegram to your webhook. 
+#     # This data (update) contains information about the incoming message, such as the sender's chat ID and the message text.
 
-    chat_id = update['message']['chat']['id']
-    # chat_id = update['message']['chat']['id']: Extracts the chat ID from the incoming update. 
-    # The chat ID is used to send replies back to the correct Telegram chat.
+#     chat_id = update['message']['chat']['id']
+#     # chat_id = update['message']['chat']['id']: Extracts the chat ID from the incoming update. 
+#     # The chat ID is used to send replies back to the correct Telegram chat.
 
 
-    # handle the message type coming in;
-    if 'text' in update['message']: # if it has text / is text.
-        text = update['message']['text']
+#     # handle the message type coming in;
+#     if 'text' in update['message']: # if it has text / is text.
+#         text = update['message']['text']
 
-        command_text = text.split(' ')[0] # e.g. (/chat What is your name?) -> /chat
-        if check_command(command_text): # check if the command exists in the supported commands map
-            payload_requirements = commands.commands_map[command_text]['payload_req']
+#         command_text = text.split(' ')[0] # e.g. (/chat What is your name?) -> /chat
+#         if check_command(command_text): # check if the command exists in the supported commands map
+#             payload_requirements = commands.commands_map[command_text]['payload_req']
 
-            if check_payload_req(update['message'], payload_requirements):
-                # execute the function to construct and send response payload
-                response_object = commands.commands_map[command_text]['function'](update['message'])
-                send_message(chat_id, response_object['response_text'])
+#             if check_payload_req(update['message'], payload_requirements):
+#                 # execute the function to construct and send response payload
+#                 response_object = commands.commands_map[command_text]['function'](update['message'])
+#                 send_message(chat_id, response_object['response_text'])
 
-            else:
-                    print("Payload requirements not met")
+#             else:
+#                     print("Payload requirements not met")
             
-        else:
-            print(f"Command {command_text} does not exist!")
+#         else:
+#             print(f"Command {command_text} does not exist!")
     
-    else:
-        print("Received a non-text message")
+#     else:
+#         print("Received a non-text message")
     
 
-    return 'Webhook received!', 200 # generally good practice to return normal response
+#     return 'Webhook received!', 200 # generally good practice to return normal response
 
     
 
