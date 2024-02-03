@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 import requests, os
+import telebot
 import commands
 
 ## Reference commands to set API keys
@@ -12,8 +13,49 @@ import commands
 app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
+API_TOKEN = TELEGRAM_TOKEN
+TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
+WEBHOOK_URL = 'https://telebot-test-59f8f075f509.herokuapp.com/webhook'
+WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
+
+bot = telebot.TeleBot(API_TOKEN)
+bot.remove_webhook()  # Remove previous webhook if any 
+bot.set_webhook(url=WEBHOOK_URL) # <- essentially does the same thing as below, but using telebot bot method.
+# https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+
+
+
+@app.route(WEBHOOK_URL_PATH, methods=['POST'])
+# Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
+def receive_update():
+    json_string = request.stream.read().decode('utf-8')
+    update = telebot.types.Update.de_json(json_string)
+    bot.process_new_updates([update])
+    return '!', 200
+
+
+@bot.message_handler(commands=['start'])
+def handle_start(message):
+    bot.reply_to(message, "Welcome! How can I help you?")
+
+@bot.message_handler(func=lambda message: True)
+def echo_message(message):
+    bot.reply_to(message, message.text)
+
+
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+
+"""                                                                                                                       
+# running the app
+if __name__ == '__main__':
+    app.run()
+"""
+
+
+
 
 
 
@@ -181,11 +223,5 @@ def send_message(chat_id, text):
 
 
 
-
-
-                                                                                                                                    
-# running the app
-if __name__ == '__main__':
-    app.run()
 
 

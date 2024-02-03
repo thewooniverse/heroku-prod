@@ -1,3 +1,7 @@
+ALL notes / conv history:
+https://chat.openai.com/share/1240d78d-d9c5-4114-b844-b8dc4d1ee387
+
+
 
 # Basics of Heroku
 Heroku is a cloud platform as a service (PaaS) that enables developers to build, run, and operate applications entirely in the cloud. It abstracts away the complexities of infrastructure management (like servers, networking, and storage), allowing you to focus on writing code. Here's a breakdown of some fundamental concepts and a basic tutorial to get you started with Heroku:
