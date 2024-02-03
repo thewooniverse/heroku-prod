@@ -89,15 +89,15 @@ To do lists:
 
 ## Deployment: directories and webhooks ##
 
-@app.route('/') # root directory
-def hello_world():
-    return 'Hello, World!'
-# https://telebot-test-59f8f075f509.herokuapp.com/
+# @app.route('/') # root directory
+# def hello_world():
+#     return 'Hello, World!'
+# # https://telebot-test-59f8f075f509.herokuapp.com/
 
-@app.route('/goodbye_world')
-def goodbye_world():
-    return 'Goodbye, World!'
-# https://telebot-test-59f8f075f509.herokuapp.com/goodbye_world
+# @app.route('/goodbye_world')
+# def goodbye_world():
+#     return 'Goodbye, World!'
+# # https://telebot-test-59f8f075f509.herokuapp.com/goodbye_world
 
 
 
