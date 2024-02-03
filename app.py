@@ -1,7 +1,11 @@
 from flask import Flask, request, jsonify
 import requests, os
 import commands
+
+## Reference commands to set API keys
 # heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-test
+# heroku config:set OPENAI_API_KEY=sk-ABCDEFYOURAPIKEYHERE --app telebot-test
+
 
 
 
@@ -9,15 +13,22 @@ app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
-# add openAI API
+OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
+
+
+
+
 
 
 """
 To do lists:
 - Secure environment variables <- done
-- Different chat request sorters that sort through chat requests and call different commands and responses to the texts.
+- Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
+-- done above --
+
 - Integration with basic ChatGPT
-- Then using RAG to store chat history, clear data etc...
+- Then using RAG to store chat history, clear data etc... <<- think about what the best way is to do this, and conduct semantic search as well.
+- Local testing environments + CI/CD devops stuff
 """
 
 
