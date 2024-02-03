@@ -21,14 +21,27 @@ OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 
 
 """
+Use this bot as a test environment for building out whatever features that you want to build out;
+To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
+
+
 To do lists:
 - Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
+- Integration with basic ChatGPT using langchain
 -- done above --
 
-- Integration with basic ChatGPT
-- Then using RAG to store chat history, clear data etc... <<- think about what the best way is to do this, and conduct semantic search as well.
-- Local testing environments + CI/CD devops stuff
+- Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
+-- v1 it will send just the URL link, but the next version it will save and delete.
+
+- GPT Pro vision commands to analyze image input
+
+- Retrieval Augment Generation - using threads instead;
+-- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant context provided;
+
+- Fine tuning the model
+
+- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
 """
 
 
