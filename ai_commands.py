@@ -10,7 +10,7 @@ OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 
 
 # define overarching querying function
-def chat(message):
+def chat_agent(message):
     """
     Takes a message object, unpacks and returns a response.
     """
@@ -20,10 +20,15 @@ def chat(message):
     # extract the query from the message object
     text = message['text']
     body_text = ' '.join(text.split(' ')[1:])
+    chat_history = [
+        SystemMessage(content="You are a helpful AI agent."),
+        HumanMessage(content=body_text)
+    ]
     
     # query the LLM with context provided
-    response = agent(body_text)
-    return {"response_text": response}
+    response = agent(chat_history)
+    print(response)
+    return {"response_text": response['content']}
 
 
 

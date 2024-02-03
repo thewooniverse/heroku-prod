@@ -45,7 +45,7 @@ commands_map = {
     '/hello_bro': {"function": hello_bro, "payload_req": ['text']},
     '/mock': {"function": mock, "payload_req": ['text']},
     '/text_with_photo': {"function": hello_world, "payload_req": ['text', 'photo']},
-    '/chat': {'function': ai_commands.chat, 'payload_req': ['text']}
+    '/chat': {'function': ai_commands.chat_agent, 'payload_req': ['text']}
     }
 
 
