@@ -28,7 +28,7 @@ def chat_agent(message):
     # query the LLM with context provided
     response = agent(chat_history)
     print(response)
-    return {"response_text": response['content']}
+    return {"response_text": response.content}
 
 
 
