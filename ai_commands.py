@@ -44,14 +44,14 @@ def generate_image(message):
     """
     text = message['text']
     body_text = ' '.join(text.split(' ')[1:])
-    response = client.images.generate(
+    ImagesResponse = client.images.generate(
         model='dall-e-3',
         prompt=body_text,
         n=1,
         size='1024x1024',
         response_format='url'
-    )
-    print(response)
-    return {"response_text": response.data['url']}
+    )    
+    print(ImagesResponse)
+    return {"response_text": ImagesResponse.data[0].url}
 
 
