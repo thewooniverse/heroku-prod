@@ -101,7 +101,7 @@ def handle_chat(message):
     print(query)
     response_text = ai_commands.chat_completion(query)
     print(response_text)
-    bot.reply_to(message, response_text.content, parse_mode='HTML')
+    bot.reply_to(message, response_text, parse_mode='HTML')
 
 
 @bot.message_handler(commands=['imagine'])
