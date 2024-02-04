@@ -22,10 +22,10 @@ def chat_completion(query, model='gpt-3.5-turbo'):
     completion_object = client.chat.completions.create(
     model=model,
     messages=[
-        {"role": "system", "content": "You are a helpful AI assistant"},
+        {"role": "system", "content": "You are a helpful AI assistant - reply all responses in HTML markup"},
         {"role": "user", "content": query}])
     
-    return(completion_object.choices[0].message)
+    return(completion_object.choices[0].message['content'])
 
 
 
