@@ -97,7 +97,7 @@ def handle_start(message):
 
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
-    query = helper_functions.extract_body(message)
+    query = helper_functions.extract_body(message.text)
     print(query)
     response_text = ai_commands.chat_completion(query)
     print(response_text)
@@ -106,7 +106,7 @@ def handle_chat(message):
 
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
-    query = helper_functions.extract_body(message)
+    query = helper_functions.extract_body(message.text)
     image_content = ai_commands.generate_image(query)
     if image_content:
         bot.send_photo(message.chat.id, photo=image_content)
