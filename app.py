@@ -2,10 +2,43 @@ from flask import Flask, request, jsonify
 import requests, os
 import telebot
 import commands
+import helper_functions
+import ai_commands
+
 
 ## Reference commands to set API keys
 # heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-test
 # heroku config:set OPENAI_API_KEY=sk-ABCDEFYOURAPIKEYHERE --app telebot-test
+
+
+"""
+Use this bot as a test environment for building out whatever features that you want to build out;
+To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
+
+Cool, rewrite / refactor everything to use telebot, along with helper functions + remove the decorator stuff;
+Then finish off anad builkd out the DallE3 integration, and GPT vision stuff as well - analyze and rate the NFT.
+
+
+
+To do lists:
+- Secure environment variables <- done
+- Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
+- Integration with basic ChatGPT using langchain
+-- done above --
+
+- Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
+-- v1 it will send just the URL link, but the next version it will save and delete.
+
+- GPT4 vision commands to analyze image input
+
+- Retrieval Augment Generation - using threads instead;
+-- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant context provided;
+
+- Fine tuning the model
+
+- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+"""
+
 
 
 
@@ -27,26 +60,72 @@ bot = telebot.TeleBot(API_TOKEN)
 
 
 
-@app.route(WEBHOOK_URL_PATH, methods=['POST'])
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
+@app.route(WEBHOOK_URL_PATH, methods=['POST']) # Define Route: We're telling our Flask app that whenever it receives a POST request at the WEBHOOK_URL_PATH,
+# it should execute the function defined directly below this line.
 def receive_update():
-    json_string = request.stream.read().decode('utf-8')
+    # Receive Update Function: This is the start of a function definition called receive_update, 
+    # which will be called whenever a POST request is received at our webhook URL path.
+
+    json_string = request.stream.read().decode('utf-8') 
+    # Read Request Data: This line reads the raw data from the incoming request, decodes it from UTF-8 format, and stores it as a string in json_string. 
+    # This string contains the update data sent by Telegram.
+
     update = telebot.types.Update.de_json(json_string)
+    # Parse Update Data: Here, we're converting the JSON string into a Telebot Update object using the de_json method. 
+    # This Update object makes it easier to work with the data from Telegram.
+
     bot.process_new_updates([update])
+    # Process Update: This line tells the bot to process the update we just received. 
+    # Essentially, it triggers any handlers you've set up in your bot for various commands or message types.
+
     return '!', 200
+    # Respond to Telegram: After processing the update, this line sends a response back to Telegram. 
+    # The 200 status code indicates success, and '!' is just a simple response body. 
+    # Telegram doesn't use the response body, but a valid HTTP response is required.
+
+
+
+
+
 
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.reply_to(message, "Welcome! How can I help you?")
 
-@bot.message_handler(func=lambda message: True)
-def echo_message(message):
-    bot.reply_to(message, message.text)
 
+@bot.message_handler(commands=['chat'])
+def chat_agent(message):
+    query = helper_functions.extract_body(message)
+    response_text = ai_commands.chat_competion(query)
+    bot.reply_to(message, response_text)
+
+
+@bot.message_handler(commands=['imagine'])
+def chat_agent(message):
+    query = helper_functions.extract_body(message)
+    image_content = ai_commands.generate_image(query)
+    if image_content:
+        bot.send_photo(message.chat.id, photo=image_content)
+    else:
+        bot.reply_to(message, "Failed to fetch or generate image")
+    # bot.reply_to(message, response_text)
+
+
+
+# @bot.message_handler(func=lambda message: True)
+# def echo_message(message):
+#     bot.reply_to(message, message.text)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
+
+
+
+
+
+
 
 """                                                                                                                       
 # running the app
@@ -62,29 +141,14 @@ if __name__ == '__main__':
 
 
 
-"""
-Use this bot as a test environment for building out whatever features that you want to build out;
-To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
 
 
-To do lists:
-- Secure environment variables <- done
-- Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
-- Integration with basic ChatGPT using langchain
--- done above --
 
-- Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
--- v1 it will send just the URL link, but the next version it will save and delete.
 
-- GPT Pro vision commands to analyze image input
 
-- Retrieval Augment Generation - using threads instead;
--- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant context provided;
 
-- Fine tuning the model
 
-- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
-"""
+
 
 
 ## Deployment: directories and webhooks ##
@@ -169,56 +233,56 @@ Getting info
 ### Message and Command handling logic ###
 
 
-def check_command(command_text):
-    """
-    def check_command(text): This function checks for whether the command within the text is a valid command contained within the commands folder. 
-    If the command is found and has valid prefix, returns True.
-    If the command is not found in the command mapping, returns False.
-    """
-    valid_commands = commands.commands_map.keys()
-    return command_text in valid_commands # returns True if command_text exists within valid commands
+# def check_command(command_text):
+#     """
+#     def check_command(text): This function checks for whether the command within the text is a valid command contained within the commands folder. 
+#     If the command is found and has valid prefix, returns True.
+#     If the command is not found in the command mapping, returns False.
+#     """
+#     valid_commands = commands.commands_map.keys()
+#     return command_text in valid_commands # returns True if command_text exists within valid commands
     
 
 
-def check_payload_req(message, payload_req):
-    """
-    def check_payload_req(payload_requirements, message): This function checks whether the payload requirements passed are all within the message object.
-    It iterates through payload_req which is a list of payload requirements for a given function.
-    """
-    # if the payload requirement is an empty list, then return True because there is no addl requirement that needs to be met
-    if payload_req == []:
-        return True
+# def check_payload_req(message, payload_req):
+#     """
+#     def check_payload_req(payload_requirements, message): This function checks whether the payload requirements passed are all within the message object.
+#     It iterates through payload_req which is a list of payload requirements for a given function.
+#     """
+#     # if the payload requirement is an empty list, then return True because there is no addl requirement that needs to be met
+#     if payload_req == []:
+#         return True
     
-    for payload in payload_req:
-        # if any of the payloads are not in, we return False.
-        if payload not in message:
-            return False
+#     for payload in payload_req:
+#         # if any of the payloads are not in, we return False.
+#         if payload not in message:
+#             return False
         
-    # if we iterated through all, we pass and return True as well.
-    return True
+#     # if we iterated through all, we pass and return True as well.
+#     return True
 
 
 
 
 
 
-def send_message(chat_id, text):
-    """
-    def send_message(chat_id, text): This function defines how to send a message back to the user. 
-    It takes two parameters: chat_id (to know where to send the message) and text (the content of the message to send).
-    """
+# def send_message(chat_id, text):
+#     """
+#     def send_message(chat_id, text): This function defines how to send a message back to the user. 
+#     It takes two parameters: chat_id (to know where to send the message) and text (the content of the message to send).
+#     """
 
-    url = TELEGRAM_API_URL + 'sendMessage'
-    # url = TELEGRAM_API_URL + 'sendMessage': Constructs the API request URL for sending a message through the Telegram Bot API. 
-    # TELEGRAM_API_URL should be the base URL for the Telegram API, including your bot's token.
+#     url = TELEGRAM_API_URL + 'sendMessage'
+#     # url = TELEGRAM_API_URL + 'sendMessage': Constructs the API request URL for sending a message through the Telegram Bot API. 
+#     # TELEGRAM_API_URL should be the base URL for the Telegram API, including your bot's token.
 
-    payload = {'chat_id': chat_id, 'text': text}
-    # payload = {'chat_id': chat_id, 'text': text}: Prepares the data to be sent in the API request. 
-    # This includes the chat_id to reply to and the text of the message you want to send.
+#     payload = {'chat_id': chat_id, 'text': text}
+#     # payload = {'chat_id': chat_id, 'text': text}: Prepares the data to be sent in the API request. 
+#     # This includes the chat_id to reply to and the text of the message you want to send.
 
-    requests.post(url, json=payload)
-    # requests.post(url, json=payload): Sends a POST request to the Telegram API with the constructed URL and payload. 
-    # This request tells Telegram to send your message to the specified chat.
+#     requests.post(url, json=payload)
+#     # requests.post(url, json=payload): Sends a POST request to the Telegram API with the constructed URL and payload. 
+#     # This request tells Telegram to send your message to the specified chat.
 
 
 
