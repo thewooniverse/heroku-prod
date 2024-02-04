@@ -99,9 +99,9 @@ def handle_start(message):
 def handle_chat(message):
     query = helper_functions.extract_body(message.text)
     print(query)
-    response_text = ai_commands.chat_completion(query)
+    response_text = ai_commands.chat_completion(query, model='gpt-4')
     print(response_text)
-    bot.reply_to(message, response_text, parse_mode='HTML')
+    bot.reply_to(message, response_text, parse_mode='MarkdownV2')
 
 
 @bot.message_handler(commands=['imagine'])
