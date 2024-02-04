@@ -25,19 +25,19 @@ def chat_completion(query, model='gpt-3.5-turbo'):
         {"role": "system", "content": "You are a helpful AI assistant - reply all responses in markdown"},
         {"role": "user", "content": query}])
     print(completion_object)
-    return(completion_object.choices[0].message.content)
+    response_text = completion_object.choices[0].message.content
+    print(response_text)
+    return(response_text)
 
 
 
-def generate_image(message):
+def generate_image(query):
     """
     Takes a message object, unpacks and returns a response.
     """
-    text = message['text']
-    body_text = ' '.join(text.split(' ')[1:])
     ImagesResponse = client.images.generate(
         model='dall-e-3',
-        prompt=body_text,
+        prompt=query,
         n=1,
         size='1024x1024',
         response_format='url'
