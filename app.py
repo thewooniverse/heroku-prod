@@ -98,12 +98,12 @@ def handle_start(message):
 @bot.message_handler(commands=['chat'])
 def chat_agent(message):
     query = helper_functions.extract_body(message)
-    response_text = ai_commands.chat_competion(query)
+    response_text = ai_commands.chat_completion(query)
     bot.reply_to(message, response_text)
 
 
 @bot.message_handler(commands=['imagine'])
-def chat_agent(message):
+def imagine(message):
     query = helper_functions.extract_body(message)
     image_content = ai_commands.generate_image(query)
     if image_content:

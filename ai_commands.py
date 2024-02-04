@@ -15,9 +15,9 @@ OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
 
-def chat_competion(query, model='gpt-3.5-turbo'):
+def chat_completion(query, model='gpt-3.5-turbo'):
     """
-    def chat_competion(query): This function calls the OpenAI API endpoint. Default Model is 
+    def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
     completion_object = client.chat.completions.create(
     model=model,
@@ -26,8 +26,6 @@ def chat_competion(query, model='gpt-3.5-turbo'):
         {"role": "user", "content": query}])
     
     return(completion_object.choices[0].message)
-
-
 
 
 
