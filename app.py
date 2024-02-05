@@ -14,9 +14,9 @@ import ai_commands
 """
 Use this bot as a test environment for building out whatever features that you want to build out;
 To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
+Its a playground; its also pretty exciting to just like build bigger and bigger projects with more and more features.
+Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
 
-Cool, rewrite / refactor everything to use telebot, along with helper functions + remove the decorator stuff;
-Then finish off anad builkd out the DallE3 integration, and GPT vision stuff as well - analyze and rate the NFT.
 
 
 
@@ -24,17 +24,24 @@ To do lists:
 - Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
 - Integration with basic ChatGPT using langchain
--- done above --
-
 - Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
 -- v1 it will send just the URL link, but the next version it will save and delete.
+-- done above --
 
+- GPT Voice chat as well;
 - GPT4 vision commands to analyze image input
-
 - Retrieval Augment Generation - using threads instead;
--- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant context provided;
+-- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant contexts provided.
 
-- Fine tuning the model
+- /translate with preloaded context.
+- Fine tuning the model for different use cases
+- AI Committee
+
+- Configurations and safety checking best practices using Postgres, key management etc..
+- Google calendar API
+
+---> then re-doing this practice, porting it out and over to be used by my family; THEN probably work on like
+
 
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
 """
@@ -98,15 +105,15 @@ def handle_start(message):
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
     query = helper_functions.extract_body(message.text)
-    print(query)
     response_text = ai_commands.chat_completion(query, model='gpt-4')
-    print(response_text)
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
+    system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
+    print(query)
     image_content = ai_commands.generate_image(query)
     if image_content:
         bot.send_photo(message.chat.id, photo=image_content)
