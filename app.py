@@ -38,7 +38,11 @@ To do lists:
 - AI Committee
 
 - Configurations and safety checking best practices using Postgres, key management etc..
-- Google calendar API
+- Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
+
+
+
+
 
 ---> then re-doing this practice, porting it out and over to be used by my family; THEN probably work on like
 
