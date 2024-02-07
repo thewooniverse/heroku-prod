@@ -65,7 +65,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 API_TOKEN = TELEGRAM_TOKEN
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
-WEBHOOK_URL = 'https://telebot-prod-59f8f075f509.herokuapp.com/webhook'
+WEBHOOK_URL = 'https://telebot-prod-2f34e594e894.herokuapp.com/webhook'
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 
 bot = telebot.TeleBot(API_TOKEN)
