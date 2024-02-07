@@ -83,12 +83,6 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
-@app.route('/webhook')
-def webhook():
-    update = telebot.types.Update.de_json(request.stream.read().decode('utf-8'))
-    bot.process_new_updates([update])
-    return jsonify({}), 200
-
 
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
