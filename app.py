@@ -45,18 +45,11 @@ To do lists:
 - Configurations and safety checking best practices using Postgres, key management etc..
 - Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
 
-  
-
-
-
 ---> then re-doing this practice, porting it out and over to be used by my family; THEN probably work on like
 
 
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
 """
-
-
-
 
 
 app = Flask(__name__)
@@ -69,8 +62,8 @@ WEBHOOK_URL = 'https://telebot-prod-2f34e594e894.herokuapp.com/webhook'
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 
 bot = telebot.TeleBot(API_TOKEN)
-# bot.remove_webhook()  # Remove previous webhook if any 
-# bot.set_webhook(url=WEBHOOK_URL) # <- essentially does the same thing as below, but using telebot bot method.
+bot.remove_webhook()  # Remove previous webhook if any 
+bot.set_webhook(url=WEBHOOK_URL) # <- essentially does the same thing as below, but using telebot bot method.
 # https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
 # https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
 
