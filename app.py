@@ -18,6 +18,11 @@ Its a playground; its also pretty exciting to just like build bigger and bigger 
 Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
 
 
+1. Redeploy post name change - reset webhooks
+2. Add 1 more feature, maybe vision or voice? voice is harder tho
+
+
+
 
 
 To do lists:
@@ -40,7 +45,7 @@ To do lists:
 - Configurations and safety checking best practices using Postgres, key management etc..
 - Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
 
-
+  
 
 
 
