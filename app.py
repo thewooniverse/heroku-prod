@@ -5,6 +5,7 @@ import helper_functions
 import ai_commands
 
 
+
 ## Reference commands to set API keys
 # heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-prod
 # heroku config:set OPENAI_API_KEY=sk-ABCDEFYOURAPIKEYHERE --app telebot-prod
@@ -145,11 +146,12 @@ def handle_tts(message):
     # generating the speech response and sending it
     tts_file_path = ai_commands.text_to_speech(message)
 
-    if tts_file_path:
+    if os.path.exists(tts_file_path):
         with open(tts_file_path, 'rb') as audio:
             print("Successfully sent audio message")
             bot.send_voice(message.chat.id, audio)
     else:
+        print("filepath does not exist.")
         bot.reply_to(message, "Failed to fetch or generate speech.")
     
     helper_functions.delete_temp(tts_file_path)
