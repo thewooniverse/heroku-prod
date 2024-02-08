@@ -7,8 +7,8 @@ import ai_commands
 
 
 ## Reference commands to set API keys
-# heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-test
-# heroku config:set OPENAI_API_KEY=sk-ABCDEFYOURAPIKEYHERE --app telebot-test
+# heroku config:set TELEGRAM_TOKEN=6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4 --app telebot-prod
+# heroku config:set OPENAI_API_KEY=sk-ABCDEFYOURAPIKEYHERE --app telebot-prod
 
 
 """
@@ -22,40 +22,41 @@ Eventually, it would be really cool and amazing to write a full fledged AI assis
 2. Add 1 more feature, maybe vision or voice? voice is harder tho
 
 
-
-
-
 To do lists:
+# Completed
 - Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
 - Integration with basic ChatGPT using langchain
 - Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
 -- v1 it will send just the URL link, but the next version it will save and delete.
--- done above --
+----- done above -----
 
-- GPT Voice chat as well;
-- GPT4 vision commands to analyze image input
-- Retrieval Augment Generation - using threads instead;
--- Still a good way to use RAG using langchain and vectorstores would be simply to retrieve and summarize relevant contexts provided.
-
-- /translate with preloaded context.
+# GPT features
+- Text to Speech
+- Vision
+- Speech to Text
+- Translate
+- RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history.
 - Fine tuning the model for different use cases
-- AI Committee
+- AI Committee? Eventually I suppose
 
+# Bot Features
+- /start
+- Buttons
 - Configurations and safety checking best practices using Postgres, key management etc..
 - Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
+- premium subscriptions
 
----> then re-doing this practice, porting it out and over to be used by my family; THEN probably work on like
-
-
+# Development
+- Port over and fork it for family usage version
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
 """
 
 
 app = Flask(__name__)
 
-TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
+TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environments it means this would be different
+OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # this can be the same
 API_TOKEN = TELEGRAM_TOKEN
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 WEBHOOK_URL = 'https://telebot-prod-2f34e594e894.herokuapp.com/webhook'
@@ -66,6 +67,7 @@ bot = telebot.TeleBot(API_TOKEN)
 # bot.set_webhook(url=WEBHOOK_URL) # <- essentially does the same thing as below, but using telebot bot method.
 # https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
 # https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+# curl --http1.1 -F "url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook" https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook <<< this was the hard reset
 
 
 
@@ -74,8 +76,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
-
+    return helper_functions.start_menu()
 
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
@@ -136,6 +137,21 @@ def handle_imagine(message):
 
 
 
+# @bot.message_handler(commands=['tts'])
+# def handle_imagine(message):
+#     query = helper_functions.extract_body(message.text)
+#     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
+#     print(query)
+#     image_content = ai_commands.generate_image(query)
+#     if image_content:
+#         bot.send_photo(message.chat.id, photo=image_content)
+#     else:
+#         bot.reply_to(message, "Failed to fetch or generate image")
+#     # bot.reply_to(message, response_text)
+
+
+
+
 
 
 
@@ -192,8 +208,6 @@ if __name__ == '__main__':
 # # https://telebot-test-59f8f075f509.herokuapp.com/goodbye_world
 
 
-
-
 # @app.route('/webhook', methods=['POST'])
 # def webhook():
 #     """
@@ -245,12 +259,14 @@ or verification mechanisms to ensure that incoming data is from trusted sources.
 
 Setting Webhooks:
 # https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
-# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook
 # ^ this worked, 
 # {"ok":true,"result":true,"description":"Webhook was set"}
 
 Getting info
 # https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/getWebhookInfo
+# https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/getWebhookInfo
+
 
 # test 
 # curl -X POST https://telebot-test-59f8f075f509.herokuapp.com/webhook -H "Content-Type: application/json" -d '{"key":"value"}'

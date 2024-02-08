@@ -50,9 +50,6 @@ def generate_image(query):
     else:
         return None
 
-
-
-
 """
 Example response object:
 2024-02-03T09:53:58.515753+00:00 app[web.1]: 
@@ -64,6 +61,19 @@ Her almond-shaped eyes, prominent cheekbones, and dark hair, neatly combed, give
 She carries with her an air of grace and poise, exuding a warm, inviting aura.', 
 url='https://EXAMPLEIURL.com')])
 """
+
+def text_to_speech(query):
+    """
+    def text_to_speech(query): 
+    """
+    pass
+
+
+
+
+
+
+
 
 
 
