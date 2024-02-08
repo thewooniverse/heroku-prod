@@ -6,6 +6,9 @@ import requests
 from langchain_community.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
 # from templates import system_template
+from pathlib import Path
+import helper_functions
+
 
 
 
@@ -49,7 +52,6 @@ def generate_image(query):
         return response.content
     else:
         return None
-
 """
 Example response object:
 2024-02-03T09:53:58.515753+00:00 app[web.1]: 
@@ -62,11 +64,26 @@ She carries with her an air of grace and poise, exuding a warm, inviting aura.',
 url='https://EXAMPLEIURL.com')])
 """
 
-def text_to_speech(query):
+
+
+
+def text_to_speech(message):
     """
-    def text_to_speech(query): 
+    def text_to_speech(message): 
     """
-    pass
+    query = helper_functions.extract_body(message.text)
+    speech_file_path = Path(__file__).parent / "temp_tts_mp3" / f"{str(message.chat.id)}_{str(message.message_id)}.mp3"
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=query
+        )
+    if response:
+        response.with_streaming_response.method(speech_file_path)
+        return speech_file_path
+    else:
+        return False
+    
 
 
 

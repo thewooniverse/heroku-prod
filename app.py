@@ -1,7 +1,6 @@
 from flask import Flask, request, jsonify
 import requests, os
 import telebot
-import commands
 import helper_functions
 import ai_commands
 
@@ -137,17 +136,24 @@ def handle_imagine(message):
 
 
 
-# @bot.message_handler(commands=['tts'])
-# def handle_imagine(message):
-#     query = helper_functions.extract_body(message.text)
-#     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
-#     print(query)
-#     image_content = ai_commands.generate_image(query)
-#     if image_content:
-#         bot.send_photo(message.chat.id, photo=image_content)
-#     else:
-#         bot.reply_to(message, "Failed to fetch or generate image")
-#     # bot.reply_to(message, response_text)
+@bot.message_handler(commands=['tts'])
+def handle_tts(message):
+    # logging to terminal / parsing data
+    query = helper_functions.extract_body(message.text)
+    print(query)
+
+    # generating the speech response and sending it
+    tts_file_path = ai_commands.text_to_speech(message)
+
+    if tts_file_path:
+        with open(tts_file_path, 'rb') as audio:
+            bot.send_voice(message.chat.id, audio)
+    else:
+        bot.reply_to(message, "Failed to fetch or generate speech.")
+    
+    helper_functions.delete_temp(tts_file_path)
+    
+
 
 
 
