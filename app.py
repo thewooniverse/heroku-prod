@@ -110,7 +110,7 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.reply_to(message, "Welcome! How can I help you?")
+    bot.reply_to(message, helper_functions.start_menu())
 
 
 @bot.message_handler(commands=['chat'])
@@ -147,6 +147,7 @@ def handle_tts(message):
 
     if tts_file_path:
         with open(tts_file_path, 'rb') as audio:
+            print("Successfully sent audio message")
             bot.send_voice(message.chat.id, audio)
     else:
         bot.reply_to(message, "Failed to fetch or generate speech.")

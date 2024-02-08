@@ -79,9 +79,11 @@ def text_to_speech(message):
         input=query
         )
     if response:
+        print("Response received")
         response.with_streaming_response.method(speech_file_path)
         return speech_file_path
     else:
+        print("Response not received")
         return False
     
 
