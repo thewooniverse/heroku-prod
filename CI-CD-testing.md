@@ -1,11 +1,5 @@
 
 
-
-Development Environment: This is your local development setup where initial coding and testing happen.
-Staging Environment: A mirror of your production environment used for final testing before deploying to production. This environment is used to validate updates in a production-like setting without affecting real users.
-Production Environment: The live environment where your application is accessible to end-users.
-
-
 ## CI/CD - ELI5
 Imagine you're building a really cool LEGO castle. CI/CD is like having an awesome set of tools and helpers to make building and showing off your castle easier and faster.
 
@@ -73,35 +67,55 @@ We do "regression testing" to make sure that when we add new things to our softw
 
 
 
-# Git / CICD best practices:
-Yes, your understanding is correct. It's a common practice to use different branches in a single Git repository to manage and deploy code to various environments, such as staging and production. Here's how it typically works and some best practices:
 
-### Typical Workflow:
 
-1. **Development Branch**: Developers work on feature branches or directly on a main development branch (often called `develop`, `development`, or similar). This is where initial coding, commits, and internal testing happen.
 
-2. **Staging Branch**: Once a feature is ready for testing in a more production-like environment, it's merged into a staging branch (often called `staging`). The code in this branch is automatically deployed to a staging environment where it can be tested.
 
-3. **Production Branch**: After thorough testing and approval in the staging environment, the changes are merged into the production branch (often called `master` or `main`). The code in this branch reflects what's currently running in the production environment and is considered stable.
 
-### Best Practices:
 
-- **Pull Requests for Merging**: Use pull requests (PRs) to merge changes from development to staging, and from staging to production. This facilitates code review, discussion, and approval processes, ensuring only vetted code makes its way up the deployment chain.
+# Staging environment git setup
+When using Heroku and you have created a separate staging app, you don't necessarily set the Git remote for a specific branch (like your staging branch) to this app. Instead, you manage the deployment to different Heroku apps (staging and production) by setting up separate Git remotes for each Heroku app. Here's how to do it:
 
-- **Automated Testing**: Integrate automated testing into your CI/CD pipeline. Tests should run automatically when PRs are created or updated, and only allow merges if all tests pass.
+### 1. Verify Existing Remotes
 
-- **Protected Branches**: Use protected branch rules to prevent direct pushes to critical branches like staging and production. This ensures that changes go through the proper review and automated checks before being merged.
+First, check your existing Git remotes to understand the current configuration. Open your terminal, navigate to your project directory, and run:
 
-- **Separate Environments**: Maintain separate environments for development, staging, and production. Each should have its own set of resources (servers, databases, etc.) to prevent interference and ensure realistic testing conditions.
+```bash
+git remote -v
+```
 
-- **Environment-Specific Configurations**: Use environment variables or configuration files to manage environment-specific settings (API keys, database URLs, etc.) to keep your application's behavior flexible and secure across different environments.
+You'll likely see the remote for your production app, typically named `origin` for your code repository and possibly `heroku` for your Heroku production app.
 
-- **Continuous Integration and Delivery**: Automate your deployment process as much as possible. Changes merged to the staging branch should automatically deploy to the staging environment, and similarly for production.
+### 2. Add a Remote for the Staging App
 
-- **Manual Gate for Production**: Although automation is key, it's often wise to have a manual approval step before deploying to production, ensuring that you have a final check before changes go live.
+You'll add a new remote for your Heroku staging app. Heroku CLI provides an easy way to add a remote associated with a Heroku app. Use the following command:
 
-- **Monitor and Rollback**: Have monitoring in place for all environments, especially production, and ensure you have a straightforward process for rolling back changes if something goes wrong after deployment.
+```bash
+heroku git:remote -a your-staging-app-name -r staging
+```
 
-### Conclusion:
+Replace `your-staging-app-name` with the name of your Heroku staging app. The `-r staging` option sets the name of the remote to `staging`. After running this command, `staging` will be the name of the remote pointing to your Heroku staging app.
 
-Using a single Git repository with different branches for managing deployment to various environments is a solid practice that offers several benefits, including simplicity, ease of tracking changes across environments, and centralized management of the codebase. Integrating best practices into this workflow enhances reliability, security, and team collaboration.
+### 3. Deploy to Staging
+
+To deploy code to your staging app, you just need to push the desired branch (e.g., your `staging` branch) to the `staging` remote. Here's how you do it:
+
+```bash
+git push staging staging:main
+```
+
+This command pushes the `staging` branch from your local repository to the `main` branch on the `staging` remote (Heroku automatically deploys the `main` branch by default). If your Heroku app is set to deploy from a different branch, replace `main` with the name of that branch.
+
+### 4. Managing Config Vars
+
+Remember to set environment variables (config vars in Heroku) for your staging app separately from your production app. You can do this through the Heroku dashboard or the CLI:
+
+```bash
+heroku config:set VAR_NAME=value -a your-staging-app-name
+```
+
+Replace `VAR_NAME=value` with your actual configuration variables and their values.
+
+### Summary
+
+By setting up a separate remote for your staging app on Heroku, you can easily manage deployments to staging and production independently. This setup allows you to maintain a stable production environment while testing new features and changes in staging.
