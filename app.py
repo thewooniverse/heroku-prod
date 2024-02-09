@@ -18,8 +18,8 @@ Its a playground; its also pretty exciting to just like build bigger and bigger 
 Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
 
 
-1. Redeploy post name change - reset webhooks
-2. Add 1 more feature, maybe vision or voice? voice is harder tho
+>>>> tts bugfix
+
 
 
 To do lists:
@@ -27,8 +27,8 @@ To do lists:
 - Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
 - Integration with basic ChatGPT using langchain
-- Dall-E 3 Image generation commands with optional image input and sending --> need to update the send message function as well.
--- v1 it will send just the URL link, but the next version it will save and delete.
+- Dall-E 3 Image generation commands with optional image inputand sending --> need to update the send message function as well.
+-- v1 it will send just the URL link, but the next version it w ill save and delete.
 ----- done above -----
 
 # GPT features

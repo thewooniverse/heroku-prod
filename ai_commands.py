@@ -38,6 +38,7 @@ def generate_image(query):
     """
     Takes a message object, unpacks and returns a response.
     """
+
     ImagesResponse = client.images.generate(
         model='dall-e-3',
         prompt=query,
@@ -71,20 +72,29 @@ def text_to_speech(message):
     """
     def text_to_speech(message): 
     """
+    # extract the query
     query = helper_functions.extract_body(message.text)
-    speech_file_path = Path(__file__).parent / "temp_tts_mp3" / f"{str(message.chat.id)}_{str(message.message_id)}.mp3"
+
+
+    # get the query:
     response = client.audio.speech.create(
         model="tts-1",
         voice="alloy",
-        input=query
-        )
+        input=query)
+    
     if response:
-        print("Response received")
-        response.with_streaming_response.method(speech_file_path)
-        return speech_file_path
+        print(f"Response received: {type(response)}")
+        return response
     else:
         print("Response not received")
         return None
+
+    # speech_file_path = Path(__file__).parent / "temp_tts_mp3" / f"{str(message.chat.id)}_{str(message.message_id)}.mp3"
+
+    # if response:
+    #     print("Response received")
+    #     response.stream_to_file(speech_file_path)
+    #     return speech_file_path
     
 
 
