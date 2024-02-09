@@ -18,7 +18,6 @@ Its a playground; its also pretty exciting to just like build bigger and bigger 
 Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
 
 
->>>> tts bugfix
 
 
 
@@ -29,20 +28,33 @@ To do lists:
 - Integration with basic ChatGPT using langchain
 - Dall-E 3 Image generation commands with optional image inputand sending --> need to update the send message function as well.
 -- v1 it will send just the URL link, but the next version it w ill save and delete.
+- Text to Speech
+>>>> tts bugfix
 ----- done above -----
 
 # GPT features
-- Text to Speech
+
+Current dev priorities;
+- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+
 - Vision
-- Speech to Text
-- Translate
+- translate - t1, t2, t3 <<<- translate whatever 
+
+
+
+
+
+- Speech to Text (speech to text) <- need to do reply to
+- Speech to Chat (transcribe and then chat) <- need to do reply to features
+
 - RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history.
 - Fine tuning the model for different use cases
 - AI Committee? Eventually I suppose
 
 # Bot Features
 - /start
-- Buttons
+- /configs
+- Buttons 
 - Configurations and safety checking best practices using Postgres, key management etc..
 - Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
 - premium subscriptions
@@ -116,8 +128,7 @@ def handle_start(message):
 
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
-    query = helper_functions.extract_body(message.text)
-    response_text = ai_commands.chat_completion(query, model='gpt-4')
+    response_text = ai_commands.chat_completion(message, model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
@@ -135,13 +146,8 @@ def handle_imagine(message):
 
 
 
-
-
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
-    # logging to terminal / parsing data
-    query = helper_functions.extract_body(message.text)
-    print(query)
     tts_response = ai_commands.text_to_speech(message)
     if tts_response:
         print("Audio generated")
@@ -150,6 +156,12 @@ def handle_tts(message):
         print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
     
+
+
+
+
+
+
 
 
 

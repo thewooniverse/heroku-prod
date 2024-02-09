@@ -17,31 +17,31 @@ import helper_functions
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
-
-def chat_completion(query, model='gpt-3.5-turbo'):
+def chat_completion(message, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
+    body_text = helper_functions.extract_body(message.text)
     completion_object = client.chat.completions.create(
     model=model,
     messages=[
         {"role": "system", "content": "You are a helpful AI assistant - reply all responses in markdown"},
-        {"role": "user", "content": query}])
+        {"role": "user", "content": body_text}])
     print(completion_object)
     response_text = completion_object.choices[0].message.content
     print(response_text)
     return(response_text)
 
 
-
-def generate_image(query):
+def generate_image(message):
     """
     Takes a message object, unpacks and returns a response.
     """
+    body_text = helper_functions.extract_body(message.text)
 
     ImagesResponse = client.images.generate(
         model='dall-e-3',
-        prompt=query,
+        prompt=body_text,
         n=1,
         size='1024x1024',
         response_format='url'
