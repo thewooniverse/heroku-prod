@@ -8,8 +8,12 @@ To get started, please configure your OpenAI API Key and use the commands freely
 /chat - 
 /imagine -
 /vision - 
-/translate -
 /tts - 
 /stt - 
+/t1 - 
+/t2 - 
+/t3 - 
+
+
 /clear - 
 """

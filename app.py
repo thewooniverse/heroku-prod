@@ -30,6 +30,9 @@ To do lists:
 -- v1 it will send just the URL link, but the next version it w ill save and delete.
 - Text to Speech
 >>>> tts bugfix
+
+- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+
 ----- done above -----
 
 # GPT features
@@ -140,6 +143,29 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
+
+@bot.message_handler(commands=['t1'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['t2'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['t3'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+
+
+
+
+
+
+
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
@@ -153,7 +179,6 @@ def handle_imagine(message):
     # bot.reply_to(message, response_text)
 
 
-
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
     tts_response = ai_commands.text_to_speech(message)
@@ -164,6 +189,13 @@ def handle_tts(message):
         print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
     
+
+
+
+
+
+
+
 
 
 

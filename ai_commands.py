@@ -12,7 +12,6 @@ import helper_functions
 
 
 
-
 # constructing the models
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -22,15 +21,70 @@ def chat_completion(message, model='gpt-3.5-turbo'):
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
     body_text = helper_functions.extract_body(message.text)
+
+    system_prompt = "You are a helpful AI assistant - reply all responses in markdown"
+
     completion_object = client.chat.completions.create(
     model=model,
     messages=[
-        {"role": "system", "content": "You are a helpful AI assistant - reply all responses in markdown"},
+        {"role": "system", "content": system_prompt},
         {"role": "user", "content": body_text}])
     print(completion_object)
     response_text = completion_object.choices[0].message.content
     print(response_text)
-    return(response_text)
+    return response_text
+
+
+
+
+def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
+    """
+    translate(message, target, model): translates
+
+    This is commonly used by the user with different configurations like t1 = to EN, t2 = to CN, t3 = to KR.
+    """
+    body_text = helper_functions.extract_body(message.text)
+
+    system_prompt = f"You are an expert translator agent. You will be given a body of text to translate into a target language, translate the body text into the best most accurate translation possible with awareness of context and language based nuances. Do not include any other sentences in the response text than the translation with the exception of Chinese, please include the Pinyin if the target language is Chinese. The target language to be translated is given in a ISO 639-2 Code format. The target language is {target_language}."
+    
+    completion_object = client.chat.completions.create(
+    model=model,
+    messages=[
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": body_text}])
+    print(completion_object)
+
+    response_text = completion_object.choices[0].message.content
+    print(body_text)
+    print(response_text)
+    return response_text
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def generate_image(message):
