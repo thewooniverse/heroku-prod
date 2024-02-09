@@ -142,19 +142,29 @@ def handle_tts(message):
     # logging to terminal / parsing data
     query = helper_functions.extract_body(message.text)
     print(query)
-
-    # generating the speech response and sending it
-    tts_file_path = ai_commands.text_to_speech(message)
-
-    if os.path.exists(tts_file_path):
-        with open(tts_file_path, 'rb') as audio:
-            print("Successfully sent audio message")
-            bot.send_voice(message.chat.id, audio)
+    tts_response = ai_commands.text_to_speech(message)
+    if tts_response:
+        print("Audio generated")
+        bot.send_voice(message.chat.id, tts_response)
     else:
-        print("filepath does not exist.")
+        print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
     
-    helper_functions.delete_temp(tts_file_path)
+
+
+
+    # generating the speech response and sending it
+    # tts_file_path = ai_commands.text_to_speech(message)
+
+    # if os.path.exists(tts_file_path):
+    #     with open(tts_file_path, 'rb') as audio:
+    #         print("Successfully sent audio message")
+    #         bot.send_voice(message.chat.id, audio)
+    # else:
+    #     print("filepath does not exist.")
+    #     bot.reply_to(message, "Failed to fetch or generate speech.")
+    
+    # helper_functions.delete_temp(tts_file_path)
     
 
 
