@@ -30,15 +30,20 @@ To do lists:
 -- v1 it will send just the URL link, but the next version it w ill save and delete.
 - Text to Speech
 >>>> tts bugfix
+
+- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+
 ----- done above -----
 
 # GPT features
 
 Current dev priorities;
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+- In staging, the first one I'll develop is /t1 /t2 /t3; configurable languages. (defaults set to english, Chinese, Korean).
 
 - Vision
 - translate - t1, t2, t3 <<<- translate whatever 
+
 
 
 
@@ -69,9 +74,9 @@ app = Flask(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environments it means this would be different
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # this can be the same
+WEBHOOK_URL = os.environ.get('ROOT_URL')
 API_TOKEN = TELEGRAM_TOKEN
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
-WEBHOOK_URL = 'https://telebot-prod-2f34e594e894.herokuapp.com/webhook'
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 
 bot = telebot.TeleBot(API_TOKEN)
@@ -79,7 +84,13 @@ bot = telebot.TeleBot(API_TOKEN)
 # bot.set_webhook(url=WEBHOOK_URL) # <- essentially does the same thing as below, but using telebot bot method.
 # https://api.telegram.org/botYOUR_TELEGRAM_TOKEN/setWebhook?url=https://your-app-name.herokuapp.com/webhook
 # https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook?url=https://telebot-test-59f8f075f509.herokuapp.com/webhook
+
+# setting up the webhook for prod
 # curl --http1.1 -F "url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook" https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook <<< this was the hard reset
+
+# setting up the webhook for staging
+# curl --http1.1 -F "url=https://telebot-staging-cf8f61dc178a.herokuapp.com/webhook" https://api.telegram.org/bot6734553403:AAF60yWJI_aFjn4A47hDKnmKv-7FSrRH-lQ/setWebhook <<< this was the hard reset
+
 
 
 
@@ -132,6 +143,29 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
+
+@bot.message_handler(commands=['t1'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['t2'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+@bot.message_handler(commands=['t3'])
+def handle_chat(message):
+    response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
+    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+
+
+
+
+
+
+
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
@@ -145,7 +179,6 @@ def handle_imagine(message):
     # bot.reply_to(message, response_text)
 
 
-
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
     tts_response = ai_commands.text_to_speech(message)
@@ -156,6 +189,13 @@ def handle_tts(message):
         print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
     
+
+
+
+
+
+
+
 
 
 
