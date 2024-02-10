@@ -32,37 +32,42 @@ To do lists:
 >>>> tts bugfix
 
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+- In staging, the first one I'll develop is /t1 /t2 /t3; configurable languages. (defaults set to english, Chinese, Korean).
 
+- Vision
+- translate - t1, t2, t3 <<<- translate whatever 
 ----- done above -----
 
 # GPT features
 
 Current dev priorities;
-- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
-- In staging, the first one I'll develop is /t1 /t2 /t3; configurable languages. (defaults set to english, Chinese, Korean).
-
-- Vision
-- translate - t1, t2, t3 <<<- translate whatever 
+- speech to text and various sorts of it; 
+-- Speech to Text (speech to text) <- need to do reply to
+-- Speech to Chat (transcribe and then chat) <- basically spt and then calling the /chat function
 
 
 
 
 
 
-- Speech to Text (speech to text) <- need to do reply to
-- Speech to Chat (transcribe and then chat) <- need to do reply to features
+
+
+
+
+
+
 
 - RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history.
 - Fine tuning the model for different use cases
 - AI Committee? Eventually I suppose
 
 # Bot Features
-- /start
-- /configs
+- /start <- really just about writing functions;
+- /configs <- print out all the settings / configurations
 - Buttons 
 - Configurations and safety checking best practices using Postgres, key management etc..
 - Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
-- premium subscriptions
+- premium subscriptions, ability to make different types of requests;
 
 # Development
 - Port over and fork it for family usage version
@@ -142,8 +147,6 @@ def handle_chat(message):
     response_text = ai_commands.chat_completion(message, model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
-
-
 @bot.message_handler(commands=['t1'])
 def handle_chat(message):
     response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
@@ -158,12 +161,6 @@ def handle_chat(message):
 def handle_chat(message):
     response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
-
-
-
-
-
-
 
 
 @bot.message_handler(commands=['imagine'])
@@ -188,7 +185,34 @@ def handle_tts(message):
     else:
         print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
+
+
+@bot.message_handler(commands=['stt'])
+def handle_stt(message):
+    # check whether it is replying to a message - must be used in reply to a message
+    if message.reply_to_message:
+        original_message = message.reply_to_message
+        # check that it is a voice note
+        if original_message.content_type == 'voice':
+            # access the voice note and file_id
+            voice_note = message.reply_to_message.voice
+            voice_file_id = voice_note.file_id
+
+            # download the voice note
+            voice_file_info = bot.get_file(voice_file_id) # these need to be handled here.
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+
+            # send it to OpenAI for speech to text
+            stt_response = ai_commands.speech_to_text(downloaded_voice)
+            bot.reply_to(original_message, stt_response)
+        
+        else:
+            print("The target message is not a voice file")
+            bot.reply_to(message, "The target message is not a voice file")
     
+    else:
+        print("No target message")
+        bot.reply_to(message, "Please reply to a voice note")
 
 
 
