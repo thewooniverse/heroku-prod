@@ -13,8 +13,8 @@ To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
 Its a playground; its also pretty exciting to just like build bigger and bigger projects with more and more features.
 Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
 
-To do lists:
-# Completed
+------To do lists:--------
+#### Completed ####
 - Secure environment variables <- done
 - Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
 - Integration with basic ChatGPT using langchain
@@ -28,27 +28,31 @@ To do lists:
 
 - Vision
 - translate - t1, t2, t3 <<<- translate whatever 
------ done above -----
-
-# GPT features
 
 Current dev priorities;
 - speech to text and various sorts of it; 
 -- Speech to Text (speech to text) <- need to do reply to
 -- Speech to Chat (transcribe and then chat) <- basically spt and then calling the /chat function
-
 - stt bugfix
 - imagine bugfix
+
+----- done above -----
+
+
+Current dev priorities;
+- setwebhook coded into the app sourcecode;
+
+
+
+
+
+# GPT features
 - logging
-- setwebhook coded into the app sourcecode.
+
+- RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history. << databases on heroku to manage this.
+- Fine tuning the model for different use cases, different finetuned stuff for different usecases.
 
 
-
-
-
-
-- RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history.
-- Fine tuning the model for different use cases
 - AI Committee? Eventually I suppose
 
 # Bot Features
@@ -82,24 +86,27 @@ TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 ROOT_URL = os.environ.get('ROOT_URL')
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
+DYNO_NAME = os.environ.get('DYNO')
+
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-def set_telegram_webhook():
-    # bot.remove_webhook()
-    # bot.set_webhook(url=WEBHOOK_URL)
-    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
-    response = requests.get(url)
-    print(response.text)
-    if response.status_code == 200 and response.json().get('ok'):
-        print("Webhook set successfully")
-    else:
-        print("Failed to set webhook")        
+# def set_telegram_webhook():
+#     # bot.remove_webhook()
+#     # bot.set_webhook(url=WEBHOOK_URL)
+#     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
+#     response = requests.get(url)
+#     print(response.text)
+#     if response.status_code == 200 and response.json().get('ok'):
+#         print("Webhook set successfully")
+#     else:
+#         print("Failed to set webhook")        
 
-# @app.before_first_request << has been deprecated, replaced with.
-with app.app_context():
-    set_telegram_webhook()
-# Flask routes and other configurations follow...
+# # @app.before_first_request << has been deprecated, replaced with the below solution app.app_context()
+# with app.app_context():
+#     print(DYNO_NAME)
+#     set_telegram_webhook()
+# # Flask routes and other configurations follow...
 
 
 
