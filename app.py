@@ -98,9 +98,9 @@ def set_telegram_webhook():
 # @app.before_first_request << has been deprecated, replaced with.
 with app.app_context():
     set_telegram_webhook()
-
-
 # Flask routes and other configurations follow...
+
+
 
 
 
@@ -111,8 +111,6 @@ with app.app_context():
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
-
-
 
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
@@ -205,14 +203,19 @@ def handle_stt(message):
             # access the voice note and file_id
             voice_note = message.reply_to_message.voice
             voice_file_id = voice_note.file_id
+            print(voice_file_id)
 
             # download the voice note
             voice_file_info = bot.get_file(voice_file_id) # these need to be handled here.
             downloaded_voice = bot.download_file(voice_file_info.file_path)
-
-            # send it to OpenAI for speech to text
-            stt_response = ai_commands.speech_to_text(downloaded_voice)
-            bot.reply_to(original_message, stt_response)
+            if downloaded_voice:
+                print("File Downloaded")
+                # send it to OpenAI for speech to text
+                stt_response = ai_commands.speech_to_text(downloaded_voice)
+                bot.reply_to(message, downloaded_voice)
+                bot.reply_to(original_message, stt_response)
+            else:
+                print("File did not download")
         
         else:
             print("The target message is not a voice file")
