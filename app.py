@@ -35,43 +35,51 @@ Current dev priorities;
 -- Speech to Chat (transcribe and then chat) <- basically spt and then calling the /chat function
 - stt bugfix
 - imagine bugfix
+- setwebhook coded into the app sourcecode; << fixed this to instead run once within startup.sh, and procfile to trigger a startup script.
 
 ----- done above -----
 
 
+
+
 Current dev priorities;
-- setwebhook coded into the app sourcecode;
+ADD A FEW MORE FEATURES
+- /edit_img dalle2
+- /variate dalle2
+- speech to chat
+- speech to translation -> spt en, spt cn etc...
+- Vision
 
+Logging
+- Thorough logging: basics of logging with metadata, integrating with a persistent solution (papertrail), accessing logs
 
-
-
-
-# GPT features
-- logging
-
+Databasing + Configurations and customizations
+- Configurations and safety checking best practices using Postgres, key management etc..
 - RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history. << databases on heroku to manage this.
+
+Refactoring / Cleanup
+- /start cleanup
+- Port over and fork it for family usage version
+
+
+Further Integrations and Features
+- Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
+
+DevOps
+- Local testing and automated testing
+- Github Workflows
+
+
+
+
+ADDL GPT features
 - Fine tuning the model for different use cases, different finetuned stuff for different usecases.
-
-
 - AI Committee? Eventually I suppose
 
 # Bot Features
-- /start <- really just about writing functions;
-- /configs <- print out all the settings / configurations
 - Buttons 
-- Configurations and safety checking best practices using Postgres, key management etc..
-- Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
 - premium subscriptions, ability to make different types of requests;
 
-# Development
-- Port over and fork it for family usage version
-- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
-
-
-
-# setting up the webhook for prod and staging
-# curl --http1.1 -F "url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook" https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook
-# curl --http1.1 -F "url=https://telebot-staging-cf8f61dc178a.herokuapp.com/webhook" https://api.telegram.org/bot6734553403:AAF60yWJI_aFjn4A47hDKnmKv-7FSrRH-lQ/setWebhook <<< this was the hard reset
 """
 
 
@@ -91,22 +99,6 @@ DYNO_NAME = os.environ.get('DYNO')
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# def set_telegram_webhook():
-#     # bot.remove_webhook()
-#     # bot.set_webhook(url=WEBHOOK_URL)
-#     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
-#     response = requests.get(url)
-#     print(response.text)
-#     if response.status_code == 200 and response.json().get('ok'):
-#         print("Webhook set successfully")
-#     else:
-#         print("Failed to set webhook")        
-
-# # @app.before_first_request << has been deprecated, replaced with the below solution app.app_context()
-# with app.app_context():
-#     print(DYNO_NAME)
-#     set_telegram_webhook()
-# # Flask routes and other configurations follow...
 
 
 
@@ -144,8 +136,6 @@ def receive_update():
     # Respond to Telegram: After processing the update, this line sends a response back to Telegram. 
     # The 200 status code indicates success, and '!' is just a simple response body. 
     # Telegram doesn't use the response body, but a valid HTTP response is required.
-
-
 
 
 
@@ -217,7 +207,6 @@ def handle_stt(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-
             stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
             bot.reply_to(message, stt_response or "Could not convert speech to text")
 
@@ -232,9 +221,6 @@ def handle_stt(message):
     else:
         print("No target message")
         bot.reply_to(message, "Please reply to a voice note")
-
-
-
 
 
 
