@@ -3,6 +3,7 @@ import requests, os
 import telebot
 import helper_functions
 import ai_commands
+import tempfile
 
 
 
@@ -196,31 +197,28 @@ def handle_tts(message):
 @bot.message_handler(commands=['stt'])
 def handle_stt(message):
     # check whether it is replying to a message - must be used in reply to a message
-    if message.reply_to_message:
+    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
         original_message = message.reply_to_message
-        # check that it is a voice note
-        if original_message.content_type == 'voice':
-            # access the voice note and file_id
-            voice_note = message.reply_to_message.voice
-            voice_file_id = voice_note.file_id
-            print(voice_file_id)
+        voice_note = original_message.voice
+        voice_file_info = bot.get_file(voice_note.file_id)
 
-            # download the voice note
-            voice_file_info = bot.get_file(voice_file_id) # these need to be handled here.
+        try:
             downloaded_voice = bot.download_file(voice_file_info.file_path)
-            if downloaded_voice:
-                print("File Downloaded")
-                # send it to OpenAI for speech to text
-                stt_response = ai_commands.speech_to_text(downloaded_voice)
-                bot.reply_to(message, downloaded_voice)
-                bot.reply_to(original_message, stt_response)
-            else:
-                print("File did not download")
+            print("Voice note downloaded")
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+
+            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
+            bot.reply_to(message, stt_response)
+
         
-        else:
-            print("The target message is not a voice file")
-            bot.reply_to(message, "The target message is not a voice file")
-    
+        except Exception as e:
+            print(f"Error during STT process {e}")
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+        
     else:
         print("No target message")
         bot.reply_to(message, "Please reply to a voice note")

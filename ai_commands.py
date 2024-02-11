@@ -124,13 +124,13 @@ def text_to_speech(message, voice="alloy"):
 
 
 
-def speech_to_text(voice_file):
+def speech_to_text(voice_file_path):
     """
     def speech_to_text(message): takes a voice file, and returns a transcribed version of it.
     """
     transcript = client.audio.transcriptions.create(
     model="whisper-1",
-    file=voice_file,
+    file=open(voice_file_path, 'rb'),
     response_format='text')
     if len(transcript) > 0:
         return transcript
