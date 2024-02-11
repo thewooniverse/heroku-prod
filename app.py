@@ -175,7 +175,7 @@ def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
     print(query)
-    image_content = ai_commands.generate_image(query)
+    image_content = ai_commands.generate_image(message)
     if image_content:
         bot.send_photo(message.chat.id, photo=image_content)
     else:
@@ -212,7 +212,10 @@ def handle_stt(message):
             
 
             stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
-            bot.reply_to(message, stt_response)
+            bot.reply_to(message, stt_response or "Could not convert speech to text")
+
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
 
         
         except Exception as e:
