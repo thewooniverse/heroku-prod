@@ -91,15 +91,13 @@ def set_telegram_webhook():
     else:
         print("Failed to set webhook")        
 
-@app.before_first_request
-def initialize_bot():
+# @app.before_first_request << has been deprecated, replaced with.
+with app.app_context():
     set_telegram_webhook()
 
 
 
 # Flask routes and other configurations follow...
-
-
 
 
 
