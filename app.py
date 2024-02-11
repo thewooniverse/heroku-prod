@@ -79,7 +79,8 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environ
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # again, same environment variable, different api keys accessed
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
-WEBHOOK_URL = os.environ.get('ROOT_URL' + WEBHOOK_URL_PATH)
+ROOT_URL = os.environ.get('ROOT_URL')
+WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
@@ -88,6 +89,7 @@ def set_telegram_webhook():
     bot.set_webhook(url=WEBHOOK_URL)
     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
     response = requests.get(url)
+    print(response.text)
     if response.status_code == 200 and response.json().get('ok'):
         print("Webhook set successfully")
     else:
