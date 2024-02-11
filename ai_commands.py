@@ -16,6 +16,8 @@ import helper_functions
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+
+
 def chat_completion(message, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
@@ -33,8 +35,6 @@ def chat_completion(message, model='gpt-3.5-turbo'):
     response_text = completion_object.choices[0].message.content
     print(response_text)
     return response_text
-
-
 
 
 def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
@@ -58,33 +58,6 @@ def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
     print(body_text)
     print(response_text)
     return response_text
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 def generate_image(message):
@@ -120,11 +93,9 @@ url='https://EXAMPLEIURL.com')])
 """
 
 
-
-
-def text_to_speech(message):
+def text_to_speech(message, voice="alloy"):
     """
-    def text_to_speech(message): 
+    def text_to_speech(message): takes a message, and returns a voice file containing its dictated version.
     """
     # extract the query
     query = helper_functions.extract_body(message.text)
@@ -133,7 +104,7 @@ def text_to_speech(message):
     # get the query:
     response = client.audio.speech.create(
         model="tts-1",
-        voice="alloy",
+        voice=voice,
         input=query)
     
     if response:
@@ -149,7 +120,22 @@ def text_to_speech(message):
     #     print("Response received")
     #     response.stream_to_file(speech_file_path)
     #     return speech_file_path
-    
+
+
+
+
+def speech_to_text(voice_file_path):
+    """
+    def speech_to_text(message): takes a voice file, and returns a transcribed version of it.
+    """
+    transcript = client.audio.transcriptions.create(
+    model="whisper-1",
+    file=open(voice_file_path, 'rb'),
+    response_format='text')
+    if len(transcript) > 0:
+        return transcript
+    else:
+        return False
 
 
 

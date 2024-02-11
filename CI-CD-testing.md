@@ -142,6 +142,10 @@ Pushing your code to a `staging` branch on GitHub (or another version control sy
 
 ### 4. Deployment to Staging Environment
 Automated or manual deployment to a staging environment after merging the PR allows you to test the changes in an environment that closely mirrors production. This step is crucial for identifying any environment-specific issues that weren't caught during local development.
+>> git push staging staging:main  <<--- this onky works after setting origin
+>> heroku git:remote -a your-staging-app-name -r staging
+
+
 
 ### 5. Extensive Testing in Staging
 Performing thorough testing in the staging environment, including user acceptance testing (UAT), ensures that the new features or changes behave as expected. This step is vital for catching any remaining issues before they affect your production users.
