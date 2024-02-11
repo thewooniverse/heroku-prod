@@ -36,6 +36,14 @@ Current dev priorities;
 -- Speech to Text (speech to text) <- need to do reply to
 -- Speech to Chat (transcribe and then chat) <- basically spt and then calling the /chat function
 
+- stt bugfix
+- imagine bugfix
+- logging
+- setwebhook coded into the app sourcecode.
+
+
+
+
 
 
 - RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history.
@@ -53,6 +61,12 @@ Current dev priorities;
 # Development
 - Port over and fork it for family usage version
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
+
+
+
+# setting up the webhook for prod and staging
+# curl --http1.1 -F "url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook" https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook
+# curl --http1.1 -F "url=https://telebot-staging-cf8f61dc178a.herokuapp.com/webhook" https://api.telegram.org/bot6734553403:AAF60yWJI_aFjn4A47hDKnmKv-7FSrRH-lQ/setWebhook <<< this was the hard reset
 """
 
 
@@ -69,20 +83,35 @@ WEBHOOK_URL = os.environ.get('ROOT_URL' + WEBHOOK_URL_PATH)
 
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-# setting up the webhook for prod
-# curl --http1.1 -F "url=https://telebot-prod-2f34e594e894.herokuapp.com/webhook" https://api.telegram.org/bot6355794369:AAHnqUS6p8K4xVFkryZFmmmpF4LBG-gzyv4/setWebhook
-# setting up the webhook for staging
-# curl --http1.1 -F "url=https://telebot-staging-cf8f61dc178a.herokuapp.com/webhook" https://api.telegram.org/bot6734553403:AAF60yWJI_aFjn4A47hDKnmKv-7FSrRH-lQ/setWebhook <<< this was the hard reset
+def set_telegram_webhook():
+    url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
+    response = requests.get(url)
+    if response.status_code == 200 and response.json().get('ok'):
+        print("Webhook set successfully")
+    else:
+        print("Failed to set webhook")        
+
+@app.before_first_request
+def initialize_bot():
+    set_telegram_webhook()
+
+
+
+# Flask routes and other configurations follow...
 
 
 
 
 
-app = Flask(__name__)
+
+
+
 
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
+
+
 
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
