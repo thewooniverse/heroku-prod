@@ -131,7 +131,7 @@ def speech_to_text(voice_file):
     transcript = client.audio.transcriptions.create(
     model="whisper-1",
     file=voice_file)
-    
+    return transcript
 
 
 
