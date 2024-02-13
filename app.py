@@ -45,7 +45,7 @@ Current dev priorities;
 Current dev priorities;
 ADD A FEW MORE FEATURES
 - /edit_img dalle2
-- /variate dalle2
+- /variant dalle2
 - speech to chat
 - speech to translation -> spt en, spt cn etc...
 - Vision
@@ -70,8 +70,6 @@ DevOps
 - Github Workflows
 
 
-
-
 ADDL GPT features
 - Fine tuning the model for different use cases, different finetuned stuff for different usecases.
 - AI Committee? Eventually I suppose
@@ -80,6 +78,13 @@ ADDL GPT features
 - Buttons 
 - premium subscriptions, ability to make different types of requests;
 
+
+
+>>>> FORK OUT into OpenAssistant
+- OpenAssistantStaging_Bot - 
+- OpenAssistantProduction_Bot - 
+- AssBlaster69Staging_Bot -
+- AssBlaster69Prod_Bot - 
 """
 
 
@@ -104,14 +109,9 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
 
-
-
-
-
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
-
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
 @app.route(WEBHOOK_URL_PATH, methods=['POST']) # Define Route: We're telling our Flask app that whenever it receives a POST request at the WEBHOOK_URL_PATH,
@@ -136,7 +136,6 @@ def receive_update():
     # Respond to Telegram: After processing the update, this line sends a response back to Telegram. 
     # The 200 status code indicates success, and '!' is just a simple response body. 
     # Telegram doesn't use the response body, but a valid HTTP response is required.
-
 
 
 
@@ -226,31 +225,7 @@ def handle_stt(message):
 
 
 
-
-
-
-
-
-
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
