@@ -7,7 +7,6 @@
 
 ## Old hardcoded telegram webhook.
 # def set_telegram_webhook():
-#     # bot.remove_webhook()
 #     # bot.set_webhook(url=WEBHOOK_URL)
 #     url = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/setWebhook?url={WEBHOOK_URL}'
 #     response = requests.get(url)
