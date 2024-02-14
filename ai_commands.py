@@ -18,6 +18,9 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 
+
+
+## Text Handling Commands ##
 def chat_completion(message, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
@@ -60,6 +63,13 @@ def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
     return response_text
 
 
+
+
+
+
+
+
+## Image Handling Commands ##
 def generate_image(message):
     """
     Takes a message object, unpacks and returns a response.
@@ -92,7 +102,49 @@ She carries with her an air of grace and poise, exuding a warm, inviting aura.',
 url='https://EXAMPLEIURL.com')])
 """
 
+def edit_image(message, org_image_file_path, mask_image_file_path=None):
+    """
+    def edit_image(message, image_file_path): returns an edited image based on the query and 
+    
+    """
+    query = helper_functions.extract_body(message.text)
 
+    if mask_image_file_path:
+        ImagesResponse = client.images.edit(
+            model="dall-e-2",
+            image=open(org_image_file_path, "rb"),
+            mask=open(mask_image_file_path, "rb"),
+            prompt=query,
+            n=1,
+            size="1024x1024"
+            )
+        response = requests.get(ImagesResponse.data[0].url)
+        if response.status_code == 200:
+            return response.content
+
+    else:
+        ImagesResponse = client.images.edit(
+            model="dall-e-2",
+            image=open(org_image_file_path, "rb"),
+            prompt=query,
+            n=1,
+            size="1024x1024"
+            )
+        response = requests.get(ImagesResponse.data[0].url)
+        if response.status_code == 200:
+            return response.content
+        else:
+            return None
+
+    
+
+
+
+
+
+
+
+## Speech Handling Commands ##
 def text_to_speech(message, voice="alloy"):
     """
     def text_to_speech(message): takes a message, and returns a voice file containing its dictated version.
@@ -101,7 +153,7 @@ def text_to_speech(message, voice="alloy"):
     query = helper_functions.extract_body(message.text)
 
 
-    # get the query:
+    # execute the query:
     response = client.audio.speech.create(
         model="tts-1",
         voice=voice,
@@ -120,8 +172,6 @@ def text_to_speech(message, voice="alloy"):
     #     print("Response received")
     #     response.stream_to_file(speech_file_path)
     #     return speech_file_path
-
-
 
 
 def speech_to_text(voice_file_path):
@@ -150,23 +200,4 @@ def speech_to_text(voice_file_path):
 
 
 
-
-# # define overarching querying function
-# def chat_agent_langchain(query):
-#     """
-#     Takes a message object, unpacks and returns a response.
-#     """
-#     # instantiate the agent;
-#     agent = ChatOpenAI(model='gpt-4-0613', openai_api_key=OPENAI_API_KEY, model_name="gpt-4-0613")
-
-#     # extract the query from the message object
-#     chat_history = [
-#         SystemMessage(content="You are a helpful AI agent."),
-#         HumanMessage(content=query)
-#     ]
-
-#     # query the LLM with context provided
-#     response = agent(chat_history)
-#     print(response)
-#     return {"response_text": response.content}
 

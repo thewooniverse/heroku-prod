@@ -211,3 +211,26 @@ Getting info
 
 
 
+
+
+
+
+
+# # define overarching querying function
+# def chat_agent_langchain(query):
+#     """
+#     Takes a message object, unpacks and returns a response.
+#     """
+#     # instantiate the agent;
+#     agent = ChatOpenAI(model='gpt-4-0613', openai_api_key=OPENAI_API_KEY, model_name="gpt-4-0613")
+
+#     # extract the query from the message object
+#     chat_history = [
+#         SystemMessage(content="You are a helpful AI agent."),
+#         HumanMessage(content=query)
+#     ]
+
+#     # query the LLM with context provided
+#     response = agent(chat_history)
+#     print(response)
+#     return {"response_text": response.content}

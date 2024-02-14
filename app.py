@@ -4,6 +4,10 @@ import telebot
 import helper_functions
 import ai_commands
 import tempfile
+import io
+from PIL import Image
+
+
 
 
 
@@ -41,12 +45,14 @@ Current dev priorities;
 
 
 
-
-Current dev priorities;
-ADD A FEW MORE FEATURES
 - /edit_img dalle2
 - /variant dalle2
 - speech to chat
+
+
+
+Current dev priorities;
+ADD A FEW MORE FEATURES
 - speech to translation -> spt en, spt cn etc...
 - Vision
 
@@ -139,7 +145,6 @@ def receive_update():
 
 
 
-
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.reply_to(message, helper_functions.start_menu())
@@ -166,6 +171,7 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
+# image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
@@ -179,6 +185,109 @@ def handle_imagine(message):
     # bot.reply_to(message, response_text)
 
 
+@bot.message_handler(commands=['edit'])
+def handle_edit(message):
+    """
+    - edit image can only work with two images, and type has to be png
+    - addl error handling for filesize and dimension size
+    """
+
+    if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+        # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
+
+        # get the original message and the image contained in it
+        original_message = message.reply_to_message
+        original_image = original_message.photo[-1]
+        orginal_image_file_info = bot.get_file(original_image.file_id)
+        
+        try:
+            downloaded_original_img = bot.download_file(orginal_image_file_info.file_path)
+            print("Original Image downloaded")
+
+            # Use BytesIO for in-memory image processing
+            image_stream = io.BytesIO(downloaded_original_img)
+            image_stream.seek(0)  # Go to the start of the stream
+
+            # Open the image using Pillow for conversion
+            with Image.open(image_stream) as img:
+                # Convert the image to PNG and save it to a temporary file
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_original_img_file:
+                    img.save(temp_original_img_file, format='PNG')
+                    temp_original_img_file_path = temp_original_img_file.name
+                    print(f"Image converted to PNG and saved at {temp_original_img_file_path}")
+            
+
+                # check for the mask image
+                if message.content.type == "photo":
+                    mask_photo = message.photo[-1]
+                    mask_photo_file_info = bot.get_file(mask_photo.file_id)
+
+                    # try to download the mask image and convert it into a PNG file, and 
+                    try:
+                        downloaded_mask_image = bot.download_file(mask_photo_file_info.file_path)
+                        print("Mask Image downloaded")
+
+                        mask_image_stream = io.BytesIO(downloaded_mask_image)
+                        mask_image_stream.seek(0)
+
+                        # Open the image using Pillow for conversion
+                        with Image.open(mask_image_stream) as mask_img:
+                            # convert the mask image to PNG and save it to a temp file as well
+                            # create a temp file for the mask image
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_img_file:
+                                mask_img.save(temp_mask_img_file, format='PNG')
+                                temp_mask_img_file_path = temp_mask_img_file.name
+                                print(f"Image converted to PNG and saved at {temp_mask_img_file_path}")
+                        
+                        # call the OpenAI edit API
+                        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
+
+                        # if there is a valid response
+                        if img_edit_response:
+                            bot.send_photo(message.chat.id, photo=img_edit_response)
+                            os.remove(temp_original_img_file_path)
+                            os.remove(temp_mask_img_file_path)
+                            return '!', 200
+                        
+                    # if the mask image failed for any reason, we will pass
+                    except:
+                        print("Mask image invalid")
+                
+                # if there is NO mask image, we will run the edit command without the mask image
+                else:
+                    img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
+                    if img_edit_response:
+                        bot.send_photo(message.chat.id, photo=img_edit_response)
+                        os.remove(temp_original_img_file_path)
+                        return '!', 200
+        
+        # if at any point
+        except:
+            print("Original Image received, but failed to generate edited image")
+
+    bot.reply_to(message, "Could not generate edited image")
+
+            
+            
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# voice based handlers
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
     tts_response = ai_commands.text_to_speech(message)
@@ -220,6 +329,11 @@ def handle_stt(message):
     else:
         print("No target message")
         bot.reply_to(message, "Please reply to a voice note")
+
+
+
+
+
 
 
 
