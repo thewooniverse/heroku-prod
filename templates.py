@@ -13,6 +13,7 @@ To get started, please configure your OpenAI API Key and use the commands freely
 /t1 - 
 /t2 - 
 /t3 - 
+/edit - in reply to an original image, you can send a new command /edit "caption to change the original image accordingly" Optional: Mask image to indicate where in the image to alter.
 
 
 /clear - 
