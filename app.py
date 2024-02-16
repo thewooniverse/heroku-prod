@@ -270,6 +270,7 @@ def handle_edit(message):
     
     # if the temp path is created,
     if temp_mask_img_file_path:
+        print("Image processing with mask")
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
         if img_edit_response:
             bot.send_photo(message.chat.id, photo=img_edit_response)
@@ -278,6 +279,7 @@ def handle_edit(message):
             print("Edited image with Masked file could not be generated")
 
     else:
+        print("Image processing: no mask")
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
         if img_edit_response:
             print("Edited image generated")
