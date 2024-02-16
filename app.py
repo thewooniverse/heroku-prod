@@ -269,7 +269,7 @@ def handle_edit(message):
                 print(f"Error: unidentified error, please check logs. Details {str(e)}")
     
     # if the temp path is created,
-    if temp_mask_img_file_path in locals():
+    if temp_mask_img_file_path:
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
         if img_edit_response:
             bot.send_photo(message.chat.id, photo=img_edit_response)
@@ -288,8 +288,10 @@ def handle_edit(message):
     # File cleanup
     if temp_mask_img_file_path:
         os.remove(temp_mask_img_file_path)
+        print("Temp iamge file removed")
     if temp_original_img_file_path:
         os.remove(temp_original_img_file_path)
+        print("Original iamge file removed")
 
             
 

@@ -118,6 +118,8 @@ def edit_image(message, org_image_file_path, mask_image_file_path=None):
             n=1,
             size="1024x1024"
             )
+        print(response)
+
         response = requests.get(ImagesResponse.data[0].url)
         if response.status_code == 200:
             return response.content
@@ -130,6 +132,7 @@ def edit_image(message, org_image_file_path, mask_image_file_path=None):
             n=1,
             size="1024x1024"
             )
+        print(response)
         response = requests.get(ImagesResponse.data[0].url)
         if response.status_code == 200:
             return response.content
