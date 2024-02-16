@@ -6,6 +6,7 @@ import ai_commands
 import tempfile
 import io
 from PIL import Image
+import PIL
 
 
 
@@ -191,23 +192,26 @@ def handle_edit(message):
     - edit image can only work with two images, and type has to be png
     - addl error handling for filesize and dimension size
     """
+    # initialize and simplfied cleanup
+    temp_mask_img_file_path = None
+    temp_original_img_file_path = None
 
+    # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-        # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
-
+    
         # get the original message and the image contained in it
         original_message = message.reply_to_message
         original_image = original_message.photo[-1]
-        orginal_image_file_info = bot.get_file(original_image.file_id)
-        
-        try:
-            downloaded_original_img = bot.download_file(orginal_image_file_info.file_path)
-            print("Original Image downloaded")
+        original_image_file_info = bot.get_file(original_image.file_id)
 
+        # try and get the original image and process it as a PNG file
+        try:
+            # tryt to download the original image and process it as a PNG file
+            downloaded_original_img = bot.download_file(original_image_file_info.file_path)
+            print("Original Image downloaded")
             # Use BytesIO for in-memory image processing
             image_stream = io.BytesIO(downloaded_original_img)
             image_stream.seek(0)  # Go to the start of the stream
-
             # Open the image using Pillow for conversion
             with Image.open(image_stream) as img:
                 # Convert the image to PNG and save it to a temporary file
@@ -215,59 +219,74 @@ def handle_edit(message):
                     img.save(temp_original_img_file, format='PNG')
                     temp_original_img_file_path = temp_original_img_file.name
                     print(f"Image converted to PNG and saved at {temp_original_img_file_path}")
-            
 
-                # check for the mask image
-                if message.content.type == "photo":
-                    mask_photo = message.photo[-1]
-                    mask_photo_file_info = bot.get_file(mask_photo.file_id)
+        # if the image could not be converted, then we print the error and return the handler and exit early
+        except Exception as e:
+            if isinstance(e, IOError):
+                print("Error: error occured during file operations")
+            elif isinstance(e, PIL.UnidentifiedImageError):
+                print("Error: error occured during Image Conversion to PNG")
+            else:
+                print(f"Error: unidentified erro, please check logs. Details {str(e)}")
+            return
+    
+    # if the base condition is not met where the reply message is not an image; then we exit the function early
+    else:
+        print("Original Message does not include an image")
+        bot.reply_to(message, "Original Message does not include an image")
+        return
+    
+    # check for the mask image
+    if message.content_type == "photo":
+        mask_photo = message.photo[-1]
+        mask_photo_file_info = bot.get_file(mask_photo.file_id)
 
-                    # try to download the mask image and convert it into a PNG file, and 
-                    try:
-                        downloaded_mask_image = bot.download_file(mask_photo_file_info.file_path)
-                        print("Mask Image downloaded")
+        # try to download the mask image and convert it into a PNG file, and 
+        try:
+            downloaded_mask_image = bot.download_file(mask_photo_file_info.file_path)
+            print("Mask Image downloaded")
 
-                        mask_image_stream = io.BytesIO(downloaded_mask_image)
-                        mask_image_stream.seek(0)
+            mask_image_stream = io.BytesIO(downloaded_mask_image)
+            mask_image_stream.seek(0)
 
-                        # Open the image using Pillow for conversion
-                        with Image.open(mask_image_stream) as mask_img:
-                            # convert the mask image to PNG and save it to a temp file as well
-                            # create a temp file for the mask image
-                            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_img_file:
-                                mask_img.save(temp_mask_img_file, format='PNG')
-                                temp_mask_img_file_path = temp_mask_img_file.name
-                                print(f"Image converted to PNG and saved at {temp_mask_img_file_path}")
-                        
-                        # call the OpenAI edit API
-                        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
-
-                        # if there is a valid response
-                        if img_edit_response:
-                            bot.send_photo(message.chat.id, photo=img_edit_response)
-                            os.remove(temp_original_img_file_path)
-                            os.remove(temp_mask_img_file_path)
-                            return '!', 200
-                        
-                    # if the mask image failed for any reason, we will pass
-                    except:
-                        print("Mask image invalid")
-                
-                # if there is NO mask image, we will run the edit command without the mask image
-                else:
-                    img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
-                    if img_edit_response:
-                        bot.send_photo(message.chat.id, photo=img_edit_response)
-                        os.remove(temp_original_img_file_path)
-                        return '!', 200
+            # Open the image using Pillow for conversion
+            with Image.open(mask_image_stream) as mask_img:
+                # convert the mask image to PNG and save it to a temp file as well
+                # create a temp file for the mask image
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_img_file:
+                    mask_img.save(temp_mask_img_file, format='PNG')
+                    temp_mask_img_file_path = temp_mask_img_file.name
+                    print(f"Image converted to PNG and saved at {temp_mask_img_file_path}")
         
-        # if at any point
-        except:
-            print("Original Image received, but failed to generate edited image")
+        except Exception as e:
+            if isinstance(e, IOError):
+                print("Error: error occured during file operations")
+            elif isinstance(e, PIL.UnidentifiedImageError):
+                print("Error: error occured during Image Conversion to PNG")
+            else:
+                print(f"Error: unidentified erro, please check logs. Details {str(e)}")
+    
+    # if the temp path is created,
+    if temp_mask_img_file_path in locals():
+        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
+        if img_edit_response:
+            bot.send_photo(message.chat.id, photo=img_edit_response)
+        else:
+            print("Edited image with Masked file could not be generated")
 
-    bot.reply_to(message, "Could not generate edited image")
+    else:
+        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
+        if img_edit_response:
+            bot.send_photo(message.chat.id, photo=img_edit_response)
+        else:
+            print("Edited image with just the original image could not be generated")
+    
+    # File cleanup
+    if temp_mask_img_file_path:
+        os.remove(temp_mask_img_file_path)
+    if temp_original_img_file_path:
+        os.remove(temp_original_img_file_path)
 
-            
             
 
 
