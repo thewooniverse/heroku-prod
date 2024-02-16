@@ -110,6 +110,8 @@ def edit_image(message, org_image_file_path, mask_image_file_path=None):
     query = helper_functions.extract_body(message.text)
 
     if mask_image_file_path:
+        print(query)
+        print("processing wif mask")
         ImagesResponse = client.images.edit(
             model="dall-e-2",
             image=open(org_image_file_path, "rb"),
@@ -125,6 +127,8 @@ def edit_image(message, org_image_file_path, mask_image_file_path=None):
             return response.content
 
     else:
+        print(query)
+        print("processing wif mask")
         ImagesResponse = client.images.edit(
             model="dall-e-2",
             image=open(org_image_file_path, "rb"),
@@ -134,7 +138,6 @@ def edit_image(message, org_image_file_path, mask_image_file_path=None):
             )
         print(ImagesResponse)
 
-        
         response = requests.get(ImagesResponse.data[0].url)
         if response.status_code == 200:
             return response.content
