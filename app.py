@@ -264,7 +264,7 @@ def handle_edit(message):
             elif isinstance(e, PIL.UnidentifiedImageError):
                 print("Error: error occured during Image Conversion to PNG")
             else:
-                print(f"Error: unidentified erro, please check logs. Details {str(e)}")
+                print(f"Error: unidentified error, please check logs. Details {str(e)}")
     
     # if the temp path is created,
     if temp_mask_img_file_path in locals():
@@ -272,11 +272,13 @@ def handle_edit(message):
         if img_edit_response:
             bot.send_photo(message.chat.id, photo=img_edit_response)
         else:
+            print("Edited image with masking generated")
             print("Edited image with Masked file could not be generated")
 
     else:
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
         if img_edit_response:
+            print("Edited image generated")
             bot.send_photo(message.chat.id, photo=img_edit_response)
         else:
             print("Edited image with just the original image could not be generated")
