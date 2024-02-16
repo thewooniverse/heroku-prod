@@ -281,6 +281,7 @@ def handle_edit(message):
     else:
         print("Image processing: no mask")
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
+        print(img_edit_response)
         if img_edit_response:
             print("Edited image generated")
             bot.send_photo(message.chat.id, photo=img_edit_response)
