@@ -198,6 +198,7 @@ def handle_edit(message):
 
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+        print("Original Image file received")
     
         # get the original message and the image contained in it
         original_message = message.reply_to_message
@@ -238,6 +239,7 @@ def handle_edit(message):
     
     # check for the mask image
     if message.content_type == "photo":
+        print("Mask image received")
         mask_photo = message.photo[-1]
         mask_photo_file_info = bot.get_file(mask_photo.file_id)
 
