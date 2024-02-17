@@ -186,6 +186,10 @@ def handle_imagine(message):
     # bot.reply_to(message, response_text)
 
 
+
+
+
+
 @bot.message_handler(commands=['edit'])
 def handle_edit(message):
     """
@@ -193,7 +197,6 @@ def handle_edit(message):
     - addl error handling for filesize and dimension size
     """
     # initialize and simplfied cleanup
-    temp_mask_img_file_path = None
     temp_original_img_file_path = None
 
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
@@ -237,48 +240,7 @@ def handle_edit(message):
         bot.reply_to(message, "Original Message does not include an image")
         return
     
-    # check for the mask image
-    if message.content_type == "photo":
-        print("Mask image received")
-        mask_photo = message.photo[-1]
-        mask_photo_file_info = bot.get_file(mask_photo.file_id)
-
-        # try to download the mask image and convert it into a PNG file, and 
-        try:
-            downloaded_mask_image = bot.download_file(mask_photo_file_info.file_path)
-            print("Mask Image downloaded")
-
-            mask_image_stream = io.BytesIO(downloaded_mask_image)
-            mask_image_stream.seek(0)
-
-            # Open the image using Pillow for conversion
-            with Image.open(mask_image_stream) as mask_img:
-                # convert the mask image to PNG and save it to a temp file as well
-                # create a temp file for the mask image
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_img_file:
-                    mask_img.save(temp_mask_img_file, format='PNG')
-                    temp_mask_img_file_path = temp_mask_img_file.name
-                    print(f"Image converted to PNG and saved at {temp_mask_img_file_path}")
-        
-        except Exception as e:
-            if isinstance(e, IOError):
-                print("Error: error occured during file operations")
-            elif isinstance(e, PIL.UnidentifiedImageError):
-                print("Error: error occured during Image Conversion to PNG")
-            else:
-                print(f"Error: unidentified error, please check logs. Details {str(e)}")
-    
-    # if the temp path is created,
-    if temp_mask_img_file_path:
-        print("Image processing with mask")
-        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
-        if img_edit_response:
-            bot.send_photo(message.chat.id, photo=img_edit_response)
-        else:
-            print("Edited image with masking generated")
-            print("Edited image with Masked file could not be generated")
-
-    else:
+    try:
         print("Image processing: no mask")
         img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
         print(img_edit_response)
@@ -287,11 +249,9 @@ def handle_edit(message):
             bot.send_photo(message.chat.id, photo=img_edit_response)
         else:
             print("Edited image with just the original image could not be generated")
-    
-    # File cleanup
-    if temp_mask_img_file_path:
-        os.remove(temp_mask_img_file_path)
-        print("Temp iamge file removed")
+    except:
+        print("Edited image could not be generated")
+
     if temp_original_img_file_path:
         os.remove(temp_original_img_file_path)
         print("Original iamge file removed")
