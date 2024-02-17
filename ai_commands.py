@@ -122,14 +122,19 @@ def edit_image(message, org_image_file_byte_array):
             image=org_image_file_byte_array,
             prompt=query,
             n=1,
-            size="1024x1024"
+            size="1024x1024",
+            response_format='url'
             )
+        
         print(ImagesResponse)
         response = requests.get(ImagesResponse.data[0].url)
         return response.content
     
     except openai.OpenAIError as e:
-        print(e.error)
+        print(e)
+        return None
+    except Exception as e:
+        print(e)
         return None
     
         
