@@ -212,6 +212,7 @@ def handle_edit(message):
                 with Image.open(image_stream) as img:
                     width, height = 256, 256
                     img = img.resize((width, height))
+                    img= img.convert('RGBA')
 
                     # Convert the resized image to a BytesIO object again
                     with io.BytesIO() as byte_stream:
