@@ -186,16 +186,12 @@ def handle_imagine(message):
     # bot.reply_to(message, response_text)
 
 
+
+
+
+
 @bot.message_handler(commands=['edit'])
 def handle_edit(message):
-    """
-    - edit image can only work with two images, and type has to be png
-    - addl error handling for filesize and dimension size
-    """
-    # initialize and simplfied cleanup
-    temp_mask_img_file_path = None
-    temp_original_img_file_path = None
-
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
         print("Original Image file received")
@@ -210,17 +206,30 @@ def handle_edit(message):
             # tryt to download the original image and process it as a PNG file
             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
             print("Original Image downloaded")
-            # Use BytesIO for in-memory image processing
-            image_stream = io.BytesIO(downloaded_original_img)
-            image_stream.seek(0)  # Go to the start of the stream
-            # Open the image using Pillow for conversion
-            with Image.open(image_stream) as img:
-                # Convert the image to PNG and save it to a temporary file
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_original_img_file:
-                    img.save(temp_original_img_file, format='PNG')
-                    temp_original_img_file_path = temp_original_img_file.name
-                    print(f"Image converted to PNG and saved at {temp_original_img_file_path}")
 
+            with io.BytesIO(downloaded_original_img) as image_stream:
+                # Open the image using Pillow with another 'with' block
+                with Image.open(image_stream) as img:
+                    width, height = 256, 256
+                    img = img.resize((width, height))
+                    img= img.convert('RGBA')
+
+                    # Convert the resized image to a BytesIO object again
+                    with io.BytesIO() as byte_stream:
+                        img.save(byte_stream, format='PNG')
+                        byte_array = byte_stream.getvalue()
+
+                        # try processing the image through the openAI edit function
+                        print("Image processing: no mask")
+                        img_edit_response = ai_commands.edit_image(message, byte_array)
+                        print(img_edit_response)
+                        if img_edit_response:
+                            print("Edited image generated")
+                            bot.send_photo(message.chat.id, photo=img_edit_response)
+                        else:
+                            print("Edited image with just the original image could not be generated")
+                            bot.reply_to(message, "Could not generate image")
+                            
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
             if isinstance(e, IOError):
@@ -228,7 +237,7 @@ def handle_edit(message):
             elif isinstance(e, PIL.UnidentifiedImageError):
                 print("Error: error occured during Image Conversion to PNG")
             else:
-                print(f"Error: unidentified erro, please check logs. Details {str(e)}")
+                print(f"Error: unidentified error, please check logs. Details {str(e)}")
             return
     
     # if the base condition is not met where the reply message is not an image; then we exit the function early
@@ -236,65 +245,6 @@ def handle_edit(message):
         print("Original Message does not include an image")
         bot.reply_to(message, "Original Message does not include an image")
         return
-    
-    # check for the mask image
-    if message.content_type == "photo":
-        print("Mask image received")
-        mask_photo = message.photo[-1]
-        mask_photo_file_info = bot.get_file(mask_photo.file_id)
-
-        # try to download the mask image and convert it into a PNG file, and 
-        try:
-            downloaded_mask_image = bot.download_file(mask_photo_file_info.file_path)
-            print("Mask Image downloaded")
-
-            mask_image_stream = io.BytesIO(downloaded_mask_image)
-            mask_image_stream.seek(0)
-
-            # Open the image using Pillow for conversion
-            with Image.open(mask_image_stream) as mask_img:
-                # convert the mask image to PNG and save it to a temp file as well
-                # create a temp file for the mask image
-                with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_img_file:
-                    mask_img.save(temp_mask_img_file, format='PNG')
-                    temp_mask_img_file_path = temp_mask_img_file.name
-                    print(f"Image converted to PNG and saved at {temp_mask_img_file_path}")
-        
-        except Exception as e:
-            if isinstance(e, IOError):
-                print("Error: error occured during file operations")
-            elif isinstance(e, PIL.UnidentifiedImageError):
-                print("Error: error occured during Image Conversion to PNG")
-            else:
-                print(f"Error: unidentified error, please check logs. Details {str(e)}")
-    
-    # if the temp path is created,
-    if temp_mask_img_file_path:
-        print("Image processing with mask")
-        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path, mask_image_file_path=temp_mask_img_file_path)
-        if img_edit_response:
-            bot.send_photo(message.chat.id, photo=img_edit_response)
-        else:
-            print("Edited image with masking generated")
-            print("Edited image with Masked file could not be generated")
-
-    else:
-        print("Image processing: no mask")
-        img_edit_response = ai_commands.edit_image(message, temp_original_img_file_path)
-        print(img_edit_response)
-        if img_edit_response:
-            print("Edited image generated")
-            bot.send_photo(message.chat.id, photo=img_edit_response)
-        else:
-            print("Edited image with just the original image could not be generated")
-    
-    # File cleanup
-    if temp_mask_img_file_path:
-        os.remove(temp_mask_img_file_path)
-        print("Temp iamge file removed")
-    if temp_original_img_file_path:
-        os.remove(temp_original_img_file_path)
-        print("Original iamge file removed")
 
             
 

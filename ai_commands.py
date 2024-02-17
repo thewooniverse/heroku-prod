@@ -90,6 +90,9 @@ def generate_image(message):
         return response.content
     else:
         return None
+
+
+
 """
 Example response object:
 2024-02-03T09:53:58.515753+00:00 app[web.1]: 
@@ -102,45 +105,39 @@ She carries with her an air of grace and poise, exuding a warm, inviting aura.',
 url='https://EXAMPLEIURL.com')])
 """
 
-def edit_image(message, org_image_file_path, mask_image_file_path=None):
+
+
+def edit_image(message, org_image_file_byte_array):
     """
     def edit_image(message, image_file_path): returns an edited image based on the query and 
     
     """
     query = helper_functions.extract_body(message.text)
 
-    if mask_image_file_path:
+    print(query)
+    print("processing original image with OpenAI")
+    try:
         ImagesResponse = client.images.edit(
             model="dall-e-2",
-            image=open(org_image_file_path, "rb"),
-            mask=open(mask_image_file_path, "rb"),
+            image=org_image_file_byte_array,
             prompt=query,
             n=1,
-            size="1024x1024"
+            size="1024x1024",
+            response_format='url'
             )
-        print(ImagesResponse)
-
-        response = requests.get(ImagesResponse.data[0].url)
-        if response.status_code == 200:
-            return response.content
-
-    else:
-        ImagesResponse = client.images.edit(
-            model="dall-e-2",
-            image=open(org_image_file_path, "rb"),
-            prompt=query,
-            n=1,
-            size="1024x1024"
-            )
-        print(ImagesResponse)
-
         
+        # print(ImagesResponse)
         response = requests.get(ImagesResponse.data[0].url)
-        if response.status_code == 200:
-            return response.content
-        else:
-            return None
-
+        return response.content
+    
+    except openai.OpenAIError as e:
+        print(e)
+        return None
+    except Exception as e:
+        print(e)
+        return None
+    
+        
     
 
 
