@@ -107,31 +107,33 @@ url='https://EXAMPLEIURL.com')])
 
 
 
-def edit_image(message, org_image_file_path):
+def edit_image(message, org_image_file_byte_array):
     """
     def edit_image(message, image_file_path): returns an edited image based on the query and 
     
     """
     query = helper_functions.extract_body(message.text)
 
-
     print(query)
-    print("processing wif mask")
-    ImagesResponse = client.images.edit(
-        model="dall-e-2",
-        image=open(org_image_file_path, "rb"),
-        prompt=query,
-        n=1,
-        size="1024x1024"
-        )
-    print(ImagesResponse)
-
-    response = requests.get(ImagesResponse.data[0].url)
-    if response.status_code == 200:
+    print("processing original image with OpenAI")
+    try:
+        ImagesResponse = client.images.edit(
+            model="dall-e-2",
+            image=org_image_file_byte_array,
+            prompt=query,
+            n=1,
+            size="1024x1024"
+            )
+        print(ImagesResponse)
+        response = requests.get(ImagesResponse.data[0].url)
         return response.content
     
-    else:
+    except openai.OpenAIError as e:
+        print(e.http_status)
+        print(e.error)
         return None
+    
+        
     
 
 
