@@ -129,7 +129,6 @@ def edit_image(message, org_image_file_byte_array):
         return response.content
     
     except openai.OpenAIError as e:
-        print(e.http_status)
         print(e.error)
         return None
     

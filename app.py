@@ -236,7 +236,7 @@ def handle_edit(message):
             elif isinstance(e, PIL.UnidentifiedImageError):
                 print("Error: error occured during Image Conversion to PNG")
             else:
-                print(f"Error: unidentified erro, please check logs. Details {str(e)}")
+                print(f"Error: unidentified error, please check logs. Details {str(e)}")
             return
     
     # if the base condition is not met where the reply message is not an image; then we exit the function early
