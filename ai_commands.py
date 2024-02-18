@@ -107,7 +107,7 @@ url='https://EXAMPLEIURL.com')])
 
 
 
-def edit_image(message, org_image_file_byte_array):
+def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
     """
     def edit_image(message, image_file_path): returns an edited image based on the query and 
     
@@ -120,7 +120,7 @@ def edit_image(message, org_image_file_byte_array):
         ImagesResponse = client.images.edit(
             model="dall-e-2",
             image=org_image_file_byte_array,
-            mask=org_image_file_byte_array,
+            mask=open(temp_mask_file_path, 'rb'),
             prompt=query,
             n=1,
             size="1024x1024",
