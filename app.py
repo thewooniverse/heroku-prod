@@ -222,7 +222,7 @@ def handle_edit(message):
                         # try processing the image through the openAI edit function
                         print("Image processing: no mask")
                         img_edit_response = ai_commands.edit_image(message, byte_array)
-                        print(img_edit_response)
+                        
                         if img_edit_response:
                             print("Edited image generated")
                             bot.send_photo(message.chat.id, photo=img_edit_response)
