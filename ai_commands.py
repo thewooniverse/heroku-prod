@@ -120,6 +120,7 @@ def edit_image(message, org_image_file_byte_array):
         ImagesResponse = client.images.edit(
             model="dall-e-2",
             image=org_image_file_byte_array,
+            mask=org_image_file_byte_array,
             prompt=query,
             n=1,
             size="1024x1024",
