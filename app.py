@@ -41,14 +41,35 @@ Current dev priorities;
 - stt bugfix
 - imagine bugfix
 - setwebhook coded into the app sourcecode; << fixed this to instead run once within startup.sh, and procfile to trigger a startup script.
+- /variant dalle2
+
 
 ----- done above -----
 
+- /spc speech to chat
+- /spcs speec to chat(speech)
+- /chat v2 with reply functions
+
+- /Vision
+- Deep logging with papertrail
+- /settings and configuration with PostGres / Database
+- /clear
+
+1. /edit dalle2
+-- /edit_mask(alpha targeting) /edit_img
+-- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
+-- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
 
 
-- /edit_img dalle2
-- /variant dalle2
-- speech to chat
+2. /variate v2
+-- supports n number of variations depending on configurations
+
+
+--- Build it out robustly to a degree where I can have it as a customer facing interface / product.
+
+
+
+
 
 
 
@@ -151,9 +172,15 @@ def handle_start(message):
     bot.reply_to(message, helper_functions.start_menu())
 
 
+
+
+# text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
-    response_text = ai_commands.chat_completion(message, model='gpt-4')
+    context = ""
+    if message.reply_to_message:
+        context = message.reply_to_message.text
+    response_text = ai_commands.chat_completion(message, context, model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['t1'])
@@ -172,6 +199,63 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
+
+
+# voice based handlers
+@bot.message_handler(commands=['tts'])
+def handle_tts(message):
+    tts_response = ai_commands.text_to_speech(message)
+    if tts_response:
+        print("Audio generated")
+        bot.send_voice(message.chat.id, tts_response)
+    else:
+        print("Audio failed to generate")
+        bot.reply_to(message, "Failed to fetch or generate speech.")
+
+
+@bot.message_handler(commands=['stt'])
+def handle_stt(message):
+    # check whether it is replying to a message - must be used in reply to a message
+    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
+        original_message = message.reply_to_message
+        voice_note = original_message.voice
+        voice_file_info = bot.get_file(voice_note.file_id)
+
+        try:
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+            print("Voice note downloaded")
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
+            bot.reply_to(message, stt_response or "Could not convert speech to text")
+
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
+
+        
+        except Exception as e:
+            print(f"Error during STT process {e}")
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+        
+    else:
+        print("No target message")
+        bot.reply_to(message, "Please reply to a voice note")
+
+
+
+
+
+
+
+
+
+
+
+
+
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
@@ -185,12 +269,73 @@ def handle_imagine(message):
         bot.reply_to(message, "Failed to fetch or generate image")
     # bot.reply_to(message, response_text)
 
+@bot.message_handler(commands=['variate'])
+def handle_variations(message):
+    """
+    Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
+    """
+    # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
+    if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+        print("Original Image file received")
+
+        # Download & get the original message and the image contained in it
+        original_message = message.reply_to_message
+        original_image = original_message.photo[-1]
+        original_image_file_info = bot.get_file(original_image.file_id)
+
+        # try and get the original image and process it as a PNG file
+        try:
+            # tryt to download the original image and process it as a PNG file
+            downloaded_original_img = bot.download_file(original_image_file_info.file_path)
+            print("Original Image downloaded")
+
+            with io.BytesIO(downloaded_original_img) as image_stream:
+                # Open the image using Pillow with another 'with' block
+                with Image.open(image_stream).convert('RGBA') as img:
+                    width, height = 1024, 1024
+                    img = img.resize((width, height)) # resize to standard image, same as the mask image
+
+                    # Convert the resized image to a BytesIO object again
+                    with io.BytesIO() as byte_stream:
+                        img.save(byte_stream, format='PNG')
+                        byte_array = byte_stream.getvalue()
+                        img_var_response = ai_commands.variate_image(message, byte_array)
+                        if img_var_response:
+                            print("Image Variations generated")
+                            bot.send_photo(message.chat.id, photo=img_var_response)
+                        else:
+                            print("Image Variations with just the original image could not be generated")
+                            bot.reply_to(message, "Could not generate Variations of the image")
+                            
+        # if the image could not be converted, then we print the error and return the handler and exit early
+        except Exception as e:
+            if isinstance(e, IOError):
+                print("Error: error occured during file operations")
+            elif isinstance(e, PIL.UnidentifiedImageError):
+                print("Error: error occured during Image Conversion to PNG")
+            else:
+                print(f"Error: unidentified error, please check logs. Details {str(e)}")
+            return
+    # if the base condition is not met where the reply message is not an image; then we exit the function early
+    else:
+        print("Original Message does not include an image")
+        bot.reply_to(message, "Original Message does not include an image")
 
 
 
 
 
-@bot.message_handler(commands=['edit'])
+
+
+
+
+
+
+
+
+
+# Edit version 2
+@bot.message_handler(commands=['edit_img'])
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
@@ -265,6 +410,85 @@ def handle_edit(message):
     else:
         print("Original Message does not include an image")
         bot.reply_to(message, "Original Message does not include an image")
+
+
+
+
+# @bot.message_handler(commands=['edit'])
+# def handle_edit(message):
+#     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
+#     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+#         print("Original Image file received")
+
+#         # Create the temporary mask image
+#         width, height = 1024, 1024
+#         mask = Image.new("RGBA", (width,height), (0,0,0,1)) # create an opaque mask image mask
+
+#         # short script to set bottom half to be transparent
+#         for x in range(width):
+#             for y in range(height //2, height): # only loop over the bottom half of the mask
+#                 # set alpha (A) to zero to turn pixel transparent
+#                 alpha = 0
+#                 mask.putpixel((x, y), (0,0,0,alpha))
+#                 # this results in the folllwing
+#                 # 1 1 1 1
+#                 # 1 1 1 1
+#                 # 0 0 0 0
+#                 # 0 0 0 0
+
+#         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
+#             mask.save(temp_mask_file, format='PNG')
+#             temp_mask_file_path = temp_mask_file.name
+    
+#         # get the original message and the image contained in it
+#         original_message = message.reply_to_message
+#         original_image = original_message.photo[-1]
+#         original_image_file_info = bot.get_file(original_image.file_id)
+
+#         # try and get the original image and process it as a PNG file
+#         try:
+#             # tryt to download the original image and process it as a PNG file
+#             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
+#             print("Original Image downloaded")
+
+#             with io.BytesIO(downloaded_original_img) as image_stream:
+#                 # Open the image using Pillow with another 'with' block
+#                 with Image.open(image_stream).convert('RGBA') as img:
+#                     img = img.resize((width, height)) # resize to standard image, same as the mask image
+
+#                     # Convert the resized image to a BytesIO object again
+#                     with io.BytesIO() as byte_stream:
+#                         img.save(byte_stream, format='PNG')
+#                         byte_array = byte_stream.getvalue()
+
+#                         # try processing the image through the openAI edit function
+#                         print("Image processing: no mask")
+#                         img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path)
+
+#                         if img_edit_response:
+#                             print("Edited image generated")
+#                             bot.send_photo(message.chat.id, photo=img_edit_response)
+#                         else:
+#                             print("Edited image with just the original image could not be generated")
+#                             bot.reply_to(message, "Could not generate image")
+                            
+#         # if the image could not be converted, then we print the error and return the handler and exit early
+#         except Exception as e:
+#             if isinstance(e, IOError):
+#                 print("Error: error occured during file operations")
+#             elif isinstance(e, PIL.UnidentifiedImageError):
+#                 print("Error: error occured during Image Conversion to PNG")
+#             else:
+#                 print(f"Error: unidentified error, please check logs. Details {str(e)}")
+#             return
+        
+#         finally:
+#             os.remove(temp_mask_file_path)
+
+#     # if the base condition is not met where the reply message is not an image; then we exit the function early
+#     else:
+#         print("Original Message does not include an image")
+#         bot.reply_to(message, "Original Message does not include an image")
         
 
 
@@ -283,52 +507,6 @@ def handle_edit(message):
 
 
 
-
-
-
-
-# voice based handlers
-@bot.message_handler(commands=['tts'])
-def handle_tts(message):
-    tts_response = ai_commands.text_to_speech(message)
-    if tts_response:
-        print("Audio generated")
-        bot.send_voice(message.chat.id, tts_response)
-    else:
-        print("Audio failed to generate")
-        bot.reply_to(message, "Failed to fetch or generate speech.")
-
-
-@bot.message_handler(commands=['stt'])
-def handle_stt(message):
-    # check whether it is replying to a message - must be used in reply to a message
-    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
-        original_message = message.reply_to_message
-        voice_note = original_message.voice
-        voice_file_info = bot.get_file(voice_note.file_id)
-
-        try:
-            downloaded_voice = bot.download_file(voice_file_info.file_path)
-            print("Voice note downloaded")
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
-                temp_voice_file.write(downloaded_voice)
-                temp_voice_file_path = temp_voice_file.name
-            
-            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
-            bot.reply_to(message, stt_response or "Could not convert speech to text")
-
-            # Clean up: Remove the temporary file
-            os.remove(temp_voice_file_path)
-
-        
-        except Exception as e:
-            print(f"Error during STT process {e}")
-            bot.reply_to(message, "Failed to process the voice note, please check logs.")
-        
-    else:
-        print("No target message")
-        bot.reply_to(message, "Please reply to a voice note")
 
 
 

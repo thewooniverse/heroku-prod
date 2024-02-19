@@ -21,23 +21,27 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 ## Text Handling Commands ##
-def chat_completion(message, model='gpt-3.5-turbo'):
+def chat_completion(message, context, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
     body_text = helper_functions.extract_body(message.text)
 
-    system_prompt = "You are a helpful AI assistant - reply all responses in markdown"
+    system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below as chat history"
+    chat_history = f"This is the chat history of the conversation that we've had so far: \n\n {context}"
 
     completion_object = client.chat.completions.create(
     model=model,
     messages=[
         {"role": "system", "content": system_prompt},
+        {"role": "assistant", "content": chat_history},
         {"role": "user", "content": body_text}])
     print(completion_object)
     response_text = completion_object.choices[0].message.content
     print(response_text)
     return response_text
+
+
 
 
 def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
@@ -107,15 +111,41 @@ url='https://EXAMPLEIURL.com')])
 
 
 
+def variate_image(message, org_image_file_byte_array):
+    """
+    def variate_image(message, org_image_file_byte_array): returns variations of an image based on the 
+    """
+    print(f"creating variations of original image with OpenAI")
+    try:
+        ImagesResponse = client.images.create_variation(
+            model="dall-e-2",
+            image=org_image_file_byte_array,
+            n=1,
+            size="1024x1024",
+            response_format='url'
+            )
+        print(ImagesResponse)
+        response = requests.get(ImagesResponse.data[0].url)
+        return response.content
+    
+    except openai.OpenAIError as e:
+        print(e)
+        return None
+    except Exception as e:
+        print(e)
+        return None
+
+
+
+
 def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
     """
-    def edit_image(message, image_file_path): returns an edited image based on the query and 
+    def edit_image(message, image_file_path): returns an edited image based on the query, original image provided and mask file
     
     """
     query = helper_functions.extract_body(message.text)
 
-    print(query)
-    print("processing original image with OpenAI")
+    print(f"creating an edit of the original image with OpenAI and the edit query: {query}")
     try:
         ImagesResponse = client.images.edit(
             model="dall-e-2",
