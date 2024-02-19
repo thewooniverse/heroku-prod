@@ -107,15 +107,43 @@ url='https://EXAMPLEIURL.com')])
 
 
 
+def variate_image(message, org_image_file_byte_array):
+    """
+    def variate_image(message, org_image_file_byte_array): returns variations of an image based on the 
+    """
+    print(f"creating variations of original image with OpenAI")
+    try:
+        ImagesResponse = client.images.create_variation(
+            model="dall-e-2",
+            image=org_image_file_byte_array,
+            n=1,
+            size="1024x1024",
+            response_format='url'
+            )
+        print(ImagesResponse)
+        response = requests.get(ImagesResponse.data[0].url)
+        return response.content
+    
+    except openai.OpenAIError as e:
+        print(e)
+        return None
+    except Exception as e:
+        print(e)
+        return None
+
+
+
+
+
+
 def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
     """
-    def edit_image(message, image_file_path): returns an edited image based on the query and 
+    def edit_image(message, image_file_path): returns an edited image based on the query, original image provided and mask file
     
     """
     query = helper_functions.extract_body(message.text)
 
-    print(query)
-    print("processing original image with OpenAI")
+    print(f"creating an edit of the original image with OpenAI and the edit query: {query}")
     try:
         ImagesResponse = client.images.edit(
             model="dall-e-2",
