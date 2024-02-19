@@ -21,13 +21,13 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 ## Text Handling Commands ##
-def chat_completion(message, model='gpt-3.5-turbo'):
+def chat_completion(message, context, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
     body_text = helper_functions.extract_body(message.text)
 
-    system_prompt = "You are a helpful AI assistant - reply all responses in markdown"
+    system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below: \n\n {context}"
 
     completion_object = client.chat.completions.create(
     model=model,
@@ -38,6 +38,8 @@ def chat_completion(message, model='gpt-3.5-turbo'):
     response_text = completion_object.choices[0].message.content
     print(response_text)
     return response_text
+
+
 
 
 def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
@@ -130,8 +132,6 @@ def variate_image(message, org_image_file_byte_array):
     except Exception as e:
         print(e)
         return None
-
-
 
 
 

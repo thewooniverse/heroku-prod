@@ -41,25 +41,28 @@ Current dev priorities;
 - stt bugfix
 - imagine bugfix
 - setwebhook coded into the app sourcecode; << fixed this to instead run once within startup.sh, and procfile to trigger a startup script.
+- /variant dalle2
+
 
 ----- done above -----
-- /variant dalle2
-- /Vision
-- /spc speech to chat 
-- /settings and configuration with PostGres / Database
-- Deep logging with papertrail
-- /clear
+
+- /spc speech to chat
+- /spcs speec to chat(speech)
 - /chat v2 with reply functions
 
+- /Vision
+- Deep logging with papertrail
+- /settings and configuration with PostGres / Database
+- /clear
+
 1. /edit dalle2
--- /edit_mask /edit_img
--- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha
+-- /edit_mask(alpha targeting) /edit_img
+-- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
 
 
--- alpha targeting; so we need to copy the original image and be able to call a helper function
-
-
+2. /variate v2
+-- supports n number of variations depending on configurations
 
 
 --- Build it out robustly to a degree where I can have it as a customer facing interface / product.
@@ -169,9 +172,15 @@ def handle_start(message):
     bot.reply_to(message, helper_functions.start_menu())
 
 
+
+
+# text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
-    response_text = ai_commands.chat_completion(message, model='gpt-4')
+    context = ""
+    if message.reply_to_message:
+        context = message.reply_to_message.text
+    response_text = ai_commands.chat_completion(message, context, model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['t1'])
@@ -190,6 +199,63 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 
+
+
+# voice based handlers
+@bot.message_handler(commands=['tts'])
+def handle_tts(message):
+    tts_response = ai_commands.text_to_speech(message)
+    if tts_response:
+        print("Audio generated")
+        bot.send_voice(message.chat.id, tts_response)
+    else:
+        print("Audio failed to generate")
+        bot.reply_to(message, "Failed to fetch or generate speech.")
+
+
+@bot.message_handler(commands=['stt'])
+def handle_stt(message):
+    # check whether it is replying to a message - must be used in reply to a message
+    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
+        original_message = message.reply_to_message
+        voice_note = original_message.voice
+        voice_file_info = bot.get_file(voice_note.file_id)
+
+        try:
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+            print("Voice note downloaded")
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
+            bot.reply_to(message, stt_response or "Could not convert speech to text")
+
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
+
+        
+        except Exception as e:
+            print(f"Error during STT process {e}")
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+        
+    else:
+        print("No target message")
+        bot.reply_to(message, "Please reply to a voice note")
+
+
+
+
+
+
+
+
+
+
+
+
+
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
@@ -202,8 +268,6 @@ def handle_imagine(message):
     else:
         bot.reply_to(message, "Failed to fetch or generate image")
     # bot.reply_to(message, response_text)
-
-
 
 @bot.message_handler(commands=['variate'])
 def handle_variations(message):
@@ -256,6 +320,8 @@ def handle_variations(message):
     else:
         print("Original Message does not include an image")
         bot.reply_to(message, "Original Message does not include an image")
+
+
 
 
 
@@ -441,52 +507,6 @@ def handle_edit(message):
 
 
 
-
-
-
-
-# voice based handlers
-@bot.message_handler(commands=['tts'])
-def handle_tts(message):
-    tts_response = ai_commands.text_to_speech(message)
-    if tts_response:
-        print("Audio generated")
-        bot.send_voice(message.chat.id, tts_response)
-    else:
-        print("Audio failed to generate")
-        bot.reply_to(message, "Failed to fetch or generate speech.")
-
-
-@bot.message_handler(commands=['stt'])
-def handle_stt(message):
-    # check whether it is replying to a message - must be used in reply to a message
-    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
-        original_message = message.reply_to_message
-        voice_note = original_message.voice
-        voice_file_info = bot.get_file(voice_note.file_id)
-
-        try:
-            downloaded_voice = bot.download_file(voice_file_info.file_path)
-            print("Voice note downloaded")
-
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
-                temp_voice_file.write(downloaded_voice)
-                temp_voice_file_path = temp_voice_file.name
-            
-            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
-            bot.reply_to(message, stt_response or "Could not convert speech to text")
-
-            # Clean up: Remove the temporary file
-            os.remove(temp_voice_file_path)
-
-        
-        except Exception as e:
-            print(f"Error during STT process {e}")
-            bot.reply_to(message, "Failed to process the voice note, please check logs.")
-        
-    else:
-        print("No target message")
-        bot.reply_to(message, "Please reply to a voice note")
 
 
 
