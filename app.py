@@ -195,6 +195,26 @@ def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
         print("Original Image file received")
+
+        # Create the temporary mask image
+        width, height = 1024, 1024
+        mask = Image.new("RGBA", (width,height), (0,0,0,1)) # create an opaque mask image mask
+
+        # short script to set bottom half to be transparent
+        for x in range(width):
+            for y in range(height //2, height): # only loop over the bottom half of the mask
+                # set alpha (A) to zero to turn pixel transparent
+                alpha = 0
+                mask.putpixel((x, y), (0,0,0,alpha))
+                # this results in the folllwing
+                # 1 1 1 1
+                # 1 1 1 1
+                # 0 0 0 0
+                # 0 0 0 0
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
+            mask.save(temp_mask_file, format='PNG')
+            temp_mask_file_path = temp_mask_file.name
     
         # get the original message and the image contained in it
         original_message = message.reply_to_message
@@ -209,10 +229,8 @@ def handle_edit(message):
 
             with io.BytesIO(downloaded_original_img) as image_stream:
                 # Open the image using Pillow with another 'with' block
-                with Image.open(image_stream) as img:
-                    width, height = 256, 256
-                    img = img.resize((width, height))
-                    img= img.convert('RGBA')
+                with Image.open(image_stream).convert('RGBA') as img:
+                    img = img.resize((width, height)) # resize to standard image, same as the mask image
 
                     # Convert the resized image to a BytesIO object again
                     with io.BytesIO() as byte_stream:
@@ -221,8 +239,8 @@ def handle_edit(message):
 
                         # try processing the image through the openAI edit function
                         print("Image processing: no mask")
-                        img_edit_response = ai_commands.edit_image(message, byte_array)
-                        print(img_edit_response)
+                        img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path)
+
                         if img_edit_response:
                             print("Edited image generated")
                             bot.send_photo(message.chat.id, photo=img_edit_response)
@@ -239,12 +257,16 @@ def handle_edit(message):
             else:
                 print(f"Error: unidentified error, please check logs. Details {str(e)}")
             return
-    
+        
+        finally:
+            os.remove(temp_mask_file_path)
+
     # if the base condition is not met where the reply message is not an image; then we exit the function early
     else:
         print("Original Message does not include an image")
         bot.reply_to(message, "Original Message does not include an image")
-        return
+        
+
 
             
 
