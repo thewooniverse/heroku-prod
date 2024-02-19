@@ -42,13 +42,14 @@ Current dev priorities;
 - imagine bugfix
 - setwebhook coded into the app sourcecode; << fixed this to instead run once within startup.sh, and procfile to trigger a startup script.
 - /variant dalle2
+- /chat v2 with reply functions << this is complete, and I am not building addl. features on top of it because the bot will have built in chat history in the future
 
 
 ----- done above -----
 
 - /spc speech to chat
 - /spcs speec to chat(speech)
-- /chat v2 with reply functions
+
 
 - /Vision
 - Deep logging with papertrail
