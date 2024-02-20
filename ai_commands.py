@@ -110,6 +110,41 @@ url='https://EXAMPLEIURL.com')])
 """
 
 
+def image_vision(message, base64_image):
+    """
+    def image_vision(message, encoded_image):
+    """
+    print(f"Analyzing vision")
+    query = helper_functions.extract_body(message.text)
+
+    # construct the message payload
+    input_messages = [{"role": "user",
+                 "content": [
+                    {
+                         "type": "text",
+                         "text": query},
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]}]
+    try:
+        completion_object = client.chat.completion.create(
+            model='gpt-4-vision-preview',
+            messages=input_messages,
+            max_tokens=500
+        )
+        response_text = completion_object.choices[0].message.content
+        if response_text:
+            return response_text
+        else:
+            return "Unable to analyze image"            
+        
+    except Exception as e:
+        print(f"Error occured: {e}")
+
+
+
+
+
 
 def variate_image(message, org_image_file_byte_array):
     """
@@ -134,8 +169,6 @@ def variate_image(message, org_image_file_byte_array):
     except Exception as e:
         print(e)
         return None
-
-
 
 
 def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
