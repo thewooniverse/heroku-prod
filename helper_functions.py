@@ -1,6 +1,6 @@
 import templates
 import os
-
+import base64
 
 def extract_body(message):
     """
@@ -8,6 +8,10 @@ def extract_body(message):
     """
     return " ".join(message.split(' ')[1:])
 
+
+def encode_image(image_path):
+    with open(image_path, 'rb') as image_file:
+        return base64.b64encode(image_file.read()).decode('utf-8')
 
 
 

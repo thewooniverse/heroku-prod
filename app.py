@@ -30,8 +30,6 @@ Eventually, it would be really cool and amazing to write a full fledged AI assis
 
 - Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
 - In staging, the first one I'll develop is /t1 /t2 /t3; configurable languages. (defaults set to english, Chinese, Korean).
-
-- Vision
 - translate - t1, t2, t3 <<<- translate whatever 
 
 Current dev priorities;
@@ -47,16 +45,17 @@ Current dev priorities;
 
 ----- done above -----
 
-- /spc speech to chat
-- /spcs speec to chat(speech)
-
 
 - /Vision
+
+
+
+
 - Deep logging with papertrail
 - /settings and configuration with PostGres / Database
 - /clear
 
-1. /edit dalle2
+1. /edit dalle v2
 -- /edit_mask(alpha targeting) /edit_img
 -- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
@@ -64,6 +63,9 @@ Current dev priorities;
 
 2. /variate v2
 -- supports n number of variations depending on configurations
+
+3. /chat v3
+-- chat history based persistence / threads << need to read more on it, or implement context awareness and chat history awareness
 
 
 --- Build it out robustly to a degree where I can have it as a customer facing interface / product.
@@ -173,8 +175,6 @@ def handle_start(message):
     bot.reply_to(message, helper_functions.start_menu())
 
 
-
-
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
@@ -185,17 +185,17 @@ def handle_chat(message):
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['t1'])
-def handle_chat(message):
+def handle_translate_1(message):
     response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['t2'])
-def handle_chat(message):
+def handle_translate_2(message):
     response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
 @bot.message_handler(commands=['t3'])
-def handle_chat(message):
+def handle_translate_3(message):
     response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
 
@@ -212,7 +212,6 @@ def handle_tts(message):
     else:
         print("Audio failed to generate")
         bot.reply_to(message, "Failed to fetch or generate speech.")
-
 
 @bot.message_handler(commands=['stt'])
 def handle_stt(message):
@@ -244,6 +243,7 @@ def handle_stt(message):
     else:
         print("No target message")
         bot.reply_to(message, "Please reply to a voice note")
+
 
 
 
@@ -324,6 +324,48 @@ def handle_variations(message):
 
 
 
+@bot.message_handler(commands=['vision'])
+def handle_vision(message):
+    """
+    Queries: Returns a chat completion text response from a image + query
+
+    - <<IMG>> // Caption
+    - /vision {text} (reply_to above image message)
+    -- in this case, image and the {text} after /vision is used
+    """
+    # check if we are replying to a message, and that message contains an image.
+    if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+        print("Image file received")
+        # ensure that the file format is in PNG
+        original_message = message.reply_to_message
+        original_image = original_message.photo[-1]
+        original_image_file_info = bot.get_file(original_image.file_id)
+
+        try:
+            downloaded_img_file = bot.download_file(original_image_file_info.file_path)
+            print("Image file downloaded")
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp:
+                temp.write(downloaded_img_file)
+                temp_img_path = temp.name
+                print(f'Image saved locally at: {temp.name}')
+
+                # encode the image to base64
+                encoded_img = helper_functions.encode_image(temp_img_path)
+                text_response = ai_commands.image_vision(message, encoded_img)
+                bot.reply_to(message, text_response)
+
+        
+        except Exception as e:
+            # handle various exceptions
+            print(f"Error occured, details: {e}")
+            bot.reply_to(message, "Unable to analyze image")
+        finally:
+            # handle file cleanup
+            os.remove(temp_img_path)
+    
+    else:
+        print("No reply message or image found")
+        bot.reply_to(message, "Please reply to an image message")
 
 
 
@@ -333,9 +375,6 @@ def handle_variations(message):
 
 
 
-
-
-# Edit version 2
 @bot.message_handler(commands=['edit_img'])
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
