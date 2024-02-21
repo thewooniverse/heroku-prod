@@ -127,7 +127,7 @@ def image_vision(message, base64_image):
                         "type": "image_url",
                         "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}]}]
     try:
-        completion_object = client.chat.completion.create(
+        completion_object = client.chat.completions.create(
             model='gpt-4-vision-preview',
             messages=input_messages,
             max_tokens=500
