@@ -42,12 +42,9 @@ Current dev priorities;
 - /variant dalle2
 - /chat v2 with reply functions << this is complete, and I am not building addl. features on top of it because the bot will have built in chat history in the future
 
+- /Vision << works as is.
 
 ----- done above -----
-
-
-- /Vision
-
 
 
 
