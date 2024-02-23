@@ -42,24 +42,21 @@ Current dev priorities;
 - /variant dalle2
 - /chat v2 with reply functions << this is complete, and I am not building addl. features on top of it because the bot will have built in chat history in the future
 
+- /Vision << works as is.
 
 ----- done above -----
-
-
-- /Vision
-
-
 
 
 - Deep logging with papertrail
 - /settings and configuration with PostGres / Database
 - /clear
 
+
+
 1. /edit dalle v2
 -- /edit_mask(alpha targeting) /edit_img
 -- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
-
 
 2. /variate v2
 -- supports n number of variations depending on configurations
@@ -78,8 +75,6 @@ Current dev priorities;
 
 Current dev priorities;
 ADD A FEW MORE FEATURES
-- speech to translation -> spt en, spt cn etc...
-- Vision
 
 Logging
 - Thorough logging: basics of logging with metadata, integrating with a persistent solution (papertrail), accessing logs
