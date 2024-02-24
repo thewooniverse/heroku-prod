@@ -49,9 +49,8 @@ Current dev priorities;
 
 - Deep logging with papertrail
 - /settings and configuration with PostGres / Database
-- /clear
 
-
+-- Post database --
 
 1. /edit dalle v2
 -- /edit_mask(alpha targeting) /edit_img
@@ -193,6 +192,27 @@ def handle_translate_2(message):
 def handle_translate_3(message):
     response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
     bot.reply_to(message, text=response_text, parse_mode='Markdown')
+
+
+
+@bot.message_handler(commands=['delete_chat'])
+def handle_delete_chat(message):
+    """
+    handle_delete_chat(message): deletes all chat history on telegram
+    """
+    pass
+
+
+@bot.message_handler(commands=['clear_memory'])
+def handle_clear_memory(message):
+    """
+    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
+    """
+    pass
+
+
+
+
 
 
 
