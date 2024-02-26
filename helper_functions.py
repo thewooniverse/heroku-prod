@@ -8,19 +8,53 @@ def extract_body(message):
     """
     return " ".join(message.split(' ')[1:])
 
+def extract_command(message):
+    """
+    def extract_command(message): returns the command
+    """
+    return " ".join(message.split(' ')[0])
+
 
 def encode_image(image_path):
     with open(image_path, 'rb') as image_file:
         return base64.b64encode(image_file.read()).decode('utf-8')
-
-
-
 
 def start_menu():
     """
     def start_menu(): returns the current template menu message
     """
     return templates.start_menu
+
+
+
+
+
+# logging helpers
+def construct_logs(message):
+    """
+    def construct_logs(message): takes a message object and returns a string of all the necessary and important metadata / information.
+    """
+    command = extract_command(message)
+    log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {message.from_user.usernaem}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE: {extract_body(message)}"
+    return log_string
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
