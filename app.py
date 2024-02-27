@@ -61,6 +61,8 @@ Current dev priorities;
 
 logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
 
+logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
+then, implement databases
 
 
 
@@ -211,8 +213,8 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    logger.info(helper_functions.construct_logs(message))
     bot.reply_to(message, helper_functions.start_menu())
+    logger.info(helper_functions.construct_logs(message))
 
 
 # text handlers
