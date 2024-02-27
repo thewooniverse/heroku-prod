@@ -37,6 +37,7 @@ def construct_logs(message):
     command = extract_command(message)
     try:
         log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {message.from_user.username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE: {extract_body(message)}"
+        print(log_string)
         return log_string
     except Exception as e:
         return f"Error: {e}"
