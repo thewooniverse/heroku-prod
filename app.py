@@ -157,10 +157,11 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
-# logger.info('This is a test message.', extra={'dyno_name': dyno_name}) << use the extra parameter to pass the logger.
+logger.info('This is a test message.', extra={'dyno_name': DYNO_NAME}) # << use the extra parameter to pass the logger.
 
 
 
