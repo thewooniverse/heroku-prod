@@ -6,13 +6,19 @@ def extract_body(message):
     """
     def extract_body(message): returns the message body of a telegram message
     """
-    return " ".join(message.split(' ')[1:])
+    try:
+        return " ".join(message.split(' ')[1:])
+    except Exception as e:
+        return ""
 
 def extract_command(message):
     """
     def extract_command(message): returns the command
     """
-    return " ".join(message.split(' ')[0])
+    try:
+        return " ".join(message.split(' ')[0])
+    except Exception as e:
+        return ""
 
 
 def encode_image(image_path):
