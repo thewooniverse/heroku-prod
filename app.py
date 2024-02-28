@@ -61,6 +61,8 @@ Current dev priorities;
 
 logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
 
+logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
+then, implement databases
 
 
 
@@ -155,9 +157,11 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
-logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
-# logger.info('This is a test message.', extra={'dyno_name': dyno_name}) << use the extra parameter to pass the logger.
+# logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
+logger = logging.getLogger(__name__)
+logger.info('This is a test message.', extra={'dyno_name': DYNO_NAME}) # << use the extra parameter to pass the logger.
 
 
 
@@ -210,8 +214,8 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    logger.info(helper_functions.construct_logs(message))
     bot.reply_to(message, helper_functions.start_menu())
+    logger.info("/start command successfully executed")
 
 
 # text handlers
