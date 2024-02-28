@@ -2,21 +2,21 @@ import templates
 import os
 import base64
 
-def extract_body(message):
+def extract_body(message_text):
     """
     def extract_body(message): returns the message body of a telegram message
     """
     try:
-        return " ".join(message.split(' ')[1:])
+        return " ".join(message_text.split(' ')[1:])
     except Exception as e:
         return ""
 
-def extract_command(message):
+def extract_command(message_text):
     """
     def extract_command(message): returns the command
     """
     try:
-        return " ".join(message.split(' ')[0])
+        return " ".join(message_text.split(' ')[0])
     except Exception as e:
         return ""
 
@@ -40,14 +40,14 @@ def construct_logs(message):
     """
     def construct_logs(message): takes a message object and returns a string of all the necessary and important metadata / information.
     """
-    command = extract_command(message)
+    command = extract_command(message.text)
     username = getattr(message.from_user, 'username', 'N/A')
     try:
-        log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE: {extract_body(message)}"
-        print(log_string)
+        log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE_ID: {message.message_id} | CONTENT_TYPE: {message.content_type}"
+        # print(log_string) < unclog stdout
         return log_string
     except Exception as e:
-        return f"Error: {e}"
+        return f"Error occured in: {e}"
 
 
 

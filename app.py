@@ -56,22 +56,19 @@ Current dev priorities;
 - /chat v2 with reply functions << this is complete, and I am not building addl. features on top of it because the bot will have built in chat history in the future
 
 - /Vision << works as is.
-
+logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
 ----- done above -----
 
 logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
-
-logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
-then, implement databases
-
+- now just building out logging properly into the different levels of the system for proper logs w different levels.
+- then, implement database solution, implement settingsa nd config.
 
 
 
 
 
 
-- Deep logging with papertrail
-- /settings and configuration with PostGres / Database
+
 
 -- Post database --
 
@@ -86,6 +83,7 @@ then, implement databases
 3. /chat v3
 -- chat history based persistence / threads << need to read more on it, or implement context awareness and chat history awareness
 
+4. /settings
 
 --- Build it out robustly to a degree where I can have it as a customer facing interface / product.
 
@@ -144,8 +142,8 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environments it means this would be different
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # again, same environment variable, different api keys accessed
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
-WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 ROOT_URL = os.environ.get('ROOT_URL')
+WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 
@@ -172,21 +170,12 @@ logger = logging.getLogger(__name__)
 
 
 
-
-
-
-
-
-
-
-
-
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
 
 # Your web application needs to listen for POST requests on the path you specified in your webhook URL. Here's an example using Flask:
-@app.route(WEBHOOK_URL_PATH, methods=['POST']) # Define Route: We're telling our Flask app that whenever it receives a POST request at the WEBHOOK_URL_PATH,
+@app.route(WEBHOOK_URL_PATH, methods=['POST']) # Define Route: We're telling our Flask app that whenever it receives a POST request at the WEBHOOK_URL_PATH, /webhook
 # it should execute the function defined directly below this line.
 def receive_update():
     # Receive Update Function: This is the start of a function definition called receive_update, 
