@@ -16,7 +16,7 @@ def extract_command(message_text):
     def extract_command(message): returns the command
     """
     try:
-        return " ".join(message_text.split(' ')[0])
+        return message_text.split(' ')[0]
     except Exception as e:
         return ""
 
