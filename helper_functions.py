@@ -35,8 +35,9 @@ def construct_logs(message):
     def construct_logs(message): takes a message object and returns a string of all the necessary and important metadata / information.
     """
     command = extract_command(message)
+    username = getattr(message.from_user, 'username', 'N/A')
     try:
-        log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {message.from_user.username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE: {extract_body(message)}"
+        log_string = f"/{command} | USER_ID: {message.from_user.id} | USERNAME: {username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE: {extract_body(message)}"
         print(log_string)
         return log_string
     except Exception as e:

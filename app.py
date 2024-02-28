@@ -215,7 +215,7 @@ def receive_update():
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     bot.reply_to(message, helper_functions.start_menu())
-    logger.info(helper_functions.construct_logs(message))
+    logger.info("/start command successfully executed")
 
 
 # text handlers
