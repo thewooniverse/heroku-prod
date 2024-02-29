@@ -60,7 +60,8 @@ logging conflicts and basic logging throughout helper functions as well as centr
 ----- done above -----
 
 logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
-- now just building out logging properly into the different levels of the system for proper logs w different levels.
+- now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
+- Errors with levels
 - then, implement database solution, implement settingsa nd config.
 
 
@@ -202,36 +203,60 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    bot.reply_to(message, helper_functions.start_menu())
-    logger.info("/start command successfully executed")
-    logger.info(helper_functions.construct_logs(message))
+    try:
+        bot.reply_to(message, helper_functions.start_menu())
+        logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
+    except Exception as e:
+        bot.reply_to(message, "/start command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
     context = ""
-    if message.reply_to_message:
-        context = message.reply_to_message.text
-    response_text = ai_commands.chat_completion(message, context, model='gpt-4')
-    bot.reply_to(message, text=response_text, parse_mode='Markdown')
-    logger.info(helper_functions.construct_logs(message))
+    try:
+        if message.reply_to_message:
+            context = message.reply_to_message.text
+        response_text = ai_commands.chat_completion(message, context, model='gpt-4')
+        bot.reply_to(message, text=response_text, parse_mode='Markdown')
+        logger.info(helper_functions.construct_logs(message, "Success"))
+    except Exception as e:
+        bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
 
 @bot.message_handler(commands=['t1'])
 def handle_translate_1(message):
-    response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
-    bot.reply_to(message, text=response_text, parse_mode='Markdown')
-    logger.info(helper_functions.construct_logs(message))
+    try:
+        response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
+        bot.reply_to(message, text=response_text, parse_mode='Markdown')
+        logger.info(helper_functions.construct_logs(message, "Success"))
+    except Exception as e:
+        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
 
 @bot.message_handler(commands=['t2'])
 def handle_translate_2(message):
-    response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
-    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+    try:
+        response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
+        bot.reply_to(message, text=response_text, parse_mode='Markdown')
+        logger.info(helper_functions.construct_logs(message, "Success"))
+    except Exception as e:
+        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
+    
 @bot.message_handler(commands=['t3'])
 def handle_translate_3(message):
-    response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
-    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+    try:
+        response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
+        bot.reply_to(message, text=response_text, parse_mode='Markdown')
+        logger.info(helper_functions.construct_logs(message, "Success"))
+    except Exception as e:
+        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
 
@@ -247,18 +272,23 @@ def handle_clear_memory(message):
 
 
 
-
-
 # voice based handlers
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
-    tts_response = ai_commands.text_to_speech(message)
-    if tts_response:
-        print("Audio generated")
-        bot.send_voice(message.chat.id, tts_response)
-    else:
-        print("Audio failed to generate")
-        bot.reply_to(message, "Failed to fetch or generate speech.")
+    try:
+        tts_response = ai_commands.text_to_speech(message)
+        if tts_response:
+            logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
+            bot.send_voice(message.chat.id, tts_response)
+        else:
+            bot.reply_to(message, "Text received but failed to fetch or generate speech, please contact admin.")
+            logger.warning(helper_functions.construct_logs(message, "Warning: tts response could not be generated")) 
+
+    except Exception as e:
+        bot.reply_to(message, "/tts command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+    
+
 
 @bot.message_handler(commands=['stt'])
 def handle_stt(message):
@@ -291,6 +321,11 @@ def handle_stt(message):
         print("No target message")
         bot.reply_to(message, "Please reply to a voice note")
 
+
+
+
+
+###### logging ####
 
 
 
