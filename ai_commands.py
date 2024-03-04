@@ -74,11 +74,11 @@ def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
 
 
 ## Image Handling Commands ##
-def generate_image(message):
+def generate_image(message, context):
     """
     Takes a message object, unpacks and returns a response.
     """
-    body_text = helper_functions.extract_body(message.text)
+    body_text = f"{context}\n"+ helper_functions.extract_body(message.text)
 
     ImagesResponse = client.images.generate(
         model='dall-e-3',
