@@ -11,6 +11,10 @@ import logging
 import sys
 import helper_classes
 
+# database modules
+from flask_sqlalchemy import SQLAlchemy
+
+
 
 
 
@@ -57,13 +61,19 @@ Current dev priorities;
 
 - /Vision << works as is.
 logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
------ done above -----
 
 Finish logging v1 throughout;
+logging -> 
+----- done above -----
 
 
 
-logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
+
+
+Now just implement database and configurations for chats and checking -> then integrate configurable settings for all command handling.
+Implement rest of the features.
+
+database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
 - now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
 - Errors with levels
 - then, implement database solution, implement settingsa nd config.
@@ -167,7 +177,12 @@ logger = logging.getLogger(__name__)
 
 
 
+# Configure the SQLAlchemy part of the app instance
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)  # Fix for postgres:// scheme
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Create the SQLAlchemy db instance
+db = SQLAlchemy(app)
 
 
 
