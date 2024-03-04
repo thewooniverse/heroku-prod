@@ -190,7 +190,7 @@ def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
             response_format='url'
             )
         
-        print(ImagesResponse)
+        # print(ImagesResponse)
         response = requests.get(ImagesResponse.data[0].url)
         return response.content
     
