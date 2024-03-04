@@ -59,6 +59,10 @@ Current dev priorities;
 logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
 ----- done above -----
 
+Finish logging v1 throughout;
+
+
+
 logging -> database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
 - now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
 - Errors with levels
@@ -260,16 +264,6 @@ def handle_translate_3(message):
 
 
 
-@bot.message_handler(commands=['clear_memory'])
-def handle_clear_memory(message):
-    """
-    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
-    """
-    pass
-
-
-
-
 
 
 # voice based handlers
@@ -300,40 +294,31 @@ def handle_stt(message):
 
         try:
             downloaded_voice = bot.download_file(voice_file_info.file_path)
-            print("Voice note downloaded")
+            logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
 
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
             stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
-            bot.reply_to(message, stt_response or "Could not convert speech to text")
+            if stt_response:
+                bot.reply_to(message, stt_response)
+                logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
+            else:
+                bot.reply_to(message, "Could not convert speech to text")
+                logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
 
             # Clean up: Remove the temporary file
             os.remove(temp_voice_file_path)
 
         
         except Exception as e:
-            print(f"Error during STT process {e}")
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
             bot.reply_to(message, "Failed to process the voice note, please check logs.")
         
     else:
-        print("No target message")
         bot.reply_to(message, "Please reply to a voice note")
-
-
-
-
-
-###### logging ####
-
-
-
-
-
-
-
-
+        logger.debug(helper_functions.construct_logs(message, "Debug: No target message"))
 
 
 
@@ -344,13 +329,19 @@ def handle_stt(message):
 def handle_imagine(message):
     query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
-    print(query)
-    image_content = ai_commands.generate_image(message)
-    if image_content:
+
+    try:
+        image_content = ai_commands.generate_image(message, system_context)
         bot.send_photo(message.chat.id, photo=image_content)
-    else:
+        logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
+
+    except Exception as e:
         bot.reply_to(message, "Failed to fetch or generate image")
-    # bot.reply_to(message, response_text)
+        logger.error(helper_functions.construct_logs(message, f"Error: Could not complete image generation, error: {e}"))
+
+
+
+
 
 @bot.message_handler(commands=['variate'])
 def handle_variations(message):
@@ -359,7 +350,6 @@ def handle_variations(message):
     """
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-        print("Original Image file received")
 
         # Download & get the original message and the image contained in it
         original_message = message.reply_to_message
@@ -370,13 +360,14 @@ def handle_variations(message):
         try:
             # tryt to download the original image and process it as a PNG file
             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
-            print("Original Image downloaded")
+            logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully downloaded"))
 
             with io.BytesIO(downloaded_original_img) as image_stream:
                 # Open the image using Pillow with another 'with' block
                 with Image.open(image_stream).convert('RGBA') as img:
                     width, height = 1024, 1024
                     img = img.resize((width, height)) # resize to standard image, same as the mask image
+                    logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully converted and resized"))
 
                     # Convert the resized image to a BytesIO object again
                     with io.BytesIO() as byte_stream:
@@ -384,25 +375,26 @@ def handle_variations(message):
                         byte_array = byte_stream.getvalue()
                         img_var_response = ai_commands.variate_image(message, byte_array)
                         if img_var_response:
-                            print("Image Variations generated")
+                            logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
                             bot.send_photo(message.chat.id, photo=img_var_response)
                         else:
-                            print("Image Variations with just the original image could not be generated")
+                            logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
                             bot.reply_to(message, "Could not generate Variations of the image")
                             
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
             if isinstance(e, IOError):
-                print("Error: error occured during file operations")
+                logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
             elif isinstance(e, PIL.UnidentifiedImageError):
-                print("Error: error occured during Image Conversion to PNG")
+                print(f"Error: error occured during Image Conversion to PNG")
+                logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
             else:
-                print(f"Error: unidentified error, please check logs. Details {str(e)}")
+                logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
             return
     # if the base condition is not met where the reply message is not an image; then we exit the function early
     else:
-        print("Original Message does not include an image")
         bot.reply_to(message, "Original Message does not include an image")
+        logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
 
 
 
@@ -417,7 +409,7 @@ def handle_vision(message):
     """
     # check if we are replying to a message, and that message contains an image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-        print("Image file received")
+
         # ensure that the file format is in PNG
         original_message = message.reply_to_message
         original_image = original_message.photo[-1]
@@ -425,25 +417,27 @@ def handle_vision(message):
 
         try:
             downloaded_img_file = bot.download_file(original_image_file_info.file_path)
-            print("Image file downloaded")
+            
             with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp:
                 temp.write(downloaded_img_file)
                 temp_img_path = temp.name
-                print(f'Image saved locally at: {temp.name}')
+                logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded, converted and resized at {temp.name}"))
 
                 # encode the image to base64
                 encoded_img = helper_functions.encode_image(temp_img_path)
                 text_response = ai_commands.image_vision(message, encoded_img)
                 bot.reply_to(message, text_response)
+                logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
 
         
         except Exception as e:
             # handle various exceptions
-            print(f"Error occured, details: {e}")
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured at {e}"))
             bot.reply_to(message, "Unable to analyze image")
         finally:
             # handle file cleanup
             os.remove(temp_img_path)
+            logger.debug(helper_functions.construct_logs(message, f"Debug: Image file cleanup successful"))
     
     else:
         print("No reply message or image found")
@@ -536,82 +530,30 @@ def handle_edit(message):
 
 
 
-# @bot.message_handler(commands=['edit'])
-# def handle_edit(message):
-#     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
-#     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-#         print("Original Image file received")
 
-#         # Create the temporary mask image
-#         width, height = 1024, 1024
-#         mask = Image.new("RGBA", (width,height), (0,0,0,1)) # create an opaque mask image mask
 
-#         # short script to set bottom half to be transparent
-#         for x in range(width):
-#             for y in range(height //2, height): # only loop over the bottom half of the mask
-#                 # set alpha (A) to zero to turn pixel transparent
-#                 alpha = 0
-#                 mask.putpixel((x, y), (0,0,0,alpha))
-#                 # this results in the folllwing
-#                 # 1 1 1 1
-#                 # 1 1 1 1
-#                 # 0 0 0 0
-#                 # 0 0 0 0
 
-#         with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
-#             mask.save(temp_mask_file, format='PNG')
-#             temp_mask_file_path = temp_mask_file.name
-    
-#         # get the original message and the image contained in it
-#         original_message = message.reply_to_message
-#         original_image = original_message.photo[-1]
-#         original_image_file_info = bot.get_file(original_image.file_id)
 
-#         # try and get the original image and process it as a PNG file
-#         try:
-#             # tryt to download the original image and process it as a PNG file
-#             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
-#             print("Original Image downloaded")
 
-#             with io.BytesIO(downloaded_original_img) as image_stream:
-#                 # Open the image using Pillow with another 'with' block
-#                 with Image.open(image_stream).convert('RGBA') as img:
-#                     img = img.resize((width, height)) # resize to standard image, same as the mask image
+# Bot configuration handlers and commands
+@bot.message_handler(commands=['clear_memory'])
+def handle_clear_memory(message):
+    """
+    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
+    """
+    pass
 
-#                     # Convert the resized image to a BytesIO object again
-#                     with io.BytesIO() as byte_stream:
-#                         img.save(byte_stream, format='PNG')
-#                         byte_array = byte_stream.getvalue()
 
-#                         # try processing the image through the openAI edit function
-#                         print("Image processing: no mask")
-#                         img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path)
 
-#                         if img_edit_response:
-#                             print("Edited image generated")
-#                             bot.send_photo(message.chat.id, photo=img_edit_response)
-#                         else:
-#                             print("Edited image with just the original image could not be generated")
-#                             bot.reply_to(message, "Could not generate image")
-                            
-#         # if the image could not be converted, then we print the error and return the handler and exit early
-#         except Exception as e:
-#             if isinstance(e, IOError):
-#                 print("Error: error occured during file operations")
-#             elif isinstance(e, PIL.UnidentifiedImageError):
-#                 print("Error: error occured during Image Conversion to PNG")
-#             else:
-#                 print(f"Error: unidentified error, please check logs. Details {str(e)}")
-#             return
-        
-#         finally:
-#             os.remove(temp_mask_file_path)
 
-#     # if the base condition is not met where the reply message is not an image; then we exit the function early
-#     else:
-#         print("Original Message does not include an image")
-#         bot.reply_to(message, "Original Message does not include an image")
-        
+
+
+
+
+
+
+
+
 
 
             
