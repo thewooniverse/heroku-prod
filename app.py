@@ -72,14 +72,13 @@ logging ->
 
 Now just implement database and configurations for chats and checking -> then integrate configurable settings for all command handling.
 Implement rest of the features.
+1. Learn PostgreSQL management with python + flask;
+
 
 database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
 - now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
 - Errors with levels
 - then, implement database solution, implement settingsa nd config.
-
-
-
 
 
 
