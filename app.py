@@ -13,7 +13,7 @@ import helper_classes
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
-
+import psycopg2
 
 
 
@@ -177,6 +177,10 @@ logger = logging.getLogger(__name__)
 
 
 # Configure the SQLAlchemy part of the app instance
+DATABASE_URL = os.environ['DATABASE_URL']
+
+conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)  # Fix for postgres:// scheme
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
