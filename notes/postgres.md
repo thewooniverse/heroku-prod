@@ -1,4 +1,6 @@
 
+
+
 # Basics;
 PostgreSQL, often simply Postgres, is an advanced, open-source object-relational database system known for its reliability, robustness, and performance. It supports both SQL (relational) and JSON (non-relational) querying. PostgreSQL is highly extensible with features such as custom functions and data types, and it supports a wide variety of programming languages and frameworks. Here are some of the basics to get you started with PostgreSQL:
 
@@ -114,6 +116,113 @@ As you grow more comfortable with PostgreSQL, you'll discover its powerful featu
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# CRUD basics:
+SQL (Structured Query Language) is the standard language for managing and manipulating databases. Below, you'll find an overview of the basics of SQL, focusing on creating tables and performing CRUD (Create, Read, Update, Delete) operations. These operations are fundamental for managing data in any relational database management system (RDBMS) like PostgreSQL, MySQL, SQL Server, etc.
+
+### Creating Tables
+
+To store data in a database, you first need to create a table. A table is defined with a specific set of columns, each with its own data type and possibly constraints (e.g., primary key, unique, not null).
+
+#### Example
+
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+In this example, `SERIAL` is a PostgreSQL data type that automatically increments. `VARCHAR(n)` is a variable-length character string with a maximum length of `n`. `TIMESTAMP` stores date and time.
+
+### Inserting Data (Create)
+
+To add a new row to a table, use the `INSERT` statement.
+
+#### Example
+
+```sql
+INSERT INTO users (username, email, password) VALUES ('john_doe', 'john@example.com', 'secret');
+```
+
+### Reading Data (Read)
+
+To retrieve data from a table, use the `SELECT` statement. You can specify conditions with the `WHERE` clause and sort the result set with the `ORDER BY` clause.
+
+#### Example
+
+```sql
+SELECT * FROM users; -- Retrieves all columns for all rows
+SELECT username, email FROM users WHERE id = 1; -- Retrieves specific columns for rows matching the condition
+SELECT * FROM users ORDER BY created_at DESC; -- Retrieves all columns for all rows, sorted by the created_at column
+```
+
+### Updating Data (Update)
+
+To modify existing rows in a table, use the `UPDATE` statement with a `WHERE` clause to specify which rows should be updated.
+
+#### Example
+
+```sql
+UPDATE users SET password = 'new_secret' WHERE id = 1;
+```
+
+### Deleting Data (Delete)
+
+To remove rows from a table, use the `DELETE` statement, typically with a `WHERE` clause to avoid deleting all rows.
+
+#### Example
+
+```sql
+DELETE FROM users WHERE id = 1;
+```
+
+### Additional Concepts
+
+- **Primary Key**: A column or a set of columns used to uniquely identify each row in a table.
+- **Foreign Key**: A field (or collection of fields) in one table that uniquely identifies a row of another table. It's used to establish a link between the data in two tables.
+- **Indexes**: Used to speed up the search queries by essentially allowing the database to skip scanning every row in a table.
+- **Transactions**: Allow multiple SQL statements to be executed as a single atomic operation, ensuring data integrity.
+- **Joins**: Used to combine rows from two or more tables, based on a related column between them.
+
+Remember, SQL syntax can vary slightly between different RDBMS, so always check the documentation for the specific database you're working with.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Using Postgres with a python app;
 Using PostgreSQL for a Python app, especially one deployed on Heroku, is a common choice due to PostgreSQL's reliability and robust features. For Python applications, `psycopg2` is a popular PostgreSQL database adapter, enabling you to interact with PostgreSQL databases in an efficient and Pythonic way. Let's go through the basics of setting up and using `psycopg2` in the context of storing configurations for different chats for a Telegram bot written with the Telebot library.
 
@@ -218,3 +327,11 @@ conn.close()
 - Consider using connection pooling (e.g., with `psycopg2.pool.SimpleConnectionPool`) for more efficient use of database connections, especially important for web applications or bots serving multiple users.
 
 This introduction covers the basics of using `psycopg2` to manage chat configurations for a Telegram bot. Adjust the SQL and Python code as necessary to fit your application's specific needs.
+
+
+
+
+
+
+
+
