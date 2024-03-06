@@ -1,90 +1,105 @@
 
-# Getting started - flask + heroku postgres
-Integrating a Heroku PostgreSQL database with a Flask application involves several steps. Here's a guide to get you started:
+# Basics
+Using PostgreSQL for a Python app, especially one deployed on Heroku, is a common choice due to PostgreSQL's reliability and robust features. For Python applications, `psycopg2` is a popular PostgreSQL database adapter, enabling you to interact with PostgreSQL databases in an efficient and Pythonic way. Let's go through the basics of setting up and using `psycopg2` in the context of storing configurations for different chats for a Telegram bot written with the Telebot library.
 
-### Step 1: Add Heroku Postgres to Your App
+### Prerequisites
 
-If you haven't already added a PostgreSQL database to your Heroku app, you can do so by running:
+Before diving into code examples, ensure you have:
 
-```sh
-heroku addons:create heroku-postgresql:hobby-dev --app your-app-name
+- A PostgreSQL database set up. On Heroku, you can add a Postgres addon to your application from the Heroku dashboard.
+- The `psycopg2` package installed in your Python environment. If you're deploying on Heroku, also add it to your `requirements.txt` file.
+- Basic knowledge of SQL for creating tables and performing CRUD operations.
+
+### Setting Up `psycopg2`
+
+1. **Install psycopg2**: Install the package using pip. If you're working in a local development environment, run:
+
+   ```sh
+   pip install psycopg2-binary
+   ```
+
+   For Heroku deployment, add `psycopg2-binary` to your `requirements.txt` file.
+
+2. **Database Connection**: Use the DATABASE_URL from your Heroku Postgres addon to connect to your database. Heroku automatically adds this environment variable when you add a Postgres database.
+
+   ```python
+   import psycopg2
+   import os
+
+   DATABASE_URL = os.environ['DATABASE_URL']
+
+   conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+   ```
+
+### Basic Operations with `psycopg2`
+
+#### Creating a Table
+
+To store configurations for different chats, you'll need a table. Here's an example SQL statement to create a table:
+
+```sql
+CREATE TABLE chat_configs (
+    chat_id BIGINT PRIMARY KEY,
+    config JSONB
+);
 ```
-This command adds a free `hobby-dev` instance of Heroku Postgres to your application.
 
-### Step 2: Install Flask-SQLAlchemy
-
-Flask-SQLAlchemy is an extension for Flask that simplifies using SQLAlchemy with Flask applications. SQLAlchemy is an ORM (Object-Relational Mapper) that allows you to interact with your database in a Pythonic way.
-
-Add `Flask-SQLAlchemy` to your `requirements.txt` file:
-
-```
-Flask-SQLAlchemy
-psycopg2-binary
-```
-
-Then, install the dependencies locally (if you haven't already):
-
-```sh
-pip install -r requirements.txt
-```
-
-### Step 3: Configure Your Flask App for PostgreSQL
-
-Heroku sets an environment variable `DATABASE_URL` for your app's database connection string. In your Flask app, you can use this environment variable to configure the SQLALCHEMY_DATABASE_URI for Flask-SQLAlchemy.
-
-Modify your app's main file (e.g., `app.py`) to include the following:
+And here's how you can execute it with `psycopg2`:
 
 ```python
-import os
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
-
-app = Flask(__name__)
-
-# Configure the SQLAlchemy part of the app instance
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)  # Fix for postgres:// scheme
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Create the SQLAlchemy db instance
-db = SQLAlchemy(app)
-
-# Define a model
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-
-# Create the tables
-with app.app_context():
-    db.create_all()
+def create_table():
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS chat_configs (
+                chat_id BIGINT PRIMARY KEY,
+                config JSONB
+            );
+        """)
+        conn.commit()
 ```
 
-Note the `.replace("://", "ql://", 1)` part in the `DATABASE_URL` setting. This is a workaround for a dialect name change in SQLAlchemy 1.4 for PostgreSQL URLs from `postgres://` to `postgresql://`. Heroku's environment variable might use the old dialect name, so this ensures compatibility.
+#### Inserting Data
 
-### Step 4: Use Models in Your Application
-
-Now that you have a model defined (`User` in the example above), you can start using it in your route handlers to create, read, update, and delete data in your database. For example, to create a new user:
+To insert or update a chat's configuration:
 
 ```python
-@app.route('/add_user/<username>')
-def add_user(username):
-    new_user = User(username=username)
-    db.session.add(new_user)
-    db.session.commit()
-    return f"User {username} added."
+def upsert_chat_config(chat_id, config):
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            INSERT INTO chat_configs (chat_id, config)
+            VALUES (%s, %s)
+            ON CONFLICT (chat_id) DO UPDATE
+            SET config = EXCLUDED.config;
+        """, (chat_id, config))
+        conn.commit()
 ```
 
-### Step 5: Deploy Your Changes
+#### Retrieving Data
 
-Commit your changes to Git and deploy to Heroku:
+To retrieve a chat's configuration:
 
-```sh
-git add .
-git commit -m "Add PostgreSQL database integration"
-git push heroku main
+```python
+def get_chat_config(chat_id):
+    with conn.cursor() as cursor:
+        cursor.execute("""
+            SELECT config FROM chat_configs WHERE chat_id = %s;
+        """, (chat_id,))
+        config = cursor.fetchone()
+        return config[0] if config else None
 ```
 
-### Step 6: Test Your Application
+#### Closing the Connection
 
-Make sure to test your application thoroughly to ensure that database operations are working as expected.
+It's important to close the connection when your application stops:
 
-By following these steps, you integrate your Flask application with a Heroku PostgreSQL database, allowing you to perform database operations through your Flask app.
+```python
+conn.close()
+```
+
+### Notes
+
+- When deploying on Heroku, manage database connections carefully. Heroku limits the number of connections based on your database plan.
+- Always use environment variables (like `DATABASE_URL`) for sensitive information and avoid hard-coding credentials in your source code.
+- Consider using connection pooling (e.g., with `psycopg2.pool.SimpleConnectionPool`) for more efficient use of database connections, especially important for web applications or bots serving multiple users.
+
+This introduction covers the basics of using `psycopg2` to manage chat configurations for a Telegram bot. Adjust the SQL and Python code as necessary to fit your application's specific needs.
