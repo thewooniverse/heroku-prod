@@ -246,8 +246,10 @@ def get_or_create_chat_config(chat_id):
                 config = default_config
                 print(f"config default is {type(config)}")
             else:
-                config = json.loads(config_row[0])
-                print(f"config importaed is {type(config)}")
+                if isinstance(config_row[0], str):
+                    config = json.loads(config_row[0])  # Deserialize if it's a string
+                else:
+                    config = config_row[0]  # Use directly if it's already a dictionary
             return config
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
