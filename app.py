@@ -14,6 +14,7 @@ import signal
 import sys
 import json
 from templates import default_config
+import traceback
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
@@ -228,9 +229,12 @@ def create_table(table_name):
 # Define Database Utility function (getting connection and putting down the connection)
 def get_or_create_chat_config(chat_id):
     """
-    def get_or_create_chat_config(chat_id): takes a chat_id and returns a config as Python Dict. If no config is found
+    def get_or_create_chat_config(chat_id): takes a chat_id and returns a config as Python Dict. If no config is found then we write a new default config.
     """
     conn = connection_pool.getconn()
+    print(f"default config is {type(default_config)}")
+
+
     try:
         with conn.cursor() as cursor:
             cursor.execute("SELECT config FROM chat_configs WHERE chat_id = %s;", (chat_id,))
@@ -240,11 +244,14 @@ def get_or_create_chat_config(chat_id):
                 cursor.execute("INSERT INTO chat_configs (chat_id, config) VALUES (%s, %s) RETURNING config;", (chat_id, json.dumps(default_config)))
                 conn.commit()
                 config = default_config
+                print(f"config default is {type(config)}")
             else:
                 config = json.loads(config_row[0])
+                print(f"config importaed is {type(config)}")
             return config
     except Exception as e:
-        logger.error(f"Database error: {e}")
+        tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        logger.error(f"Database error: {e} \n\n {tb_str}")
         raise
     finally:
         connection_pool.putconn(conn)
@@ -311,7 +318,7 @@ def handle_start(message):
     try:
         chat_config = get_or_create_chat_config(message.chat.id)
         bot.reply_to(message, helper_functions.start_menu())
-        # bot.reply_to(message, chat_config)
+        bot.reply_to(message, chat_config)
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
