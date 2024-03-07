@@ -1,0 +1,14 @@
+{
+    "names": {
+      "default_user": "user"
+    },
+    "persistence": false,
+    "language_model": "gpt-3.5-turbo",
+    "openai_api_key": "",
+    "image_mask_map": [
+          [0, 0, 0],
+          [0, 0, 0],
+          [1, 1, 1]
+        ],
+    "is_premium": false
+  }

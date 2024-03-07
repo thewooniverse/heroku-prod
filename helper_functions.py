@@ -2,6 +2,12 @@ import templates
 import os
 import base64
 
+
+
+
+
+
+# handler helper functions
 def extract_body(message_text):
     """
     def extract_body(message): returns the message body of a telegram message

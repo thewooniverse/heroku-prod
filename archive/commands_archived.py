@@ -1,3 +1,25 @@
+# # Configure the SQLAlchemy part of the app instance
+# DATABASE_URL = os.environ['DATABASE_URL']
+
+# conn = psycopg2.connect(DATABASE_URL, sslmode='require')
+# # Create a connection pool
+# connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, 
+#                                                       dsn="dbname=yourdbname user=youruser password=yourpassword host=yourhost")
+
+# # Get a connection from the pool
+# conn = connection_pool.getconn()
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)  # Fix for postgres:// scheme
+# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# # Create the SQLAlchemy db instance
+# db = SQLAlchemy(app)
+
+
+
+
+
+
 
 
 # ## import modules ##
