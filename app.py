@@ -242,14 +242,10 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
-    if message.from_user.isbot:
-        print("This user is a bot.")
-        return
-
     try:
         # import the configs
-        chat_config = get_or_create_chat_config(message.chat.id)
-        user_config = get_or_create_chat_config(message.from_user.id)
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
         bot.reply_to(message, f"Chat language model: {chat_config['language-model']}, user language model: {user_config['language_model']}")
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:

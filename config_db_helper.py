@@ -11,7 +11,13 @@ from psycopg2 import pool
 ### Setup the connection pool ###
 DATABASE_URL = os.environ.get('DATABASE_URL')
 connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
-print(f"DATABASE URL ESTABLISHED {DATABASE_URL}")
+# print(f"DATABASE URL ESTABLISHED {DATABASE_URL}")
+
+
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
+# logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
+logger = logging.getLogger(__name__)
 
 
 ### variables and templates ###
@@ -42,6 +48,25 @@ default_user_config = {
 
 
 ### Define and create the necessary tables if they are not already created ###
+def get_conn_from_pool():
+    """Get a connection from the pool with logging."""
+    logger.info("Attempting to fetch a connection from the pool.")
+    conn = connection_pool.getconn()
+    if conn:
+        logger.info("Connection fetched successfully.")
+    else:
+        logger.warning("Failed to fetch a connection from the pool.")
+    return conn
+
+def put_conn_back_in_pool(conn):
+    """Return a connection to the pool with logging."""
+    logger.info("Returning a connection to the pool.")
+    connection_pool.putconn(conn)
+    logger.info("Connection returned successfully.")
+
+
+
+
 def create_config_table(table_name, config_type):
     # Ensure table_name is a safe string to prevent SQL injection
     # This is a simplified example. In production, use more robust validation or whitelisting.
@@ -51,7 +76,7 @@ def create_config_table(table_name, config_type):
     if config_type not in ['chat', 'user']:
         raise ValueError("Invalid config type")
 
-    conn = connection_pool.getconn()
+    conn = get_conn_from_pool()
     try:
         with conn.cursor() as cursor:
             cursor.execute(f"""
@@ -62,11 +87,11 @@ def create_config_table(table_name, config_type):
             """)
             conn.commit()
     finally:
-        connection_pool.putconn(conn)
+        put_conn_back_in_pool(conn)
 
 # Create the necessary tables
 create_config_table("chat_configs", "chat")
-create_config_table("user_configs", "user")
+# create_config_table("user_configs", "user")
 
 
 
