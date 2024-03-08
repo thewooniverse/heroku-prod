@@ -11,11 +11,11 @@ from psycopg2 import pool
 ### Setup the connection pool ###
 DATABASE_URL = os.environ.get('DATABASE_URL')
 connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
+print(f"DATABASE URL ESTABLISHED {DATABASE_URL}")
 
 
 ### variables and templates ###
 valid_table_names = ["chat_configs", "user_configs"]
-
 
 default_chat_config = {
     # chat configuration determines the behaviour of the bot within a chat group
