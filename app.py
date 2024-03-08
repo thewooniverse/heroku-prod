@@ -243,7 +243,7 @@ def get_or_create_chat_config(chat_id):
                 # default config is imported as a python dict of a Default Config from templates.py; from templates import default_config at the top of the app.
                 cursor.execute("INSERT INTO chat_configs (chat_id, config) VALUES (%s, %s) RETURNING config;", (chat_id, json.dumps(default_config)))
                 conn.commit()
-                config = default_config
+                config = default_config 
                 print(f"config default is {type(config)}")
             else:
                 if isinstance(config_row[0], str):
