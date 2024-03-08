@@ -13,8 +13,9 @@ import helper_classes
 import signal
 import sys
 import json
-from templates import default_config
 import traceback
+import config_db_helper # this also runs all of the necessary functions in creating all the tables
+from config_db_helper import get_or_create_chat_config
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
@@ -85,10 +86,19 @@ DATABASE INTEGRATION WORKFLOW:
 - Design the initial configurations based on the configurability of the different functions and handlers
 -- chat_model, name etc...
 - Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations.
-
-
-
 - Bulk update script for updating configurations with new configuration structures; bot is down while configs are being updated and maintained.
+
+
+Well - it should be by account, and not by chat; or should it be by chat...
+Well if someone got a subscription, it should be by username?
+It should be against the person? Or the group; or does the group configurations have a different thing.
+
+
+
+NEXTUP:
+-> build out the feature integrations checker and all that
+-> build out configurations / settings
+
 
 
 
@@ -184,9 +194,6 @@ DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 # instantiate the bot
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-
-
-
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 print(f"Logging started with {LOG_LEVEL}")
@@ -194,90 +201,6 @@ logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
 
-
-
-##############################################
-############### DATABASE SETUP ###############
-##############################################
-
-# Setup the connection pool
-DATABASE_URL = os.environ.get('DATABASE_URL')
-connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
-
-
-# Define and create the necessary tables if they are not already created
-def create_table(table_name):
-    # Ensure table_name is a safe string to prevent SQL injection
-    # This is a simplified example. In production, use more robust validation or whitelisting.
-    if table_name not in ["chat_configs"]:
-        raise ValueError("Invalid table name")
-
-    conn = connection_pool.getconn()
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(f"""
-                CREATE TABLE IF NOT EXISTS {table_name} (
-                    chat_id BIGINT PRIMARY KEY,
-                    config JSONB
-                );
-            """)
-            conn.commit()
-    finally:
-        connection_pool.putconn(conn)
-
-
-# Define Database Utility function (getting connection and putting down the connection)
-def get_or_create_chat_config(chat_id):
-    """
-    def get_or_create_chat_config(chat_id): takes a chat_id and returns a config as Python Dict. If no config is found then we write a new default config.
-    """
-    conn = connection_pool.getconn()
-    # print(f"default config is {type(default_config)}")
-
-
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute("SELECT config FROM chat_configs WHERE chat_id = %s;", (chat_id,))
-            config_row = cursor.fetchone()
-            if config_row is None:
-                # default config is imported as a python dict of a Default Config from templates.py; from templates import default_config at the top of the app.
-                cursor.execute("INSERT INTO chat_configs (chat_id, config) VALUES (%s, %s) RETURNING config;", (chat_id, json.dumps(default_config)))
-                conn.commit()
-                config = default_config 
-                # print(f"config default is {type(config)}")
-            else:
-                if isinstance(config_row[0], str):
-                    config = json.loads(config_row[0])  # Deserialize if it's a string
-                else:
-                    config = config_row[0]  # Use directly if it's already a dictionary
-            print(config)
-            return config
-    except Exception as e:
-        tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
-        logger.error(f"Database error: {e} \n\n {tb_str}")
-        raise
-    finally:
-        connection_pool.putconn(conn)
-
-
-# Create the table
-create_table("chat_configs")
-
-
-# Set up the shutdown handler
-def shutdown_handler(signum, frame):
-    # Close database connection pool
-    connection_pool.closeall()
-    sys.exit(0)
-
-# Register the signal handler for graceful shutdown
-signal.signal(signal.SIGTERM, shutdown_handler)
-
-
-
-##############################################
-##############################################
-##############################################
 
 
 
@@ -318,10 +241,14 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
+    if message.from_user.isbot:
+        return
+
     try:
+        # import the configs
         chat_config = get_or_create_chat_config(message.chat.id)
-        bot.reply_to(message, helper_functions.start_menu())
-        bot.reply_to(message, chat_config["language_model"])
+        user_config = get_or_create_chat_config(message.from_user.id)
+        bot.reply_to(message, f"Chat language model: {chat_config['language-model']}, user language model: {user_config['language_model']}")
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -331,6 +258,10 @@ def handle_start(message):
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
+    # bot check
+    if message.from_user.isbot:
+        return
+
     context = ""
     try:
         if message.reply_to_message:
