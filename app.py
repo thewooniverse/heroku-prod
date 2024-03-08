@@ -234,9 +234,6 @@ def get_or_create_chat_config(chat_id):
     conn = connection_pool.getconn()
     print(f"default config is {type(default_config)}")
 
-    # check the create table
-    create_table("chat_configs")
-
 
     try:
         with conn.cursor() as cursor:
@@ -261,6 +258,9 @@ def get_or_create_chat_config(chat_id):
     finally:
         connection_pool.putconn(conn)
 
+
+# Create the table
+create_table("chat_configs")
 
 
 # Set up the shutdown handler
@@ -320,7 +320,7 @@ def handle_start(message):
     try:
         chat_config = get_or_create_chat_config(message.chat.id)
         bot.reply_to(message, helper_functions.start_menu())
-        bot.reply_to(message, chat_config)
+        bot.reply_to(message, chat_config.keys())
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
