@@ -234,6 +234,9 @@ def get_or_create_chat_config(chat_id):
     conn = connection_pool.getconn()
     print(f"default config is {type(default_config)}")
 
+    # check the create table
+    create_table("chat_configs")
+
 
     try:
         with conn.cursor() as cursor:
@@ -258,9 +261,6 @@ def get_or_create_chat_config(chat_id):
     finally:
         connection_pool.putconn(conn)
 
-
-# Create the table
-create_table("chat_configs")
 
 
 # Set up the shutdown handler
