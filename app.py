@@ -202,8 +202,9 @@ logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging
 logger = logging.getLogger(__name__)
 
 
-
-
+# create necessary tables
+config_db_helper.create_config_table("chat_configs", "chat")
+config_db_helper.create_config_table("user_configs", "user")
 
 
 
