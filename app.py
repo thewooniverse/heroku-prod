@@ -243,6 +243,7 @@ def receive_update():
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     if message.from_user.isbot:
+        print("This user is a bot.")
         return
 
     try:
