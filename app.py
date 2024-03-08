@@ -246,7 +246,7 @@ def handle_start(message):
         # import the configs
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        bot.reply_to(message, f"Chat language model: {chat_config['language-model']}, user language model: {user_config['language_model']}")
+        bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
