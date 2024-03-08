@@ -232,7 +232,7 @@ def get_or_create_chat_config(chat_id):
     def get_or_create_chat_config(chat_id): takes a chat_id and returns a config as Python Dict. If no config is found then we write a new default config.
     """
     conn = connection_pool.getconn()
-    print(f"default config is {type(default_config)}")
+    # print(f"default config is {type(default_config)}")
 
 
     try:
@@ -244,12 +244,13 @@ def get_or_create_chat_config(chat_id):
                 cursor.execute("INSERT INTO chat_configs (chat_id, config) VALUES (%s, %s) RETURNING config;", (chat_id, json.dumps(default_config)))
                 conn.commit()
                 config = default_config 
-                print(f"config default is {type(config)}")
+                # print(f"config default is {type(config)}")
             else:
                 if isinstance(config_row[0], str):
                     config = json.loads(config_row[0])  # Deserialize if it's a string
                 else:
                     config = config_row[0]  # Use directly if it's already a dictionary
+            print(config)
             return config
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
@@ -321,6 +322,7 @@ def handle_start(message):
         chat_config = get_or_create_chat_config(message.chat.id)
         bot.reply_to(message, helper_functions.start_menu())
         bot.reply_to(message, chat_config.keys())
+        bot.reply_to(message, chat_config["language_model"])
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
