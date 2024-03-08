@@ -91,20 +91,24 @@ def get_or_create_chat_config(id, config_type):
     new record is created for that given user or chat group in the relevant tables: chat_configs or user_configs.
     """
     conn = connection_pool.getconn()
+    if config_type not in ['chat', 'user']:
+        raise ValueError("Invalid config type")
 
     # determine which configuration type is being retrieved or created.
     if config_type == "chat":
         default_config = default_chat_config
+        config_table = "chat_configs"
     else:
         default_config = default_user_config
+        config_table = "user_configs"
     
     try:
         with conn.cursor() as cursor:
-            cursor.execute("SELECT config FROM chat_configs WHERE chat_id = %s;", (id,))
+            cursor.execute(f"SELECT config FROM {config_table} WHERE {config_type}_id = %s;", (id,))
             config_row = cursor.fetchone()
             if config_row is None:
                 # default config is imported as a python dict of a Default Config from templates.py; from templates import default_config at the top of the app.
-                cursor.execute("INSERT INTO chat_configs (chat_id, config) VALUES (%s, %s) RETURNING config;", (id, json.dumps(default_config)))
+                cursor.execute(f"""INSERT INTO {config_table} ({config_type}_id, config) VALUES (%s, %s) RETURNING config;""", (id, json.dumps(default_config)))
                 conn.commit()
                 config = default_config 
                 # print(f"config default is {type(config)}")
