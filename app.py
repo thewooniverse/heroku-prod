@@ -321,7 +321,6 @@ def handle_start(message):
     try:
         chat_config = get_or_create_chat_config(message.chat.id)
         bot.reply_to(message, helper_functions.start_menu())
-        bot.reply_to(message, chat_config.keys())
         bot.reply_to(message, chat_config["language_model"])
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
