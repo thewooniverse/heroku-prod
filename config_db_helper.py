@@ -5,6 +5,7 @@ import signal
 import traceback
 import logging
 import json
+from psycopg2 import pool
 
 
 ### Setup the connection pool ###
