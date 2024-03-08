@@ -10,10 +10,17 @@ import PIL
 import logging
 import sys
 import helper_classes
+import signal
+import sys
+import json
+import traceback
+import config_db_helper # this also runs all of the necessary functions in creating all the tables
+from config_db_helper import get_or_create_chat_config
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
 import psycopg2
+from psycopg2 import pool
 
 
 
@@ -70,9 +77,32 @@ logging ->
 
 
 
-Now just implement database and configurations for chats and checking -> then integrate configurable settings for all command handling.
-Implement rest of the features.
-1. Learn PostgreSQL management with python + flask;
+
+
+
+
+DATABASE INTEGRATION WORKFLOW:
+- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL
+- Design the initial configurations based on the configurability of the different functions and handlers
+-- chat_model, name etc...
+- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations.
+- Bulk update script for updating configurations with new configuration structures; bot is down while configs are being updated and maintained.
+
+
+Well - it should be by account, and not by chat; or should it be by chat...
+Well if someone got a subscription, it should be by username?
+It should be against the person? Or the group; or does the group configurations have a different thing.
+
+
+
+NEXTUP:
+-> build out the feature integrations checker and all that
+-> build out configurations / settings
+
+
+
+
+
 
 
 database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
@@ -164,9 +194,6 @@ DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 # instantiate the bot
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
-
-
-
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 print(f"Logging started with {LOG_LEVEL}")
@@ -175,19 +202,9 @@ logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging
 logger = logging.getLogger(__name__)
 
 
-
-# Configure the SQLAlchemy part of the app instance
-DATABASE_URL = os.environ['DATABASE_URL']
-
-conn = psycopg2.connect(DATABASE_URL, sslmode='require')
-
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL').replace("://", "ql://", 1)  # Fix for postgres:// scheme
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Create the SQLAlchemy db instance
-db = SQLAlchemy(app)
-
-
+# create necessary tables
+config_db_helper.create_config_table("chat_configs", "chat")
+config_db_helper.create_config_table("user_configs", "user")
 
 
 
@@ -226,7 +243,10 @@ def receive_update():
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     try:
-        bot.reply_to(message, helper_functions.start_menu())
+        # import the configs
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -236,6 +256,10 @@ def handle_start(message):
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
+    # bot check
+    if message.from_user.isbot:
+        return
+
     context = ""
     try:
         if message.reply_to_message:
