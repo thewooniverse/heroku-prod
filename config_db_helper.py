@@ -12,13 +12,6 @@ from psycopg2 import pool
 DATABASE_URL = os.environ.get('DATABASE_URL')
 connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
 
-### create logging objects ###
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
-print(f"Logging started with {LOG_LEVEL}")
-logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
-# logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
-logger = logging.getLogger(__name__)
-
 
 ### variables and templates ###
 valid_table_names = ["chat_configs", "user_configs"]
@@ -121,7 +114,7 @@ def get_or_create_chat_config(id, config_type):
             return config
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
-        logger.error(f"Database error: {e} \n\n {tb_str}")
+        print(f"Database error: {e} \n\n {tb_str}")
         raise
     finally:
         connection_pool.putconn(conn)
