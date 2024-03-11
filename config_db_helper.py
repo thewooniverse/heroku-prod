@@ -25,11 +25,10 @@ valid_table_names = ["chat_configs", "user_configs"]
 
 default_chat_config = {
     # chat configuration determines the behaviour of the bot within a chat group
-
     "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
+    "vectorestore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
     "openai_api_key": "",
-    "is_premium": False, # determines whether a chat has a premium subscription
-    "language_model": "gpt-3.5-turbo", # determines
+    "is_premium": False, # determines whether a group ios
   }
 
 default_user_config = {
@@ -92,13 +91,6 @@ def create_config_table(table_name, config_type):
 # Create the necessary tables
 create_config_table("chat_configs", "chat")
 # create_config_table("user_configs", "user")
-
-
-
-
-
-
-
 
 
 
