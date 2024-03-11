@@ -4,8 +4,25 @@
 telebot postgres database structure
 
 ## chat configs
-Contains all of the configurations for each chat;
-(CHAT_ID:BIGINT, {config:JSONB})
+Each chat can have configurations
+- chat group context / system messages - string to give the bot more context as to the nature of the group and its enquiries;
+- persistence - true/false
+- vectorstore_endpoint
+- OpenAI API Key set through OAI_apikey_group (fallback if user's keys are not working or user does not have a key)
+
+Each user can have config:
+- OpenAI API key
+- language model
+- is_premium - determines whether the user is able to use premium featuers
+- variantions
+- img_edit_mask - configuration for
+
+
+
+
+
+
+
 
 
 ## eventstream
@@ -43,3 +60,13 @@ So then the config checks for:
 Is it going to be two different configs? Or no, how will the checking work against it? How will the configuration be structured?
 chat_id, sender user_id.
 When a connection is made to the database, both of the configurations are retrieved
+
+
+
+
+
+# How will chat configurations used?
+We retrieve it first, then
+
+
+

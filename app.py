@@ -22,6 +22,7 @@ from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from psycopg2 import pool
 
+import templates
 
 
 
@@ -71,6 +72,14 @@ logging conflicts and basic logging throughout helper functions as well as centr
 
 Finish logging v1 throughout;
 logging -> 
+
+
+DB:
+- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL << done
+- Design the initial configurations based on the configurability of the different functions and handlers << done
+-- chat_model, name etc... << done
+- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations. << done
+
 ----- done above -----
 
 
@@ -82,33 +91,49 @@ logging ->
 
 
 DATABASE INTEGRATION WORKFLOW:
-- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL
-- Design the initial configurations based on the configurability of the different functions and handlers
--- chat_model, name etc...
-- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations.
-- Bulk update script for updating configurations with new configuration structures; bot is down while configs are being updated and maintained.
 
 
-Well - it should be by account, and not by chat; or should it be by chat...
-Well if someone got a subscription, it should be by username?
-It should be against the person? Or the group; or does the group configurations have a different thing.
+0. /settings for adjusting configurations with buttons? Do I want to deal with buttons already?
+0.a. Retrieval and updating
+Need to do simple setting API key, variations;
 
 
-
-NEXTUP:
--> build out the feature integrations checker and all that
--> build out configurations / settings
+----
 
 
 
 
 
+1. Basic integrations of configurations into functions such as /chat based models.
+1.a. /chat
+1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
+------> But I would also nee to handle for API Key validity, and multiple key entry and trying with both;
+---------> ask GPT, ok so I have two keys, and I want to try with one, and if one fails I want to try again for the other key.
+------------> Perhaps a way that I could do this is populate a list of keys, one after the other, then try by popping;
+1.a.ii. Then, I would need to get 
 
 
-database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
-- now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
-- Errors with levels
-- then, implement database solution, implement settingsa nd config.
+1.b. /variate
+1.c. translations options
+
+
+3. Bulk update scripts to retain information from the previous script and add a new attribute or configurable feature.
+4. Integrate configuration details within logging as well.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -242,11 +267,17 @@ def receive_update():
 
 @bot.message_handler(commands=['start'])
 def handle_start(message):
+    if message.from_user.is_bot:
+        return
+
     try:
         # import the configs
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
+
+        # previous test, to be deleted. Commented out to prevent unnecessary database connections.
+        # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
+        bot.reply_to(message, templates.start_menu)
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -257,19 +288,31 @@ def handle_start(message):
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
     # bot check
-    if message.from_user.isbot:
+    if message.from_user.is_bot:
         return
 
     context = ""
     try:
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+
         if message.reply_to_message:
             context = message.reply_to_message.text
-        response_text = ai_commands.chat_completion(message, context, model='gpt-4')
+        response_text = ai_commands.chat_completion(message, context, model=user_config['language_model'])
         bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, "Success"))
+        logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent. Language Model = {user_config['language_model']}"))
     except Exception as e:
         bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+
+
+
+
+
 
 
 @bot.message_handler(commands=['t1'])
