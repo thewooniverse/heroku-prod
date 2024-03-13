@@ -89,13 +89,21 @@ DB:
 
 
 
-
 DATABASE INTEGRATION WORKFLOW:
+
+0. get or set configuration attribute.
+
+
+
+
 
 
 0. /settings for adjusting configurations with buttons? Do I want to deal with buttons already?
 0.a. Retrieval and updating
 Need to do simple setting API key, variations;
+
+Basic Get/Set - retrieval and updating / inserting data types.
+
 
 
 ----

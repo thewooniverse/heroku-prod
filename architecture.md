@@ -1,7 +1,22 @@
 
 
-# Database Architecture:
-telebot postgres database structure
+# Architecture:
+telebot database and configs architecture
+
+Premium features for Groups:
+- Custom usernames
+- Persistence and Context awareness for threads
+- 
+
+Premium features for Users:
+- Configurable 
+- Multie generations
+- Unlimited call limits
+
+
+Freemium model -> free users have limitations as to how much calls they can make on a free tier (and the tiers of services available).
+
+
 
 ## chat configs
 Each chat can have configurations

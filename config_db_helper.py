@@ -24,18 +24,20 @@ logger = logging.getLogger(__name__)
 valid_table_names = ["chat_configs", "user_configs"]
 
 default_chat_config = {
+    "version": "0.0.1", # the version determines
+
     # chat configuration determines the behaviour of the bot within a chat group
     "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
     "vectorestore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
-    "openai_api_key": "",
-    "is_premium": False, # determines whether a group ios
+    "openai_api_key": "", # group's OpenAI API Key, this is used if the user's API key is not valid.
+    "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on.
   }
 
 default_user_config = {
-    # user configurations determines how the bot interacts with commands requested by the user
+    "version": "0.0.1", # the version determines
 
-    "override": True, # determines whether a user configuration overrides a chat configuration, if the setting is off then chat_config is used
-    "is_premium": False,
+    # user configurations determines how the bot interacts with commands requested by the user
+    "is_premium": False, # determines whether the user is a premium user and has access to premium features.
     "language_model": "gpt-4", # determines the default language model used by the user
     "openai_api_key": "", # determines the OpenAI API Key of a given user
     "image_mask_map": [ # determines how each user wants to edit the images
@@ -118,6 +120,7 @@ def get_or_create_chat_config(id, config_type):
             config_row = cursor.fetchone()
             if config_row is None:
                 # default config is imported as a python dict of a Default Config from templates.py; from templates import default_config at the top of the app.
+                # this automatically sets it to the most up to date version of default configs as written above.
                 cursor.execute(f"""INSERT INTO {config_table} ({config_type}_id, config) VALUES (%s, %s) RETURNING config;""", (id, json.dumps(default_config)))
                 conn.commit()
                 config = default_config 
@@ -127,6 +130,34 @@ def get_or_create_chat_config(id, config_type):
                     config = json.loads(config_row[0])  # Deserialize if it's a string
                 else:
                     config = config_row[0]  # Use directly if it's already a dictionary
+                
+                # if there is an existing configuration, we check the versions and then do the dynamic migrations as needed.
+                current_version = default_config['version'] # get the current default version
+                existing_config_version = config['version'] # check the version of the returned config for the id
+                
+
+                ## dynamic datastructure updating;
+                # only if the versions do not match here, then we update the existing configurations with the new attribute and its default value.
+                if existing_config_version != current_version:
+                    updated_config = default_config.copy() # make a copy
+                    # we loop through the current version of the config for each attribute.
+                    for key in updated_config.keys():
+                        # if the key in the default config exists, get the value of it from the existing key EXCEPT the version (the default one is retained).
+                        if key in config.keys() and (key != "version"):
+                            updated_config[key] = config[key]
+                        # if the key does not exist in the new one, the default configuration is maintained
+                        # if a key exists in the existing config, but is deleted in the default schema, then it is also dropped.
+                    
+
+                    # dump the updated default configuration into the targeted ID;
+                    ## the default config should now have: 
+                    ## 1.) All existing configuration from existing config copied except version num. 
+                    ## 2.) Any new configurations and default values, and 3.) Any old attribute in existing config that is no longer supported is dropped.
+                    cursor.execute(f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s", (json.dumps(updated_config), id))
+                    conn.commit()
+
+                    # overwrite the config variable to the modified / combined default config from above so that it can be returned
+                    config = updated_config
 
             return config
     except Exception as e:
@@ -135,6 +166,32 @@ def get_or_create_chat_config(id, config_type):
         raise
     finally:
         connection_pool.putconn(conn)
+
+
+
+
+
+
+def get_or_set_config_value(id, config_type, config_attribute):
+    """
+    def get_or_set_config_value(id, config_type): this function returns a configuration value for a given attribute key/name.
+    """
+    conn = connection_pool.getconn()
+    # check if the configuration type is valid.
+    if config_type not in ['chat', 'user']:
+        raise ValueError("Invalid config type")
+    
+    
+
+
+
+
+
+    
+
+    
+
+
 
 
 
@@ -150,15 +207,6 @@ def shutdown_handler(signum, frame):
 
 # Register the signal handler for graceful shutdown
 signal.signal(signal.SIGTERM, shutdown_handler)
-
-
-
-
-
-
-
-
-
 
 
 
