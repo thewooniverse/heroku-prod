@@ -37,6 +37,33 @@ Each user can have config:
 
 
 
+/user_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /uset_oai_key <>
+
+<Button 1 - Language Models> <Button 2 - Premium Subscription>
+<Button 3 - Image Models> <Button 4 - Image Edit Mask> 
+
+/chat_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /cset_oai_key <>
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

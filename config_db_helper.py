@@ -6,6 +6,8 @@ import traceback
 import logging
 import json
 from psycopg2 import pool
+import helper_functions
+import re
 
 
 ### Setup the connection pool ###
@@ -23,9 +25,14 @@ logger = logging.getLogger(__name__)
 ### variables and templates ###
 valid_table_names = ["chat_configs", "user_configs"]
 
-default_chat_config = {
-    "version": "0.0.1", # the version determines
 
+#####
+# For any config changes, remember to update the versions.
+#####
+default_chat_config = {
+    "version": "0.0.1", # the version determines the current version of the configs
+
+    # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
     "vectorestore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
@@ -34,8 +41,9 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.0.1", # the version determines
+    "version": "0.0.1", # the version determines the current version of the configs
 
+    # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
     "is_premium": False, # determines whether the user is a premium user and has access to premium features.
     "language_model": "gpt-4", # determines the default language model used by the user
@@ -48,7 +56,16 @@ default_user_config = {
   }
 
 
-### Define and create the necessary tables if they are not already created ###
+valid_configval_patterns = {
+    # valid_formats contain the syntaxes in regex that are accepted by a configuration that is typed / entered by the user.
+    "openai_api_key": r'sk-.{20}T3BlbkFJ.{20}' # regex,
+}
+
+
+
+
+
+# database connection helpers
 def get_conn_from_pool():
     """Get a connection from the pool with logging."""
     logger.info("Attempting to fetch a connection from the pool.")
@@ -68,6 +85,9 @@ def put_conn_back_in_pool(conn):
 
 
 
+
+
+### Define and create the necessary tables if they are not already created ###
 def create_config_table(table_name, config_type):
     # Ensure table_name is a safe string to prevent SQL injection
     # This is a simplified example. In production, use more robust validation or whitelisting.
@@ -92,7 +112,8 @@ def create_config_table(table_name, config_type):
 
 # Create the necessary tables
 create_config_table("chat_configs", "chat")
-# create_config_table("user_configs", "user")
+create_config_table("user_configs", "user")
+
 
 
 
@@ -156,7 +177,7 @@ def get_or_create_chat_config(id, config_type):
                     cursor.execute(f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s", (json.dumps(updated_config), id))
                     conn.commit()
 
-                    # overwrite the config variable to the modified / combined default config from above so that it can be returned
+                    # overwrite the config variable to the modified / combined default config from above so that it can be returned and used in the command handlers.
                     config = updated_config
 
             return config
@@ -172,18 +193,61 @@ def get_or_create_chat_config(id, config_type):
 
 
 
-def get_or_set_config_value(id, config_type, config_attribute):
+def set_new_config(id, config_type, config_attribute, new_config):
     """
-    def get_or_set_config_value(id, config_type): this function returns a configuration value for a given attribute key/name.
+    Updates the configuration value for a specified attribute and configuration type (chat or user).
+    This function assumes the relevant chat or user configuration has already been initialized and is up to date by 
+    calling get_or_create_chat_config() on the user or chat first.
+    
+    Args:
+        id (str): The unique identifier for the chat or user.
+        config_type (str): The type of configuration ('chat' or 'user').
+        config_attribute (str): The attribute name within the configuration to be updated.
+        new_config (dict): The new configuration value to be set for the specified attribute.
+        
+    Raises:
+        ValueError: If `config_type` is not 'chat' or 'user', or if `config_attribute` is invalid.
     """
     conn = connection_pool.getconn()
     # check if the configuration type is valid.
     if config_type not in ['chat', 'user']:
         raise ValueError("Invalid config type")
     
+    # check if the configuration attribute it is trying to retrieve is value.
+    valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
+    if config_attribute not in valid_keys:
+        raise ValueError("Invalid config attribute for current version of configurations")
+    
+
+    # determine which configuration type is being retrieved or created.
+    config_table = "chat_configs" if config_type == "chat" else "user_configs"
+
+    try:
+        with conn.cursor() as cursor:
+            # Safe way to insert variable table names into SQL queries
+            query = f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s"
+            cursor.execute(query, (json.dumps(new_config), id))
+    except Exception as e:
+        tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
+        print(f"Database error: {e} \n\n {tb_str}")
+        raise
+
+
+    finally:
+        connection_pool.putconn(conn)
+
+
     
 
 
+
+def check_configval_format(message, config_attr):
+    """
+    check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
+    """
+    configval = helper_functions.extract_body(message)
+    config_pattern = re.compile(valid_configval_patterns[config_attr])
+    return bool(config_pattern.fullmatch(configval))
 
 
 
