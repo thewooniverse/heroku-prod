@@ -320,7 +320,6 @@ def handle_start(message):
 
     try:
         # import the configs
-
         # previous test, to be deleted. Commented out to prevent unnecessary database connections.
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -344,13 +343,16 @@ def handle_user_openai_apikey(message):
         return
     
     try:
-        openai_key = helper_functions.extract_body(message)
+        new_openai_key = helper_functions.extract_body(message)
         if config_db_helper.check_configval_format(message, 'openai_api_key'):
             # get the configurations
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
-            user_config['openai_api_key'] = openai_key
+            print(user_config['openai_api_key'])
+            user_config['openai_api_key'] = new_openai_key
+            print(user_config['openai_api_key'])
+
             new_config = user_config.copy()
-            config_db_helper.set_new_config(message.from_user.id, 'user', 'openai_api_key', new_config)
+            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
             bot.reply_to(message, "New API key for user successfully set")
 
     except Exception as e:
@@ -361,7 +363,7 @@ def handle_user_openai_apikey(message):
 @bot.message_handler(commands=['/cset_oaikey'])
 def handle_chat_openai_apikey(message):
     """
-    handle_user_openai_apikey(message): sets openAI key for the user
+    handle_user_openai_apikey(message): sets openAI key for the chat
     """
     if message.from_user.is_bot:
         return

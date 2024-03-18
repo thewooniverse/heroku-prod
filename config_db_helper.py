@@ -193,7 +193,7 @@ def get_or_create_chat_config(id, config_type):
 
 
 
-def set_new_config(id, config_type, config_attribute, new_config):
+def set_new_config(id, config_type, new_config):
     """
     Updates the configuration value for a specified attribute and configuration type (chat or user).
     This function assumes the relevant chat or user configuration has already been initialized and is up to date by 
@@ -231,7 +231,6 @@ def set_new_config(id, config_type, config_attribute, new_config):
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         print(f"Database error: {e} \n\n {tb_str}")
         raise
-
 
     finally:
         connection_pool.putconn(conn)
