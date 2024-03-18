@@ -214,11 +214,7 @@ def set_new_config(id, config_type, new_config):
         raise ValueError("Invalid config type")
     
     # check if the configuration attribute it is trying to retrieve is value.
-    valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
-    if config_attribute not in valid_keys:
-        raise ValueError("Invalid config attribute for current version of configurations")
-    
-
+    # valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
     # determine which configuration type is being retrieved or created.
     config_table = "chat_configs" if config_type == "chat" else "user_configs"
 
@@ -247,8 +243,6 @@ def check_configval_format(message, config_attr):
     configval = helper_functions.extract_body(message)
     config_pattern = re.compile(valid_configval_patterns[config_attr])
     return bool(config_pattern.fullmatch(configval))
-
-
 
     
 

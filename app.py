@@ -344,7 +344,10 @@ def handle_user_openai_apikey(message):
     
     try:
         new_openai_key = helper_functions.extract_body(message)
+        logger.info(helper_functions.construct_logs(message, f"Success: new oai API Key extracted {new_openai_key}"))
+
         if config_db_helper.check_configval_format(message, 'openai_api_key'):
+            logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
             # get the configurations
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
             print(user_config['openai_api_key'])
