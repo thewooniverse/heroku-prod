@@ -343,7 +343,7 @@ def handle_user_openai_apikey(message):
         return
     
     try:
-        new_openai_key = helper_functions.extract_body(message)
+        new_openai_key = helper_functions.extract_body(message.text)
 
         # if config_db_helper.check_configval_format(message, 'openai_api_key'):
             # logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
@@ -549,7 +549,7 @@ def handle_stt(message):
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
-    query = helper_functions.extract_body(message.text)
+    # query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
