@@ -334,7 +334,7 @@ def handle_start(message):
 
 
 ### manual configurations
-@bot.message_handler(commands=['/user_set_openai_key'])
+@bot.message_handler(commands=['/userset-openaikey'])
 def handle_user_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
