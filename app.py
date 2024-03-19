@@ -334,56 +334,45 @@ def handle_start(message):
 
 
 ### manual configurations
-@bot.message_handler(commands=['/uset_oaikey'])
+@bot.message_handler(commands=['/user_set_openai_key'])
 def handle_user_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
     """
     if message.from_user.is_bot:
         return
-    
     try:
-        new_openai_key = helper_functions.extract_body(message)
-        logger.info(helper_functions.construct_logs(message, f"Success: new oai API Key extracted {new_openai_key}"))
-
+        bot.reply_to(message, f"OpenAI API KEY{helper_functions.extract_body(message)}")
         if config_db_helper.check_configval_format(message, 'openai_api_key'):
-            logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
-            # get the configurations
-            user_config = get_or_create_chat_config(message.from_user.id, 'user')
-            print(user_config['openai_api_key'])
-            user_config['openai_api_key'] = new_openai_key
-            print(user_config['openai_api_key'])
+            bot.reply_to(message, f"OpenAI Key is in the correct format.")
 
-            new_config = user_config.copy()
-            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
-            bot.reply_to(message, "New API key for user successfully set")
+
+
+
+
+    # try:
+    #     new_openai_key = helper_functions.extract_body(message)
+    #     logger.info(helper_functions.construct_logs(message, f"Success: new oai API Key extracted {new_openai_key}"))
+
+    #     if config_db_helper.check_configval_format(message, 'openai_api_key'):
+    #         logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
+    #         # get the configurations
+    #         user_config = get_or_create_chat_config(message.from_user.id, 'user')
+    #         print(user_config['openai_api_key'])
+    #         user_config['openai_api_key'] = new_openai_key
+    #         print(user_config['openai_api_key'])
+
+    #         new_config = user_config.copy()
+    #         config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+    #         bot.reply_to(message, "New API key for user successfully set")
 
     except Exception as e:
         bot.reply_to(message, "/uset_oaikey command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
 
 
-@bot.message_handler(commands=['/cset_oaikey'])
-def handle_chat_openai_apikey(message):
-    """
-    handle_user_openai_apikey(message): sets openAI key for the chat
-    """
-    if message.from_user.is_bot:
-        return
-    
-    try:
-        openai_key = helper_functions.extract_body(message)
-        if config_db_helper.check_configval_format(message, 'openai_api_key'):
-            # get the configurations
-            user_config = get_or_create_chat_config(message.from_user.id, 'chat')
-            user_config['openai_api_key'] = openai_key
-            new_config = user_config.copy()
-            config_db_helper.set_new_config(message.chat.id, 'chat', 'openai_api_key', new_config)
-            bot.reply_to(message, "New API key for chat successfully set")
 
-    except Exception as e:
-        bot.reply_to(message, "/uset_oaikey command request could not be completed, please contact admin.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
 
 
 
