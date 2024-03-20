@@ -223,6 +223,7 @@ def set_new_config(id, config_type, new_config):
             # Safe way to insert variable table names into SQL queries
             query = f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s"
             cursor.execute(query, (json.dumps(new_config), id))
+            conn.commit()
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         print(f"Database error: {e} \n\n {tb_str}")

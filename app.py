@@ -347,11 +347,11 @@ def handle_user_openai_apikey(message):
 
         # if config_db_helper.check_configval_format(message, 'openai_api_key'):
             # logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
-            # get the configurations
+        
+        # get the configurations
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        print(user_config['openai_api_key'])
         user_config['openai_api_key'] = new_openai_key
-        print(user_config['openai_api_key'])
+        
 
         new_config = user_config.copy()
         config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
