@@ -1,7 +1,22 @@
 
 
-# Database Architecture:
-telebot postgres database structure
+# Architecture:
+telebot database and configs architecture
+
+Premium features for Groups:
+- Custom usernames
+- Persistence and Context awareness for threads
+- 
+
+Premium features for Users:
+- Configurable 
+- Multie generations
+- Unlimited call limits
+
+
+Freemium model -> free users have limitations as to how much calls they can make on a free tier (and the tiers of services available).
+
+
 
 ## chat configs
 Each chat can have configurations
@@ -16,6 +31,33 @@ Each user can have config:
 - is_premium - determines whether the user is able to use premium featuers
 - variantions
 - img_edit_mask - configuration for
+
+
+
+
+
+
+/user_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /uset_oai_key <>
+
+<Button 1 - Language Models> <Button 2 - Premium Subscription>
+<Button 3 - Image Models> <Button 4 - Image Edit Mask> 
+
+/chat_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /cset_oai_key <>
+
+
+
+
+
+
+
 
 
 

@@ -16,6 +16,8 @@ import json
 import traceback
 import config_db_helper # this also runs all of the necessary functions in creating all the tables
 from config_db_helper import get_or_create_chat_config
+import re
+
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
@@ -80,10 +82,16 @@ DB:
 -- chat_model, name etc... << done
 - Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations. << done
 
+
+0. get or set configuration attribute.
+Basic Get/Set - retrieval and updating database / config schema.
+
 ----- done above -----
 
 
 
+> try implementing the /uset_oaikey and /cset_oaikey commands, and integrate the ai_commands part as well;
+> then edit the first version of the /user_configs /chat_configs
 
 
 
@@ -91,19 +99,58 @@ DB:
 
 
 DATABASE INTEGRATION WORKFLOW:
+- getting and creating attribute configurations is one universal function - def get_or_create_chat_config(id, config_type):
+- setting a configuration / updating it is another universal function - def set_config_value(id, config_type, config_attribute, new_config):
 
 
-0. /settings for adjusting configurations with buttons? Do I want to deal with buttons already?
-0.a. Retrieval and updating
-Need to do simple setting API key, variations;
+
+settings command handler specifications for Telegram Bot:
+- The /settings messages are valid for 24 hours validity, after which they stop responding and the user needs to use the /settings command to configure.
+- For settings that require typing, the message contains a guide for users to set these individually, for example /set_apikey <API_KEY>.
+- Buttons to allow for simple configurations that simply requires a selection among supported options.
+-- For example: user clicks "Chat_Models" button -> goes to another state of the message that has two buttons "gpt-4" or "gpt-3.5-turbo"
+-- User clicks one of the models, and the bot updates the configuration to use that specific model, and sends the chat the notification that it has updated.
+-- USer is then able to click back, or continue changing the models.
+-- When user clicks back, they go back to the main settings screen which currently displays the current settings in terms of the buttons.
+
+> implement /uset_oaikey <>
+> learn inline keyboards
+> learn stateful transitions and state management for messages
+> learn to implement message validity
+
+
+/user_settings
+
+
+
+/chat_settings
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ----
 
 
 
-
-
+Once settings / configuring is made available.
 1. Basic integrations of configurations into functions such as /chat based models.
 1.a. /chat
 1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
@@ -265,6 +312,7 @@ def receive_update():
 
 
 
+
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     if message.from_user.is_bot:
@@ -272,7 +320,6 @@ def handle_start(message):
 
     try:
         # import the configs
-
         # previous test, to be deleted. Commented out to prevent unnecessary database connections.
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -284,6 +331,88 @@ def handle_start(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
+
+
+### manual configurations
+@bot.message_handler(commands=['usoak'])
+def handle_user_openai_apikey(message):
+    """
+    handle_user_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+
+        # if config_db_helper.check_configval_format(message, 'openai_api_key'):
+            # logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
+            # get the configurations
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        print(user_config['openai_api_key'])
+        user_config['openai_api_key'] = new_openai_key
+        print(user_config['openai_api_key'])
+
+        new_config = user_config.copy()
+        config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+        bot.reply_to(message, f"New API key for user successfully set to {new_openai_key}")
+
+    except Exception as e:
+        bot.reply_to(message, "/uset_oaikey command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@bot.message_handler(commands=['user_settings']) # paired with /chat_settings
+def handle_user_settings(message):
+    """
+    def handle_settings(message): this function sends the settings menu for the user's configurations as a message and allows them to set various config values via buttons.
+
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        # import the current set of configurations of the given user and display it
+        # display the buttons and handle settings for setting each of the configurations <<- need to learn basics of how buttons are handled
+        pass
+
+    except Exception as e:
+        bot.reply_to(message, "/settings command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
@@ -293,11 +422,19 @@ def handle_chat(message):
 
     context = ""
     try:
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-
+        # load context if it is response to anything;
         if message.reply_to_message:
             context = message.reply_to_message.text
+        
+
+
+        # handle API Keys, the usage of the group's API key is prioritized over individual.
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
+
+
+        # try to run the OpenAI commands with the given API keys;
         response_text = ai_commands.chat_completion(message, context, model=user_config['language_model'])
         bot.reply_to(message, text=response_text, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent. Language Model = {user_config['language_model']}"))
@@ -412,7 +549,7 @@ def handle_stt(message):
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
-    query = helper_functions.extract_body(message.text)
+    # query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
