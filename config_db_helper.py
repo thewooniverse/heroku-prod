@@ -245,11 +245,17 @@ def check_configval_format(message, config_attr):
     config_pattern = re.compile(valid_configval_patterns[config_attr])
     return bool(config_pattern.fullmatch(configval))
 
-    
 
-    
+def get_apikey_list(message):
+    """
+    get_apikey_list(message): returns a list of associated Api Keys. If empty
+    """
+    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+    openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
 
-
+    # returns an empty list of there are no api keys or both are ["", ""]
+    return [key for key in openai_api_keys if key]
 
 
 

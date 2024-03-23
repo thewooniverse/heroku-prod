@@ -98,6 +98,10 @@ Basic Get/Set - retrieval and updating database / config schema.
 
 
 
+
+
+
+
 DATABASE INTEGRATION WORKFLOW:
 - getting and creating attribute configurations is one universal function - def get_or_create_chat_config(id, config_type):
 - setting a configuration / updating it is another universal function - def set_config_value(id, config_type, config_attribute, new_config):
@@ -263,8 +267,19 @@ WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WE
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 
-# instantiate the bot
+# instantiate the bot and any key helper functions
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+
+
+
+
+
+
+
+
+
+
 
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -334,7 +349,7 @@ def handle_start(message):
 
 
 ### manual configurations
-@bot.message_handler(commands=['usoak'])
+@bot.message_handler(commands=['user_set_openai_key'])
 def handle_user_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
@@ -345,24 +360,22 @@ def handle_user_openai_apikey(message):
     try:
         new_openai_key = helper_functions.extract_body(message.text)
 
-        # if config_db_helper.check_configval_format(message, 'openai_api_key'):
-            # logger.info(helper_functions.construct_logs(message, f"Success: new openAI API Key is in correct formatting;"))
-        
         # get the configurations
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         user_config['openai_api_key'] = new_openai_key
-        
-
         new_config = user_config.copy()
         config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
-        bot.reply_to(message, f"New API key for user successfully set to {new_openai_key}")
 
+        if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+            bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
+            bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+        else:
+            bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+ 
     except Exception as e:
         bot.reply_to(message, "/uset_oaikey command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
-
-
 
 
 
@@ -422,22 +435,21 @@ def handle_chat(message):
 
     context = ""
     try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+
+
+
         # load context if it is response to anything;
         if message.reply_to_message:
             context = message.reply_to_message.text
-        
-
 
         # handle API Keys, the usage of the group's API key is prioritized over individual.
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
+        api_keys = config_db_helper.get_apikey_list(message)
+        if api_keys:
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=user_config['language_model'])
+            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
-
-        # try to run the OpenAI commands with the given API keys;
-        response_text = ai_commands.chat_completion(message, context, model=user_config['language_model'])
-        bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent. Language Model = {user_config['language_model']}"))
     except Exception as e:
         bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))

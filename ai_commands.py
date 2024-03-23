@@ -13,18 +13,19 @@ import helper_functions
 
 
 # constructing the models
-OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
-client = OpenAI(api_key=OPENAI_API_KEY)
+# OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP')
+
 
 
 
 
 
 ## Text Handling Commands ##
-def chat_completion(message, context, model='gpt-3.5-turbo'):
+def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo'):
     """
     def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
+    client = OpenAI(api_key=openai_api_key)
     body_text = helper_functions.extract_body(message.text)
 
     system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below as chat history"
@@ -44,12 +45,13 @@ def chat_completion(message, context, model='gpt-3.5-turbo'):
 
 
 
-def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
+def translate(message, openai_api_key, target_language="eng" ,model='gpt-3.5-turbo'):
     """
     translate(message, target, model): translates
 
     This is commonly used by the user with different configurations like t1 = to EN, t2 = to CN, t3 = to KR.
     """
+    client = OpenAI(api_key=openai_api_key)
     body_text = helper_functions.extract_body(message.text)
 
     system_prompt = f"You are an expert translator agent. You will be given a body of text to translate into a target language, translate the body text into the best most accurate translation possible with awareness of context and language based nuances. Do not include any other sentences in the response text than the translation with the exception of Chinese, please include the Pinyin if the target language is Chinese. The target language to be translated is given in a ISO 639-2 Code format. The target language is {target_language}."
@@ -74,10 +76,11 @@ def translate(message, target_language="eng" ,model='gpt-3.5-turbo'):
 
 
 ## Image Handling Commands ##
-def generate_image(message, context):
+def generate_image(message, openai_api_key, context):
     """
     Takes a message object, unpacks and returns a response.
     """
+    client = OpenAI(api_key=openai_api_key)
     body_text = f"{context}\n"+ helper_functions.extract_body(message.text)
 
     ImagesResponse = client.images.generate(
@@ -110,11 +113,11 @@ url='https://EXAMPLEIURL.com')])
 """
 
 
-def image_vision(message, base64_image):
+def image_vision(message, openai_api_key, base64_image):
     """
     def image_vision(message, encoded_image):
     """
-    print(f"Analyzing vision")
+    client = OpenAI(api_key=openai_api_key)
     query = helper_functions.extract_body(message.text)
 
     # construct the message payload
@@ -146,11 +149,13 @@ def image_vision(message, base64_image):
 
 
 
-def variate_image(message, org_image_file_byte_array):
+def variate_image(message, openai_api_key, org_image_file_byte_array):
     """
     def variate_image(message, org_image_file_byte_array): returns variations of an image based on the 
     """
-    print(f"creating variations of original image with OpenAI")
+    # print(f"creating variations of original image with OpenAI")
+    client = OpenAI(api_key=openai_api_key)
+
     try:
         ImagesResponse = client.images.create_variation(
             model="dall-e-2",
@@ -171,12 +176,13 @@ def variate_image(message, org_image_file_byte_array):
         return None
 
 
-def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
+def edit_image(message, openai_api_key, org_image_file_byte_array, temp_mask_file_path):
     """
     def edit_image(message, image_file_path): returns an edited image based on the query, original image provided and mask file
     
     """
     query = helper_functions.extract_body(message.text)
+    client = OpenAI(api_key=openai_api_key)
 
     print(f"creating an edit of the original image with OpenAI and the edit query: {query}")
     try:
@@ -211,11 +217,11 @@ def edit_image(message, org_image_file_byte_array, temp_mask_file_path):
 
 
 ## Speech Handling Commands ##
-def text_to_speech(message, voice="alloy"):
+def text_to_speech(message, openai_api_key voice="alloy"):
     """
     def text_to_speech(message): takes a message, and returns a voice file containing its dictated version.
     """
-    # extract the query
+    client = OpenAI(api_key=openai_api_key)
     query = helper_functions.extract_body(message.text)
 
 
@@ -240,10 +246,11 @@ def text_to_speech(message, voice="alloy"):
     #     return speech_file_path
 
 
-def speech_to_text(voice_file_path):
+def speech_to_text(voice_file_path, openai_api_key):
     """
     def speech_to_text(message): takes a voice file, and returns a transcribed version of it.
     """
+    client = OpenAI(api_key=openai_api_key)
     transcript = client.audio.transcriptions.create(
     model="whisper-1",
     file=open(voice_file_path, 'rb'),

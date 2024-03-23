@@ -67,7 +67,11 @@ def construct_logs(message, result_message):
 
 
 
-
+def bot_has_delete_permission(chat_id, bot):
+    bot_user = bot.get_me()  # Get bot's own user info
+    bot_member = bot.get_chat_member(chat_id, bot_user.id)  # Get bot's membership info in the chat
+    # Check if bot has permission to delete messages
+    return bot_member.can_delete_messages
 
 
 
