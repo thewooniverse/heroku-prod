@@ -217,7 +217,7 @@ def edit_image(message, openai_api_key, org_image_file_byte_array, temp_mask_fil
 
 
 ## Speech Handling Commands ##
-def text_to_speech(message, openai_api_key voice="alloy"):
+def text_to_speech(message, openai_api_key, voice="alloy"):
     """
     def text_to_speech(message): takes a message, and returns a voice file containing its dictated version.
     """

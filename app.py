@@ -379,6 +379,40 @@ def handle_user_openai_apikey(message):
 
 
 
+# @bot.message_handler(commands=['chat_set_openai_key'])
+# def handle_user_openai_apikey(message):
+#     """
+#     handle_user_openai_apikey(message): sets openAI key for the user
+#     """
+#     if message.from_user.is_bot:
+#         return
+    
+#     try:
+#         new_openai_key = helper_functions.extract_body(message.text)
+
+#         # get the configurations
+#         user_config = get_or_create_chat_config(message.from_user.id, 'user')
+#         user_config['openai_api_key'] = new_openai_key
+#         new_config = user_config.copy()
+#         config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+
+#         if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+#             bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
+#             bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+#         else:
+#             bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+ 
+#     except Exception as e:
+#         bot.reply_to(message, "/uset_oaikey command request could not be completed, please contact admin.")
+#         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
 
 
 
