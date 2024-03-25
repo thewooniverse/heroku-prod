@@ -619,7 +619,7 @@ def handle_imagine(message):
 
     try:
         api_keys = config_db_helper.get_apikey_list(message)
-        image_content = ai_commands.generate_image(message, system_context, openai_api_key=api_keys[0])
+        image_content = ai_commands.generate_image(message, api_keys[0], system_context)
         bot.send_photo(message.chat.id, photo=image_content)
         logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
 
