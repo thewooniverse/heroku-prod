@@ -113,7 +113,7 @@ url='https://EXAMPLEIURL.com')])
 """
 
 
-def image_vision(message, openai_api_key, base64_image):
+def image_vision(message, base64_image, openai_api_key):
     """
     def image_vision(message, encoded_image):
     """
@@ -149,7 +149,7 @@ def image_vision(message, openai_api_key, base64_image):
 
 
 
-def variate_image(message, openai_api_key, org_image_file_byte_array):
+def variate_image(message, org_image_file_byte_array, openai_api_key):
     """
     def variate_image(message, org_image_file_byte_array): returns variations of an image based on the 
     """
@@ -176,7 +176,7 @@ def variate_image(message, openai_api_key, org_image_file_byte_array):
         return None
 
 
-def edit_image(message, openai_api_key, org_image_file_byte_array, temp_mask_file_path):
+def edit_image(message, org_image_file_byte_array, temp_mask_file_path, openai_api_key):
     """
     def edit_image(message, image_file_path): returns an edited image based on the query, original image provided and mask file
     
