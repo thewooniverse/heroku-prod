@@ -85,13 +85,31 @@ DB:
 
 0. get or set configuration attribute.
 Basic Get/Set - retrieval and updating database / config schema.
+1. Integrate the retrieval and usage of openai api keys through all command handlers so they are sending it correctly; currently working for just /chat rn.
+
 
 ----- done above -----
 
+2. Set up the chat_set_openai_apikey and test it in a group setting;
+3. Do some more logging;
 
 
-> try implementing the /uset_oaikey and /cset_oaikey commands, and integrate the ai_commands part as well;
-> then edit the first version of the /user_configs /chat_configs
+- Encrypt the openai API key with a secret key that is saved as an env variable (ask GPT whether this is a good approach) so that saved data is ok.
+- STC method as well just for convenience sake.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -472,7 +490,6 @@ def handle_chat(message):
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
 
 
-
         # load context if it is response to anything;
         if message.reply_to_message:
             context = message.reply_to_message.text
@@ -493,15 +510,12 @@ def handle_chat(message):
 
 
 
-
-
-
-
-
 @bot.message_handler(commands=['t1'])
 def handle_translate_1(message):
     try:
-        response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
+        api_keys = config_db_helper.get_apikey_list(message)
+
+        response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
         bot.reply_to(message, text=response_text, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -512,7 +526,9 @@ def handle_translate_1(message):
 @bot.message_handler(commands=['t2'])
 def handle_translate_2(message):
     try:
-        response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
+        api_keys = config_db_helper.get_apikey_list(message)
+        response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+
         bot.reply_to(message, text=response_text, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -523,7 +539,8 @@ def handle_translate_2(message):
 @bot.message_handler(commands=['t3'])
 def handle_translate_3(message):
     try:
-        response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
+        api_keys = config_db_helper.get_apikey_list(message)
+        response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
         bot.reply_to(message, text=response_text, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -538,7 +555,8 @@ def handle_translate_3(message):
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
     try:
-        tts_response = ai_commands.text_to_speech(message)
+        api_keys = config_db_helper.get_apikey_list(message)
+        tts_response = ai_commands.text_to_speech(message, openai_api_key=api_keys[0])
         if tts_response:
             logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
             bot.send_voice(message.chat.id, tts_response)
@@ -568,7 +586,8 @@ def handle_stt(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
+            api_keys = config_db_helper.get_apikey_list(message)
+            stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
             if stt_response:
                 bot.reply_to(message, stt_response)
                 logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
@@ -599,7 +618,8 @@ def handle_imagine(message):
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
-        image_content = ai_commands.generate_image(message, system_context)
+        api_keys = config_db_helper.get_apikey_list(message)
+        image_content = ai_commands.generate_image(message, system_context, openai_api_key=api_keys[0])
         bot.send_photo(message.chat.id, photo=image_content)
         logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
 
@@ -641,7 +661,8 @@ def handle_variations(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        img_var_response = ai_commands.variate_image(message, byte_array)
+                        api_keys = config_db_helper.get_apikey_list(message)
+                        img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
                         if img_var_response:
                             logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
                             bot.send_photo(message.chat.id, photo=img_var_response)
@@ -693,7 +714,8 @@ def handle_vision(message):
 
                 # encode the image to base64
                 encoded_img = helper_functions.encode_image(temp_img_path)
-                text_response = ai_commands.image_vision(message, encoded_img)
+                api_keys = config_db_helper.get_apikey_list(message)
+                text_response = ai_commands.image_vision(message, encoded_img, openai_api_key=api_keys[0])
                 bot.reply_to(message, text_response)
                 logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
 
@@ -759,8 +781,8 @@ def handle_edit(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        
-                        img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path)
+                        api_keys = config_db_helper.get_apikey_list(message)
+                        img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path, openai_api_key=api_keys[0])
 
                         if img_edit_response:
                             logger.info(helper_functions.construct_logs(message, f"Info: Generated image edit with mask"))
