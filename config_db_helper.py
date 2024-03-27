@@ -223,6 +223,7 @@ def set_new_config(id, config_type, new_config):
             # Safe way to insert variable table names into SQL queries
             query = f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s"
             cursor.execute(query, (json.dumps(new_config), id))
+            conn.commit()
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         print(f"Database error: {e} \n\n {tb_str}")
@@ -244,11 +245,17 @@ def check_configval_format(message, config_attr):
     config_pattern = re.compile(valid_configval_patterns[config_attr])
     return bool(config_pattern.fullmatch(configval))
 
-    
 
-    
+def get_apikey_list(message):
+    """
+    get_apikey_list(message): returns a list of associated Api Keys. If empty
+    """
+    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+    openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
 
-
+    # returns an empty list of there are no api keys or both are ["", ""]
+    return [key for key in openai_api_keys if key]
 
 
 
