@@ -35,7 +35,7 @@ default_chat_config = {
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
-    "vectorestore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
+    "vectorstore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
     "openai_api_key": "", # group's OpenAI API Key, this is used if the user's API key is not valid.
     "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on.
   }
