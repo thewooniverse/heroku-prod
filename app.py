@@ -104,13 +104,13 @@ Once settings / configuring is made available.
 
 
 
+0 - get patty to test out DMing and fix /vision
+
+
 
 ----- done above -----
 
 
-
-
-0 - get patty to test out DMing and fix /vision
 
 
 2. Encrypted storing of API keys.
@@ -700,6 +700,10 @@ def handle_variations(message):
     else:
         bot.reply_to(message, "Original Message does not include an image")
         logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
+
+
+
+
 
 
 
