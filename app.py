@@ -86,13 +86,19 @@ DB:
 0. get or set configuration attribute.
 Basic Get/Set - retrieval and updating database / config schema.
 1. Integrate the retrieval and usage of openai api keys through all command handlers so they are sending it correctly; currently working for just /chat rn.
+2. Set up the chat_set_openai_apikey and test it in a group setting;
 
 
 ----- done above -----
 
-2. Set up the chat_set_openai_apikey and test it in a group setting;
-3. Do some more logging to see;
+1. Testing the chats and settings from a user that does not have an openai api key; and from a chat group that does not have it as well;
+2. Encryption storing, and then doing it again.
 
+
+
+
+
+3. Do some more logging to see;
 
 - STC method as well just for convenience sake.
 - Encrypt the openai API key with a secret key that is saved as an env variable 
@@ -369,10 +375,10 @@ def handle_start(message):
 
 
 ### manual configurations
-@bot.message_handler(commands=['user_set_openai_key'])
-def handle_user_set_openai_apikey(message):
+@bot.message_handler(commands=['chat_set_openai_key'])
+def handle_chat_set_openai_apikey(message):
     """
-    handle_user_openai_apikey(message): sets openAI key for the user
+    handle_chat_openai_apikey(message): sets openAI key for the user
     """
     if message.from_user.is_bot:
         return
@@ -401,8 +407,8 @@ def handle_user_set_openai_apikey(message):
 
 
 
-@bot.message_handler(commands=['group_set_openai_key'])
-def handle_group_set_openai_apikey(message):
+@bot.message_handler(commands=['user_set_openai_key'])
+def handle_user_set_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
     """
