@@ -86,76 +86,60 @@ DB:
 0. get or set configuration attribute.
 Basic Get/Set - retrieval and updating database / config schema.
 1. Integrate the retrieval and usage of openai api keys through all command handlers so they are sending it correctly; currently working for just /chat rn.
+2. Set up the chat_set_openai_apikey and test it in a group setting;
+
+3. Testing the chats and settings from a user that does not have an openai api key; and from a chat group that does not have it as well;
+
+Once settings / configuring is made available.
+1. Basic integrations of configurations into functions such as /chat based models.
+1.a. /chat
+1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
+------> But I would also nee to handle for API Key validity, and multiple key entry and trying with both;
+---------> ask GPT, ok so I have two keys, and I want to try with one, and if one fails I want to try again for the other key.
+------------> Perhaps a way that I could do this is populate a list of keys, one after the other, then try by popping;
+1.a.ii. Then, I would need to get 
+
+1.b. /variate
+1.c. translations options
+
+
+
+0 - get patty to test out DMing and fix /vision
+
 
 
 ----- done above -----
 
-2. Set up the chat_set_openai_apikey and test it in a group setting;
-3. Do some more logging to see;
-
-
-- STC method as well just for convenience sake.
-- Encrypt the openai API key with a secret key that is saved as an env variable 
-(ask GPT whether this is a good approach) so that saved data is ok not exposed to abuse / misuse.
 
 
 
+2. Encrypted storing of API keys.
+3. Features:
+-- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
+-- Temperature controls for language models;
+-- Context for language models (chat specific)
+
+
+General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
 
 
 
+/user_settings;
+/chat_settings;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-DATABASE INTEGRATION WORKFLOW:
-- getting and creating attribute configurations is one universal function - def get_or_create_chat_config(id, config_type):
-- setting a configuration / updating it is another universal function - def set_config_value(id, config_type, config_attribute, new_config):
-
-
-
-settings command handler specifications for Telegram Bot:
 - The /settings messages are valid for 24 hours validity, after which they stop responding and the user needs to use the /settings command to configure.
 - For settings that require typing, the message contains a guide for users to set these individually, for example /set_apikey <API_KEY>.
 - Buttons to allow for simple configurations that simply requires a selection among supported options.
 -- For example: user clicks "Chat_Models" button -> goes to another state of the message that has two buttons "gpt-4" or "gpt-3.5-turbo"
 -- User clicks one of the models, and the bot updates the configuration to use that specific model, and sends the chat the notification that it has updated.
--- USer is then able to click back, or continue changing the models.
+-- User is then able to click back, or continue changing the models.
 -- When user clicks back, they go back to the main settings screen which currently displays the current settings in terms of the buttons.
 
-> implement /uset_oaikey <>
+-- T1 T2 T3 configurations
+
 > learn inline keyboards
-> learn stateful transitions and state management for messages
+> learn stateful transitions and state management for messages;
 > learn to implement message validity
-
-
-/user_settings
-
-
-
-/chat_settings
-
-
-
-
-
-
-
-
 
 
 
@@ -172,20 +156,6 @@ settings command handler specifications for Telegram Bot:
 
 ----
 
-
-
-Once settings / configuring is made available.
-1. Basic integrations of configurations into functions such as /chat based models.
-1.a. /chat
-1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
-------> But I would also nee to handle for API Key validity, and multiple key entry and trying with both;
----------> ask GPT, ok so I have two keys, and I want to try with one, and if one fails I want to try again for the other key.
-------------> Perhaps a way that I could do this is populate a list of keys, one after the other, then try by popping;
-1.a.ii. Then, I would need to get 
-
-
-1.b. /variate
-1.c. translations options
 
 
 3. Bulk update scripts to retain information from the previous script and add a new attribute or configurable feature.
@@ -308,7 +278,6 @@ logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
 
-
 # create necessary tables
 config_db_helper.create_config_table("chat_configs", "chat")
 config_db_helper.create_config_table("user_configs", "user")
@@ -369,40 +338,11 @@ def handle_start(message):
 
 
 ### manual configurations
+
+
+
 @bot.message_handler(commands=['user_set_openai_key'])
 def handle_user_set_openai_apikey(message):
-    """
-    handle_user_openai_apikey(message): sets openAI key for the user
-    """
-    if message.from_user.is_bot:
-        return
-    
-    try:
-        new_openai_key = helper_functions.extract_body(message.text)
-
-        # get the configurations
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['openai_api_key'] = new_openai_key
-        new_config = chat_config.copy()
-        config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
-
-        if helper_functions.bot_has_delete_permission(message.chat.id, bot):
-            bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
-            bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-
-        else:
-            bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
- 
-    except Exception as e:
-        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
-
-
-
-
-@bot.message_handler(commands=['group_set_openai_key'])
-def handle_group_set_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
     """
@@ -428,6 +368,37 @@ def handle_group_set_openai_apikey(message):
     except Exception as e:
         bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+@bot.message_handler(commands=['chat_set_openai_key'])
+def handle_chat_set_openai_apikey(message):
+    """
+    handle_chat_set_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+
+        # get the configurations
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['openai_api_key'] = new_openai_key
+        new_config = chat_config.copy()
+        config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
+
+        if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+            bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
+            bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+        else:
+            bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
 
 
 
@@ -732,14 +703,15 @@ def handle_variations(message):
 
 
 
+
+
+
+
 @bot.message_handler(commands=['vision'])
 def handle_vision(message):
     """
     Queries: Returns a chat completion text response from a image + query
-
-    - <<IMG>> // Caption
-    - /vision {text} (reply_to above image message)
-    -- in this case, image and the {text} after /vision is used
+    - /vision {text} 
     """
     # check if we are replying to a message, and that message contains an image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
