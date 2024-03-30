@@ -348,7 +348,7 @@ def handle_user_set_openai_apikey(message):
     
     try:
         new_openai_key = helper_functions.extract_body(message.text)
-        if config_db_helper.check_configval_pattern(message, config_attr='openai_api_key'):
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
 
             # encrypt the key;
             new_openai_key = config_db_helper.encrypt(new_openai_key)
@@ -386,7 +386,7 @@ def handle_chat_set_openai_apikey(message):
     try:
         new_openai_key = helper_functions.extract_body(message.text)
 
-        if config_db_helper.check_configval_pattern(message, config_attr='openai_api_key'):
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
             
             # encrypt the key;
             new_openai_key = config_db_helper.encrypt(new_openai_key)

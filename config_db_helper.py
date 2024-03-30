@@ -262,11 +262,10 @@ def set_new_config(id, config_type, new_config):
 
 
 
-def check_configval_pattern(message, config_attr):
+def check_configval_pattern(configval, config_attr):
     """
     check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
     """
-    configval = helper_functions.extract_body(message)
     config_pattern = re.compile(valid_configval_patterns[config_attr])
     print(configval)
     print(config_pattern)
