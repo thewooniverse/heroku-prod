@@ -268,6 +268,8 @@ def check_configval_pattern(message, config_attr):
     """
     configval = helper_functions.extract_body(message)
     config_pattern = re.compile(valid_configval_patterns[config_attr])
+    print(configval)
+    print(config_pattern)
     return bool(config_pattern.fullmatch(configval))
 
 
