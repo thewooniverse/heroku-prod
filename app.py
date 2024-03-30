@@ -39,6 +39,7 @@ import templates
 
 
 
+
 """
 Use this bot as a test environment for building out whatever features that you want to build out;
 To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
@@ -110,6 +111,12 @@ Once settings / configuring is made available.
 
 ----- done above -----
 
+- Checking API key and other formatting / accepted formats or types;
+- Encrypting API keys during setting;
+- Decrypting API keys;
+
+
+
 
 
 
@@ -121,7 +128,6 @@ Once settings / configuring is made available.
 
 
 General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
-
 
 
 /user_settings;
@@ -149,17 +155,8 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 
 
 
-
-
-
-
-
 ----
 
-
-
-3. Bulk update scripts to retain information from the previous script and add a new attribute or configurable feature.
-4. Integrate configuration details within logging as well.
 
 
 
@@ -351,19 +348,26 @@ def handle_user_set_openai_apikey(message):
     
     try:
         new_openai_key = helper_functions.extract_body(message.text)
+        if config_db_helper.check_configval_pattern(message, config_attr='openai_api_key'):
 
-        # get the configurations
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        user_config['openai_api_key'] = new_openai_key
-        new_config = user_config.copy()
-        config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
 
-        if helper_functions.bot_has_delete_permission(message.chat.id, bot):
-            bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
-            bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+            # get the configurations
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            user_config['openai_api_key'] = new_openai_key
+            new_config = user_config.copy()
+            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
 
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
         else:
-            bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+
  
     except Exception as e:
         bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
@@ -382,19 +386,27 @@ def handle_chat_set_openai_apikey(message):
     try:
         new_openai_key = helper_functions.extract_body(message.text)
 
-        # get the configurations
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['openai_api_key'] = new_openai_key
-        new_config = chat_config.copy()
-        config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
+        if config_db_helper.check_configval_pattern(message, config_attr='openai_api_key'):
+            
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
 
-        if helper_functions.bot_has_delete_permission(message.chat.id, bot):
-            bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
-            bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+            # get the configurations
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            chat_config['openai_api_key'] = new_openai_key
+            new_config = chat_config.copy()
+            config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
 
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+        
         else:
-            bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
- 
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+    
     except Exception as e:
         bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?

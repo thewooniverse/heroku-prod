@@ -10,10 +10,27 @@ import helper_functions
 import re
 
 
+# encryption module
+from cryptography.fernet import Fernet
+
+
+
+
 ### Setup the connection pool ###
 DATABASE_URL = os.environ.get('DATABASE_URL')
 connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
 # print(f"DATABASE URL ESTABLISHED {DATABASE_URL}")
+
+
+
+# Retrieve the key from environment variables
+fernet_key = os.getenv('FERNET_KEY')
+cipher_suite = Fernet(fernet_key)
+
+
+
+
+
 
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -59,8 +76,14 @@ default_user_config = {
 
 valid_configval_patterns = {
     # valid_formats contain the syntaxes in regex that are accepted by a configuration that is typed / entered by the user.
-    "openai_api_key": r'sk-.{20}T3BlbkFJ.{20}' # regex,
+    "openai_api_key": r'^sk-[A-Za-z0-9]{45,60}$' # regex
 }
+
+valid_configval_options = {
+    "language_model": ['gpt-4', 'gpt-3.5-turbo'],
+}
+
+
 
 
 
@@ -234,11 +257,12 @@ def set_new_config(id, config_type, new_config):
         connection_pool.putconn(conn)
 
 
-    
 
 
 
-def check_configval_format(message, config_attr):
+
+
+def check_configval_pattern(message, config_attr):
     """
     check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
     """
@@ -247,16 +271,68 @@ def check_configval_format(message, config_attr):
     return bool(config_pattern.fullmatch(configval))
 
 
+def check_configval_options(message, config_attr):
+    """
+    check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
+    """
+    configval = helper_functions.extract_body(message)
+    return configval in valid_configval_options[config_attr]
+
+
+
+
+
+
 def get_apikey_list(message):
     """
-    get_apikey_list(message): returns a list of associated Api Keys. If empty
+    get_apikey_list(message): retrieves, decrypts and returns a list decrypted list of associated Api Keys. If empty, an empty list (falsey) is returned.
     """
     chat_config = get_or_create_chat_config(message.chat.id, 'chat')
     user_config = get_or_create_chat_config(message.from_user.id, 'user')
     openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
 
     # returns an empty list of there are no api keys or both are ["", ""]
-    return [key for key in openai_api_keys if key]
+    return [decrypt(key) for key in openai_api_keys if key]
+
+
+
+
+def encrypt(text):
+    """
+    Encrypts a plaintext string using Fernet encryption.
+
+    Args:
+        text (str): Plaintext string to be encrypted.
+    
+    Returns:
+        str: Encrypted text encoded in base64.
+    """
+    # Convert the plaintext string to bytes
+    text_bytes = text.encode()
+    # Encrypt the text
+    encrypted_text = cipher_suite.encrypt(text_bytes)
+    # Return the encrypted text encoded in base64 as a string
+    return encrypted_text.decode()
+
+
+def decrypt(token):
+    """
+    Decrypts a base64 encoded string using Fernet decryption.
+    
+    Args:
+        token (str): Encrypted text encoded in base64.
+    
+    Returns:
+        str: Decrypted plaintext string.
+    """
+    # Convert the token back to bytes
+    token_bytes = token.encode()
+    # Decrypt the text
+    decrypted_text = cipher_suite.decrypt(token_bytes)
+    # Return the decrypted text as a string
+    return decrypted_text.decode()
+
+
 
 
 
