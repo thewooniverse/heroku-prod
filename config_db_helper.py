@@ -283,20 +283,6 @@ def check_configval_options(message, config_attr):
 
 
 
-def get_apikey_list(message):
-    """
-    get_apikey_list(message): retrieves, decrypts and returns a list decrypted list of associated Api Keys. If empty, an empty list (falsey) is returned.
-    """
-    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-    user_config = get_or_create_chat_config(message.from_user.id, 'user')
-    openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
-
-    # returns an empty list of there are no api keys or both are ["", ""]
-    return [decrypt(key) for key in openai_api_keys if key]
-
-
-
-
 def encrypt(text):
     """
     Encrypts a plaintext string using Fernet encryption.
@@ -316,22 +302,26 @@ def encrypt(text):
 
 
 def decrypt(token):
-    """
-    Decrypts a base64 encoded string using Fernet decryption.
-    
-    Args:
-        token (str): Encrypted text encoded in base64.
-    
-    Returns:
-        str: Decrypted plaintext string.
-    """
-    # Convert the token back to bytes
-    token_bytes = token.encode()
-    # Decrypt the text
-    decrypted_text = cipher_suite.decrypt(token_bytes)
-    # Return the decrypted text as a string
-    return decrypted_text.decode()
+    try:
+        token_bytes = token.encode()
+        decrypted_text = cipher_suite.decrypt(token_bytes)
+        return decrypted_text.decode()
+    except Exception as e:
+        # Handle or log the decryption error appropriately
+        return None
 
+def get_apikey_list(message):
+    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+    openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
+
+    decrypted_keys = []
+    for key in openai_api_keys:
+        if key:
+            decrypted_key = decrypt(key)
+            if decrypted_key:
+                decrypted_keys.append(decrypted_key)
+    return decrypted_keys
 
 
 
