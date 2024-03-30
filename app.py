@@ -106,30 +106,27 @@ Once settings / configuring is made available.
 
 
 0 - get patty to test out DMing and fix /vision
+- Checking API key and other formatting / accepted formats or types;
+- Encrypting API keys during setting;
+- Decrypting API keys;
+2. Encrypted storing of API keys.
 
 
 
 ----- done above -----
 
-- Checking API key and other formatting / accepted formats or types;
-- Encrypting API keys during setting;
-- Decrypting API keys;
 
 
-
-
-
-
-2. Encrypted storing of API keys.
 3. Features:
 -- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 -- Temperature controls for language models;
 -- Context for language models (chat specific)
 
-
 General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
 
 
+
+- BUTTON SETTINGS!!
 /user_settings;
 /chat_settings;
 
