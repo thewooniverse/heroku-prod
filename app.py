@@ -16,11 +16,15 @@ import json
 import traceback
 import config_db_helper # this also runs all of the necessary functions in creating all the tables
 from config_db_helper import get_or_create_chat_config
+import re
+
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from psycopg2 import pool
+
+import templates
 
 
 
@@ -71,33 +75,84 @@ logging conflicts and basic logging throughout helper functions as well as centr
 
 Finish logging v1 throughout;
 logging -> 
+
+
+DB:
+- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL << done
+- Design the initial configurations based on the configurability of the different functions and handlers << done
+-- chat_model, name etc... << done
+- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations. << done
+
+
+0. get or set configuration attribute.
+Basic Get/Set - retrieval and updating database / config schema.
+1. Integrate the retrieval and usage of openai api keys through all command handlers so they are sending it correctly; currently working for just /chat rn.
+2. Set up the chat_set_openai_apikey and test it in a group setting;
+
+3. Testing the chats and settings from a user that does not have an openai api key; and from a chat group that does not have it as well;
+
+Once settings / configuring is made available.
+1. Basic integrations of configurations into functions such as /chat based models.
+1.a. /chat
+1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
+------> But I would also nee to handle for API Key validity, and multiple key entry and trying with both;
+---------> ask GPT, ok so I have two keys, and I want to try with one, and if one fails I want to try again for the other key.
+------------> Perhaps a way that I could do this is populate a list of keys, one after the other, then try by popping;
+1.a.ii. Then, I would need to get 
+
+1.b. /variate
+1.c. translations options
+
+
+
+0 - get patty to test out DMing and fix /vision
+- Checking API key and other formatting / accepted formats or types;
+- Encrypting API keys during setting;
+- Decrypting API keys;
+2. Encrypted storing of API keys.
+
+
+
 ----- done above -----
 
 
 
+3. Features:
+-- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
+-- Temperature controls for language models;
+-- Context for language models (chat specific)
+
+General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
+
+
+
+- BUTTON SETTINGS!!
+/user_settings;
+/chat_settings;
+
+- The /settings messages are valid for 24 hours validity, after which they stop responding and the user needs to use the /settings command to configure.
+- For settings that require typing, the message contains a guide for users to set these individually, for example /set_apikey <API_KEY>.
+- Buttons to allow for simple configurations that simply requires a selection among supported options.
+-- For example: user clicks "Chat_Models" button -> goes to another state of the message that has two buttons "gpt-4" or "gpt-3.5-turbo"
+-- User clicks one of the models, and the bot updates the configuration to use that specific model, and sends the chat the notification that it has updated.
+-- User is then able to click back, or continue changing the models.
+-- When user clicks back, they go back to the main settings screen which currently displays the current settings in terms of the buttons.
+
+-- T1 T2 T3 configurations
+
+> learn inline keyboards
+> learn stateful transitions and state management for messages;
+> learn to implement message validity
 
 
 
 
 
 
-DATABASE INTEGRATION WORKFLOW:
-- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL
-- Design the initial configurations based on the configurability of the different functions and handlers
--- chat_model, name etc...
-- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations.
-- Bulk update script for updating configurations with new configuration structures; bot is down while configs are being updated and maintained.
-
-
-Well - it should be by account, and not by chat; or should it be by chat...
-Well if someone got a subscription, it should be by username?
-It should be against the person? Or the group; or does the group configurations have a different thing.
 
 
 
-NEXTUP:
--> build out the feature integrations checker and all that
--> build out configurations / settings
+----
 
 
 
@@ -105,10 +160,15 @@ NEXTUP:
 
 
 
-database -> database based features -> tidy up code, fork it and make it customer facing with good bot name; then this repo will be used to develop jarvis.
-- now just building out logging properly into the different levels of the system for proper logs w different levels. Logging to replace printing on screen for std output errors.
-- Errors with levels
-- then, implement database solution, implement settingsa nd config.
+
+
+
+
+
+
+
+
+
 
 
 
@@ -191,8 +251,19 @@ WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WE
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 
-# instantiate the bot
+# instantiate the bot and any key helper functions
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+
+
+
+
+
+
+
+
+
+
 
 # create logging objects
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -200,7 +271,6 @@ print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
-
 
 # create necessary tables
 config_db_helper.create_config_table("chat_configs", "chat")
@@ -240,44 +310,206 @@ def receive_update():
 
 
 
+
 @bot.message_handler(commands=['start'])
 def handle_start(message):
+    if message.from_user.is_bot:
+        return
+
     try:
         # import the configs
-        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
+        # previous test, to be deleted. Commented out to prevent unnecessary database connections.
+        # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
+        bot.reply_to(message, templates.start_menu)
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
+
+
+### manual configurations
+
+
+
+@bot.message_handler(commands=['user_set_openai_key'])
+def handle_user_set_openai_apikey(message):
+    """
+    handle_user_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
+
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
+
+            # get the configurations
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            user_config['openai_api_key'] = new_openai_key
+            new_config = user_config.copy()
+            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+        else:
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+@bot.message_handler(commands=['chat_set_openai_key'])
+def handle_chat_set_openai_apikey(message):
+    """
+    handle_chat_set_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
+            
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
+
+            # get the configurations
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            chat_config['openai_api_key'] = new_openai_key
+            new_config = chat_config.copy()
+            config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
+
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+        
+        else:
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+    
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @bot.message_handler(commands=['user_settings']) # paired with /chat_settings
+# def handle_user_settings(message):
+#     """
+#     def handle_settings(message): this function sends the settings menu for the user's configurations as a message and allows them to set various config values via buttons.
+
+#     """
+#     if message.from_user.is_bot:
+#         return
+    
+#     try:
+#         # import the current set of configurations of the given user and display it
+#         # display the buttons and handle settings for setting each of the configurations <<- need to learn basics of how buttons are handled
+#         pass
+
+#     except Exception as e:
+#         bot.reply_to(message, "/settings command request could not be completed, please contact admin.")
+#         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # text handlers
 @bot.message_handler(commands=['chat'])
 def handle_chat(message):
     # bot check
-    if message.from_user.isbot:
+    if message.from_user.is_bot:
         return
 
     context = ""
     try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+
+
+        # load context if it is response to anything;
         if message.reply_to_message:
             context = message.reply_to_message.text
-        response_text = ai_commands.chat_completion(message, context, model='gpt-4')
-        bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, "Success"))
+
+        # handle API Keys, the usage of the group's API key is prioritized over individual.
+        api_keys = config_db_helper.get_apikey_list(message)
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=user_config['language_model'])
+            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
+
     except Exception as e:
         bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
+
+
+
+
 @bot.message_handler(commands=['t1'])
 def handle_translate_1(message):
     try:
-        response_text = ai_commands.translate(message, target_language='eng',model='gpt-4')
-        bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, "Success"))
+        api_keys = config_db_helper.get_apikey_list(message)
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -286,9 +518,16 @@ def handle_translate_1(message):
 @bot.message_handler(commands=['t2'])
 def handle_translate_2(message):
     try:
-        response_text = ai_commands.translate(message, target_language='kor',model='gpt-4')
-        bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, "Success"))
+        api_keys = config_db_helper.get_apikey_list(message)
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            logger.info(helper_functions.construct_logs(message, "Success"))
+        
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -297,9 +536,17 @@ def handle_translate_2(message):
 @bot.message_handler(commands=['t3'])
 def handle_translate_3(message):
     try:
-        response_text = ai_commands.translate(message, target_language='chi',model='gpt-4')
-        bot.reply_to(message, text=response_text, parse_mode='Markdown')
-        logger.info(helper_functions.construct_logs(message, "Success"))
+
+        api_keys = config_db_helper.get_apikey_list(message)
+
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -312,10 +559,17 @@ def handle_translate_3(message):
 @bot.message_handler(commands=['tts'])
 def handle_tts(message):
     try:
-        tts_response = ai_commands.text_to_speech(message)
-        if tts_response:
-            logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
-            bot.send_voice(message.chat.id, tts_response)
+        api_keys = config_db_helper.get_apikey_list(message)
+
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            tts_response = ai_commands.text_to_speech(message, openai_api_key=api_keys[0])
+            if tts_response:
+                logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
+                bot.send_voice(message.chat.id, tts_response)
         else:
             bot.reply_to(message, "Text received but failed to fetch or generate speech, please contact admin.")
             logger.warning(helper_functions.construct_logs(message, "Warning: tts response could not be generated")) 
@@ -342,17 +596,22 @@ def handle_stt(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            stt_response = ai_commands.speech_to_text(temp_voice_file_path) # receives a transcribed text
-            if stt_response:
-                bot.reply_to(message, stt_response)
-                logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
-            else:
-                bot.reply_to(message, "Could not convert speech to text")
-                logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
+            api_keys = config_db_helper.get_apikey_list(message)
+            if not api_keys:
+                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+                return
+
+            if api_keys:
+                stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
+                if stt_response:
+                    bot.reply_to(message, stt_response)
+                    logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
+                else:
+                    bot.reply_to(message, "Could not convert speech to text")
+                    logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
 
             # Clean up: Remove the temporary file
             os.remove(temp_voice_file_path)
-
         
         except Exception as e:
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
@@ -369,13 +628,20 @@ def handle_stt(message):
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
-    query = helper_functions.extract_body(message.text)
+    # query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
-        image_content = ai_commands.generate_image(message, system_context)
-        bot.send_photo(message.chat.id, photo=image_content)
-        logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
+        api_keys = config_db_helper.get_apikey_list(message)
+
+        if not api_keys:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+            return
+
+        if api_keys:
+            image_content = ai_commands.generate_image(message, api_keys[0], system_context)
+            bot.send_photo(message.chat.id, photo=image_content)
+            logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
 
     except Exception as e:
         bot.reply_to(message, "Failed to fetch or generate image")
@@ -415,13 +681,19 @@ def handle_variations(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        img_var_response = ai_commands.variate_image(message, byte_array)
-                        if img_var_response:
-                            logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
-                            bot.send_photo(message.chat.id, photo=img_var_response)
-                        else:
-                            logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
-                            bot.reply_to(message, "Could not generate Variations of the image")
+                        api_keys = config_db_helper.get_apikey_list(message)
+                        if not api_keys:
+                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+                            return
+
+                        if api_keys:
+                            img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
+                            if img_var_response:
+                                logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
+                                bot.send_photo(message.chat.id, photo=img_var_response)
+                            else:
+                                logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
+                                bot.reply_to(message, "Could not generate Variations of the image")
                             
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
@@ -440,14 +712,15 @@ def handle_variations(message):
 
 
 
+
+
+
+
 @bot.message_handler(commands=['vision'])
 def handle_vision(message):
     """
     Queries: Returns a chat completion text response from a image + query
-
-    - <<IMG>> // Caption
-    - /vision {text} (reply_to above image message)
-    -- in this case, image and the {text} after /vision is used
+    - /vision {text} 
     """
     # check if we are replying to a message, and that message contains an image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
@@ -467,10 +740,15 @@ def handle_vision(message):
 
                 # encode the image to base64
                 encoded_img = helper_functions.encode_image(temp_img_path)
-                text_response = ai_commands.image_vision(message, encoded_img)
-                bot.reply_to(message, text_response)
-                logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
+                api_keys = config_db_helper.get_apikey_list(message)
+                if not api_keys:
+                    bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+                    return
 
+                if api_keys:
+                    text_response = ai_commands.image_vision(message, encoded_img, openai_api_key=api_keys[0])
+                    bot.reply_to(message, text_response)
+                    logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
         
         except Exception as e:
             # handle various exceptions
@@ -533,16 +811,21 @@ def handle_edit(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        
-                        img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path)
+                        api_keys = config_db_helper.get_apikey_list(message)
+                        if not api_keys:
+                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+                            return  
 
-                        if img_edit_response:
-                            logger.info(helper_functions.construct_logs(message, f"Info: Generated image edit with mask"))
-                            bot.send_photo(message.chat.id, photo=img_edit_response)
-                        else:
-                            logger.warning(helper_functions.construct_logs(message, f"Warning: Image could not be generated"))
-                            bot.reply_to(message, "Could not generate image, please contact admin to check logs.")
-                            
+                        if api_keys:
+                            img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path, openai_api_key=api_keys[0])
+
+                            if img_edit_response:
+                                logger.info(helper_functions.construct_logs(message, f"Info: Generated image edit with mask"))
+                                bot.send_photo(message.chat.id, photo=img_edit_response)
+                            else:
+                                logger.warning(helper_functions.construct_logs(message, f"Warning: Image could not be generated"))
+                                bot.reply_to(message, "Could not generate image, please contact admin to check logs.")
+
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
             if isinstance(e, IOError):

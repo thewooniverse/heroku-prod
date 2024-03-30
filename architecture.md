@@ -1,11 +1,70 @@
 
 
-# Database Architecture:
-telebot postgres database structure
+# Architecture:
+telebot database and configs architecture
+
+Premium features for Groups:
+- Custom usernames
+- Persistence and Context awareness for threads
+- 
+
+Premium features for Users:
+- Configurable 
+- Multie generations
+- Unlimited call limits
+
+
+Freemium model -> free users have limitations as to how much calls they can make on a free tier (and the tiers of services available).
+
+
 
 ## chat configs
-Contains all of the configurations for each chat;
-(CHAT_ID:BIGINT, {config:JSONB})
+Each chat can have configurations
+- chat group context / system messages - string to give the bot more context as to the nature of the group and its enquiries;
+- persistence - true/false
+- vectorstore_endpoint
+- OpenAI API Key set through OAI_apikey_group (fallback if user's keys are not working or user does not have a key)
+
+Each user can have config:
+- OpenAI API key
+- language model
+- is_premium - determines whether the user is able to use premium featuers
+- variantions
+- img_edit_mask - configuration for
+
+
+
+
+
+
+/user_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /uset_oai_key <>
+
+<Button 1 - Language Models> <Button 2 - Premium Subscription>
+<Button 3 - Image Models> <Button 4 - Image Edit Mask> 
+
+/chat_configs
+- MESSAGES on how to use the bot and how to configure them
+
+-- Details on how to set API Keys or manually change a few settings.
+--- /cset_oai_key <>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## eventstream
@@ -43,3 +102,13 @@ So then the config checks for:
 Is it going to be two different configs? Or no, how will the checking work against it? How will the configuration be structured?
 chat_id, sender user_id.
 When a connection is made to the database, both of the configurations are retrieved
+
+
+
+
+
+# How will chat configurations used?
+We retrieve it first, then
+
+
+
