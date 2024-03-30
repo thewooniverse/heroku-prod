@@ -473,7 +473,6 @@ def handle_chat(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
 
-
         # load context if it is response to anything;
         if message.reply_to_message:
             context = message.reply_to_message.text
@@ -620,6 +619,90 @@ def handle_stt(message):
     else:
         bot.reply_to(message, "Please reply to a voice note")
         logger.debug(helper_functions.construct_logs(message, "Debug: No target message"))
+
+
+
+
+
+@bot.message_handler(commands=['stc'])
+def handle_stc(message):
+    """
+    handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
+    """
+    # check whether it is replying to a message - must be used in reply to a message
+    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
+        original_message = message.reply_to_message
+        voice_note = original_message.voice
+        voice_file_info = bot.get_file(voice_note.file_id)
+
+        try:
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+            logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+            api_keys = config_db_helper.get_apikey_list(message)
+            if not api_keys:
+                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
+                return
+
+            if api_keys:
+                stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
+                if stt_response:
+                    
+                    # send the stt response as well if the user wants to (optional?) - but for now, we keep it so that ppl can edit it if its wrong.
+                    bot.reply_to(message, stt_response)
+                    logger.info(helper_functions.construct_logs(f"Transcribed Text:\n{message}", "Success: text to speech sent"))
+
+                    # use the stt text response to call the chat and send the response
+                    response_text = ai_commands.chat_completion(message, context='', openai_api_key=api_keys[0], model=user_config['language_model'])
+                    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+                    logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
+                else:
+                    bot.reply_to(message, "Could not convert speech to text")
+                    logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
+
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
+        
+        except Exception as e:
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+        
+    else:
+        bot.reply_to(message, "Please reply to a voice note")
+        logger.debug(helper_functions.construct_logs(message, "Debug: No target message"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
