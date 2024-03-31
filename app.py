@@ -658,7 +658,7 @@ def handle_stc(message):
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
-                    response_text = ai_commands.chat_completion(message, context='', openai_api_key=api_keys[0], model=user_config['language_model'])
+                    response_text = ai_commands.text_completion(stt_response, context='', openai_api_key=api_keys[0], model=user_config['language_model'])
                     bot.reply_to(message, text=response_text, parse_mode='Markdown')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
