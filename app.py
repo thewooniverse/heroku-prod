@@ -655,7 +655,7 @@ def handle_stc(message):
                     
                     # send the stt response as well if the user wants to (optional?) - but for now, we keep it so that ppl can edit it if its wrong.
                     bot.reply_to(message, stt_response)
-                    logger.info(helper_functions.construct_logs(f"Transcribed Text:\n{message}", "Success: text to speech sent"))
+                    logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
                     response_text = ai_commands.chat_completion(message, context='', openai_api_key=api_keys[0], model=user_config['language_model'])
