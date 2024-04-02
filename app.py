@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 import requests, os
 import telebot
+from telebot import types
 import helper_functions
 import ai_commands
 import tempfile
@@ -17,6 +18,7 @@ import traceback
 import config_db_helper # this also runs all of the necessary functions in creating all the tables
 from config_db_helper import get_or_create_chat_config
 import re
+
 
 
 # database modules
@@ -111,20 +113,27 @@ Once settings / configuring is made available.
 - Decrypting API keys;
 2. Encrypted storing of API keys.
 
-
+-- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 
 ----- done above -----
+
+General development timeline:
+1 - Button based features and customizability
+2 - Context awareness and chat history storage in vectorstore integration
+3 - Premium subscription and manual settings.
+4 - Additional API integration and ChatGPT tools integration.
+
+
+
+
 
 
 
 3. Features:
--- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 -- Temperature controls for language models;
 -- Context for language models (chat specific)
 
 General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
-
-
 
 - BUTTON SETTINGS!!
 /user_settings;
@@ -139,7 +148,6 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 -- When user clicks back, they go back to the main settings screen which currently displays the current settings in terms of the buttons.
 
 -- T1 T2 T3 configurations
-
 > learn inline keyboards
 > learn stateful transitions and state management for messages;
 > learn to implement message validity
@@ -327,88 +335,6 @@ def handle_start(message):
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
-
-
-### manual configurations
-
-
-
-@bot.message_handler(commands=['user_set_openai_key'])
-def handle_user_set_openai_apikey(message):
-    """
-    handle_user_openai_apikey(message): sets openAI key for the user
-    """
-    if message.from_user.is_bot:
-        return
-    
-    try:
-        new_openai_key = helper_functions.extract_body(message.text)
-        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
-
-            # encrypt the key;
-            new_openai_key = config_db_helper.encrypt(new_openai_key)
-
-            # get the configurations
-            user_config = get_or_create_chat_config(message.from_user.id, 'user')
-            user_config['openai_api_key'] = new_openai_key
-            new_config = user_config.copy()
-            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
-
-            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
-                bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
-                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-
-            else:
-                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
-        else:
-            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
-
- 
-    except Exception as e:
-        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
-
-
-@bot.message_handler(commands=['chat_set_openai_key'])
-def handle_chat_set_openai_apikey(message):
-    """
-    handle_chat_set_openai_apikey(message): sets openAI key for the user
-    """
-    if message.from_user.is_bot:
-        return
-    
-    try:
-        new_openai_key = helper_functions.extract_body(message.text)
-
-        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
-            
-            # encrypt the key;
-            new_openai_key = config_db_helper.encrypt(new_openai_key)
-
-            # get the configurations
-            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-            chat_config['openai_api_key'] = new_openai_key
-            new_config = chat_config.copy()
-            config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
-
-            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
-                bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
-                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-
-            else:
-                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
-        
-        else:
-            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
-    
-    except Exception as e:
-        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
-
 
 
 
@@ -684,30 +610,6 @@ def handle_stc(message):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # image based handlers
 @bot.message_handler(commands=['imagine'])
 def handle_imagine(message):
@@ -935,13 +837,151 @@ def handle_edit(message):
 
 
 
-# Bot configuration handlers and commands
+###############################################
+### Bot configuration handlers and commands ###
+###############################################
+
+from telebot import types
+
+# Helper functions for generating different markups
+def settings_markup():
+    markup = types.InlineKeyboardMarkup()
+    user_settings_btn = types.InlineKeyboardButton("User Settings", callback_data='user_settings')
+    chat_settings_btn = types.InlineKeyboardButton("Chat Settings", callback_data='chat_settings')
+    markup.add(user_settings_btn, chat_settings_btn)
+    return markup
+
+def user_settings_markup():
+    back_btn = types.InlineKeyboardButton("Back", callback_data='back_to_main')
+    # Add other buttons for user settings here
+    markup = types.InlineKeyboardMarkup()
+    markup.add(back_btn)
+    return markup
+
+def chat_settings_markup():
+    back_btn = types.InlineKeyboardButton("Back", callback_data='back_to_main')
+    # Add other buttons for chat settings here
+    markup = types.InlineKeyboardMarkup()
+    markup.add(back_btn)
+    return markup
+
+
+
+# Core settings button functionality;
+@bot.message_handler(commands=['settings'])
+def handle_settings(message):
+    bot.send_message(chat_id=message.chat.id, text="Please choose:", reply_markup=settings_markup())
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_query(call):
+    if call.data == "user_settings":
+        # Update message to show user settings with a "Back" button
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="User Settings:", reply_markup=user_settings_markup())
+    elif call.data == "chat_settings":
+        # Update message to show chat settings with a "Back" button
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Chat Settings:", reply_markup=chat_settings_markup())
+    elif call.data == "back_to_main":
+        # User pressed the "Back" button, return to main settings screen
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Please choose:", reply_markup=settings_markup())
+    # Implement logic for other buttons as needed
+
+
+
+
+
+
+# Memory / storage management
 @bot.message_handler(commands=['clear_memory'])
 def handle_clear_memory(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
     """
     pass
+
+
+
+
+
+# Manual configurations of settings that require users to type
+@bot.message_handler(commands=['user_set_openai_key'])
+def handle_user_set_openai_apikey(message):
+    """
+    handle_user_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
+
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
+
+            # get the configurations
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            user_config['openai_api_key'] = new_openai_key
+            new_config = user_config.copy()
+            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+        else:
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+@bot.message_handler(commands=['chat_set_openai_key'])
+def handle_chat_set_openai_apikey(message):
+    """
+    handle_chat_set_openai_apikey(message): sets openAI key for the user
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_openai_key = helper_functions.extract_body(message.text)
+
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
+            
+            # encrypt the key;
+            new_openai_key = config_db_helper.encrypt(new_openai_key)
+
+            # get the configurations
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            chat_config['openai_api_key'] = new_openai_key
+            new_config = chat_config.copy()
+            config_db_helper.set_new_config(message.chat.id, 'chat', new_config)
+
+            if helper_functions.bot_has_delete_permission(message.chat.id, bot):
+                bot.reply_to(message, f"New API key for chat group successfully set. Deleting message.")
+                bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+
+            else:
+                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+        
+        else:
+            bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
+    
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
 
 
 
@@ -957,6 +997,9 @@ def handle_clear_memory(message):
 
 
             
+
+
+
 
 
 
