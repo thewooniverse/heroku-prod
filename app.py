@@ -129,6 +129,11 @@ General development timeline:
 
 
 
+
+
+
+
+
 3. Features:
 -- Temperature controls for language models;
 -- Context for language models (chat specific)
@@ -884,6 +889,22 @@ def handle_query(call):
         # User pressed the "Back" button, return to main settings screen
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Please choose:", reply_markup=settings_markup())
     # Implement logic for other buttons as needed
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
