@@ -115,22 +115,24 @@ Once settings / configuring is made available.
 
 -- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 
+
+
+
+
+
+
+
+
+
+
+
 ----- done above -----
 
 General development timeline:
 1 - Button based features and customizability
-2 - Context awareness and chat history storage in vectorstore integration
-3 - Premium subscription and manual settings.
+2 - Context awareness and chat history storage in vectorstore integration with Chroma
+3 - Premium subscription and manual settings for payments with USDT.
 4 - Additional API integration and ChatGPT tools integration.
-
-
-
-
-
-
-
-
-
 
 
 
