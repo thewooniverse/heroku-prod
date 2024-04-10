@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+from telebot import types
 import requests, os
 import telebot
 from telebot import types
@@ -18,7 +19,7 @@ import traceback
 import config_db_helper # this also runs all of the necessary functions in creating all the tables
 from config_db_helper import get_or_create_chat_config
 import re
-
+import settings
 
 
 # database modules
@@ -130,6 +131,11 @@ Once settings / configuring is made available.
 
 General development timeline:
 1 - Button based features and customizability
+1.A - First try to do the Language Model configurations first
+1.B - Then do the configuration + integrate the temperature as well.
+1.C - T1 / T2 / T3
+
+
 2 - Context awareness and chat history storage in vectorstore integration with Chroma
 3 - Premium subscription and manual settings for payments with USDT.
 4 - Additional API integration and ChatGPT tools integration.
@@ -325,7 +331,6 @@ def receive_update():
 
 
 
-
 @bot.message_handler(commands=['start'])
 def handle_start(message):
     if message.from_user.is_bot:
@@ -342,52 +347,6 @@ def handle_start(message):
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# @bot.message_handler(commands=['user_settings']) # paired with /chat_settings
-# def handle_user_settings(message):
-#     """
-#     def handle_settings(message): this function sends the settings menu for the user's configurations as a message and allows them to set various config values via buttons.
-
-#     """
-#     if message.from_user.is_bot:
-#         return
-    
-#     try:
-#         # import the current set of configurations of the given user and display it
-#         # display the buttons and handle settings for setting each of the configurations <<- need to learn basics of how buttons are handled
-#         pass
-
-#     except Exception as e:
-#         bot.reply_to(message, "/settings command request could not be completed, please contact admin.")
-#         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
-
-
-
-
-
-
-
-
 
 
 
@@ -439,7 +398,7 @@ def handle_translate_1(message):
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -456,7 +415,7 @@ def handle_translate_2(message):
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
@@ -476,7 +435,7 @@ def handle_translate_3(message):
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng',model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -848,61 +807,81 @@ def handle_edit(message):
 ### Bot configuration handlers and commands ###
 ###############################################
 
-from telebot import types
-
 # Helper functions for generating different markups
 def settings_markup():
     markup = types.InlineKeyboardMarkup()
-    user_settings_btn = types.InlineKeyboardButton("User Settings", callback_data='user_settings')
+    user_settings_btn = types.InlineKeyboardButton("User Settings", callback_data='user_settings') # telebot.types if it was not direct import
     chat_settings_btn = types.InlineKeyboardButton("Chat Settings", callback_data='chat_settings')
     markup.add(user_settings_btn, chat_settings_btn)
     return markup
 
+# User settings
 def user_settings_markup():
-    back_btn = types.InlineKeyboardButton("Back", callback_data='back_to_main')
+    back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
     # Add other buttons for user settings here
     markup = types.InlineKeyboardMarkup()
     markup.add(back_btn)
     return markup
 
+
+# Chat settings
 def chat_settings_markup():
-    back_btn = types.InlineKeyboardButton("Back", callback_data='back_to_main')
+    back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
+    persistence_on_btn = types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on')
+    persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_oFF')
+    lm_btn = types.InlineKeyboardButton("🤖Language Models", callback_data='language_model_menu')
     # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
-    markup.add(back_btn)
+    markup.add(back_btn, lm_btn, persistence_on_btn, persistence_off_btn)
     return markup
+
+# define the language_model_menu
+def langauge_model_settings_markup():
+    gpt3_5_btn = types.InlineKeyboardButton("GPT 3.5 Turbo", callback_data='set_lm_gpt3.5')
+    gpt4_btn = types.InlineKeyboardButton("GPT 4.0 ", callback_data='set_lm_gpt4')
+    back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='chat_settings') # back to main should point to previous chat setting.
+    # Add other buttons for chat settings here
+    markup = types.InlineKeyboardMarkup()
+    markup.add(back_btn, gpt3_5_btn, gpt4_btn)
+    return markup
+
+
+
 
 
 
 # Core settings button functionality;
 @bot.message_handler(commands=['settings'])
 def handle_settings(message):
-    bot.send_message(chat_id=message.chat.id, text="Please choose:", reply_markup=settings_markup())
+    bot.send_message(chat_id=message.chat.id, text=settings.settings_string, reply_markup=settings_markup())
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_query(call):
     if call.data == "user_settings":
         # Update message to show user settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="User Settings:", reply_markup=user_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup())
     elif call.data == "chat_settings":
         # Update message to show chat settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Chat Settings:", reply_markup=chat_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=chat_settings_markup())
+    
     elif call.data == "back_to_main":
         # User pressed the "Back" button, return to main settings screen
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text="Please choose:", reply_markup=settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.settings_string, reply_markup=settings_markup())
     # Implement logic for other buttons as needed
-
-
-
-
-
-
-
-
-
-
-
-
+    
+    elif call.data == "language_model_menu":
+        # User pressed the "Back" button, return to main settings screen
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup())
+    
+    # Handle callback data for changing language model in group;
+    elif call.data == "set_lm_gpt3.5":
+        bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5!")
+    elif call.data == "set_lm_gpt4":
+        bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 4!")
+    elif call.data == "persistence_on":
+        bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
+    elif call.data == "persistence_off":
+        bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
 
 
 
@@ -920,9 +899,6 @@ def handle_clear_memory(message):
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
     """
     pass
-
-
-
 
 
 # Manual configurations of settings that require users to type
@@ -960,7 +936,6 @@ def handle_user_set_openai_apikey(message):
     except Exception as e:
         bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
-
 
 
 @bot.message_handler(commands=['chat_set_openai_key'])
