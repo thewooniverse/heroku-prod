@@ -811,7 +811,7 @@ def handle_edit(message):
 def settings_markup():
     markup = types.InlineKeyboardMarkup()
     user_settings_btn = types.InlineKeyboardButton("User Settings", callback_data='user_settings') # telebot.types if it was not direct import
-    chat_settings_btn = types.InlineKeyboardButton("Chat Settings", callback_data='chat_settings')
+    chat_settings_btn = types.InlineKeyboardButton("👥 Group Settings", callback_data='chat_settings')
     markup.add(user_settings_btn, chat_settings_btn)
     return markup
 
@@ -820,6 +820,7 @@ def user_settings_markup():
     back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
     # Add other buttons for user settings here
     markup = types.InlineKeyboardMarkup()
+    markup.row_width = 2
     markup.add(back_btn)
     return markup
 
@@ -828,10 +829,11 @@ def user_settings_markup():
 def chat_settings_markup():
     back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
     persistence_on_btn = types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on')
-    persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_oFF')
+    persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off')
     lm_btn = types.InlineKeyboardButton("🤖Language Models", callback_data='language_model_menu')
     # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
+    markup.row_width = 2
     markup.add(back_btn, lm_btn, persistence_on_btn, persistence_off_btn)
     return markup
 
@@ -842,6 +844,7 @@ def langauge_model_settings_markup():
     back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='chat_settings') # back to main should point to previous chat setting.
     # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
+    markup.row_width = 2
     markup.add(back_btn, gpt3_5_btn, gpt4_btn)
     return markup
 
