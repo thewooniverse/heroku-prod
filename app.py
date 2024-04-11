@@ -920,10 +920,10 @@ def handle_query(call):
             try:
                 ## get the currenct chat config
                 chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-                chat_config['language_model'] = "gpt-3.5-turbo"
+                chat_config['language_model'] = "gpt-4"
                 new_config = chat_config.copy()
                 config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
-                bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5! All chats here onwards will use this model")
+                bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 4! All chats here onwards will use this model")
             
             except Exception as e:
                 bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
