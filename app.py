@@ -131,9 +131,9 @@ Once settings / configuring is made available.
 
 General development timeline:
 1 - Button based features and customizability
-1.A - First try to do the Language Model configurations first
-1.B - Then do the configuration + integrate the temperature as well.
-1.C - T1 / T2 / T3
+1.A - First try to do the Language Model configurations first << done
+1.B - Then do the configuration + integrate the temperature as well into the function calls.
+1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
 
 
 2 - Context awareness and chat history storage in vectorstore integration with Chroma
@@ -364,6 +364,7 @@ def handle_chat(message):
     context = ""
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
 
         # load context if it is response to anything;
         if message.reply_to_message:
@@ -376,7 +377,7 @@ def handle_chat(message):
             return
 
         if api_keys:
-            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model='gpt-4')
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -861,7 +862,7 @@ def handle_settings(message):
 def handle_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup())
 
-@bot.message_handler(commands=['group_settings'])
+@bot.message_handler(commands=['user_settings'])
 def handle_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
 
@@ -888,42 +889,45 @@ def handle_query(call):
     # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt3.5":
         # check that the clicker is an administrator
-        if not helper_functions.user_has_admin_permission(bot, call.message.chat.id, call.from_user.id):
-            bot.send_message(chat_id=call.message.chat.id, text="You do not have the administrative permissions to change this setting")
-            return
+        if (call.message.chat.type != 'private'):
+            if not helper_functions.user_has_admin_permission(bot, call.message.chat.id, call.from_user.id):
+                bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting.")
+                return
+            
+            # change the configuration for the group for the following;
+            try:
+                ## get the currenct chat config
+                chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+                chat_config['language_model'] = "gpt-3.5-turbo"
+                new_config = chat_config.copy()
+                config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
+                bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5! All chats here onwards will use this model")
+            
+            except Exception as e:
+                bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
+                logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
 
-        # change the configuration for the group for the following;
-        try:
-            ## get the currenct chat config
-            chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-            chat_config['language_model'] = "gpt-3.5-turbo"
-            new_config = chat_config.copy()
-            config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
-            bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5! All chats here onwards will use this model")
-        
-        except Exception as e:
-            bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
-            logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
 
-
+    # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt4":
         # check that the clicker is an administrator
-        if not helper_functions.user_has_admin_permission(bot, call.message.chat.id, call.from_user.id):
-            bot.send_message(chat_id=call.message.chat.id, text="You do not have the administrative permissions to change this setting")
-            return
-
-        # change the configuration for the group for the following;
-        try:
-            ## get the currenct chat config
-            chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-            chat_config['language_model'] = "gpt-4"
-            new_config = chat_config.copy()
-            config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
-            bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 4! All chats here onwards will use this model")
-        
-        except Exception as e:
-            bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
-            logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
+        if (call.message.chat.type != 'private'):
+            if not helper_functions.user_has_admin_permission(bot, call.message.chat.id, call.from_user.id):
+                bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting.")
+                return
+            
+            # change the configuration for the group for the following;
+            try:
+                ## get the currenct chat config
+                chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+                chat_config['language_model'] = "gpt-3.5-turbo"
+                new_config = chat_config.copy()
+                config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
+                bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5! All chats here onwards will use this model")
+            
+            except Exception as e:
+                bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
+                logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
 
 
     elif call.data == "persistence_on":

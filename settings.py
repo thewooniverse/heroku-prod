@@ -23,8 +23,9 @@ Customize telebot with the following options:
 
 group_settings_string = """👥Chat Group Settings👥
 
-Customize how your assistant functions in this group:
-All settings and configurations for a group is ONLY availble to be changed by the administrator of the group;
+Customize how your assistant functions in this group (including DMs):
+All settings and configurations for a group is ONLY availble to be changed by the administrator of the group / chat;
+To customize new bots with new configurations and settings, you can create new groups and invite the bot in to customize different conversations with the bot.
 
 -- Button Settings --
 Persistence - customize whether your bot remembers the conversation history of this group and remains context aware.
