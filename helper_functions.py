@@ -74,6 +74,28 @@ def bot_has_delete_permission(chat_id, bot):
     return bot_member.can_delete_messages
 
 
+def user_has_admin_permission(bot, chat_id, user_id):
+    """
+    Checks if a user is an administrator in a given chat.
+
+    Args:
+        chat_id (int): The unique identifier for the target chat or username of the target supergroup.
+        user_id (int): The unique identifier of the user to check.
+
+    Returns:
+        bool: True if the user is an admin, False otherwise.
+    """
+    try:
+        # Fetch all administrators in the chat
+        chat_administrators = bot.get_chat_administrators(chat_id)
+        # Check if the user_id is in the list of administrators
+        for admin in chat_administrators:
+            if admin.user.id == user_id:
+                return True
+        return False
+    except Exception as e:
+        print(f"Failed to check admin status: {e}")
+        return False
 
 
 
