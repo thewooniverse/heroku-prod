@@ -47,14 +47,15 @@ valid_table_names = ["chat_configs", "user_configs"]
 # For any config changes, remember to update the versions.
 #####
 default_chat_config = {
-    "version": "0.0.2", # the version determines the current version of the configs
+    "version": "0.0.3", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
     "vectorstore_endpoint" : "", # default is blank, but once the persistence trial is on it will check for 
-    "lm_temp": 0.5,
+    "lm_temp": 0.5, # default is 0.5, but language model can be made more deterministic
     "openai_api_key": "", # group's OpenAI API Key, this is used if the user's API key is not valid.
+    # "language_model": "gpt-3.5-turbo", # determines the default language model used by the user
     "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on.
   }
 
@@ -64,7 +65,7 @@ default_user_config = {
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
     "is_premium": False, # determines whether the user is a premium user and has access to premium features.
-    "language_model": "gpt-4", # determines the default language model used by the user
+    "language_model": "gpt-3.5-turbo", # determines the default language model used by the user
     "openai_api_key": "", # determines the OpenAI API Key of a given user
     "image_mask_map": [ # determines how each user wants to edit the images
           [0, 0, 0],
