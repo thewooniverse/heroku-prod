@@ -943,15 +943,6 @@ def handle_query(call):
 
 
 
-# Memory / storage management
-@bot.message_handler(commands=['clear_memory'])
-def handle_clear_memory(message):
-    """
-    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
-    """
-    pass
-
-
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['user_set_openai_key'])
 def handle_user_set_openai_apikey(message):
@@ -1027,6 +1018,36 @@ def handle_chat_set_openai_apikey(message):
 
 
 
+# Manual configurations of settings that require users to type
+@bot.message_handler(commands=['set_temperature'])
+def handle_set_temperature(message):
+    """
+    Sets the language model temperature for a user or chat. Valid range is between 0 and 2.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        # Extract and validate the new temperature setting
+        new_temperature = int(helper_functions.extract_body(message.text))
+        if new_temperature < 0 or new_temperature > 2:
+            bot.reply_to(message, "Invalid temperature. Please enter a value between 0 and 2.")
+            return
+
+        # Retrieve and update the chat configuration
+        user_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config['lm_temp'] = new_temperature
+        config_db_helper.set_new_config(message.chat.id, 'chat', user_config)
+        
+        bot.reply_to(message, f"Temperature setting updated to {new_temperature}.")
+
+    except ValueError:
+        # Handle non-integer input gracefully
+        bot.reply_to(message, "Please enter a valid integer for the temperature.")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set temperature, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 
@@ -1040,8 +1061,13 @@ def handle_chat_set_openai_apikey(message):
 
 
 
-
-
+# Memory / storage management
+@bot.message_handler(commands=['clear_memory'])
+def handle_clear_memory(message):
+    """
+    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
+    """
+    pass
 
 
 
