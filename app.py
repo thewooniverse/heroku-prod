@@ -987,7 +987,12 @@ def handle_chat_set_openai_apikey(message):
     """
     if message.from_user.is_bot:
         return
-    
+
+    # Check permissions for group chats
+    if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+        bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+        return
+        
     try:
         new_openai_key = helper_functions.extract_body(message.text)
 
@@ -1027,6 +1032,11 @@ def handle_set_temperature(message):
     if message.from_user.is_bot:
         return
     
+    # Check permissions for group chats
+    if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+        bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+        return
+
     try:
         # Extract and validate the new temperature setting
         new_temperature = int(helper_functions.extract_body(message.text))
