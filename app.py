@@ -377,7 +377,7 @@ def handle_chat(message):
             return
 
         if api_keys:
-            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['temperature'])
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -560,7 +560,7 @@ def handle_stc(message):
 
                     # use the stt text response to call the chat and send the response
                     context=''
-                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['temperature'])
+                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
                     bot.reply_to(message, text=response_text, parse_mode='Markdown')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
@@ -860,6 +860,16 @@ def langauge_model_settings_markup():
     return markup
 
 # define the translations option menu
+def translation_options_menu(t1,t2,t3):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f" 1️⃣: {t1}", callback_data="t1"),
+                types.InlineKeyboardButton(f" 2️⃣: {t2}", callback_data="t2"),
+                types.InlineKeyboardButton(f" 3️⃣: {t3}", callback_data="t3"))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="group_settings"))
+    return markup
+
+
+# define translation langauge choice menu
 
 
 
@@ -952,6 +962,12 @@ def handle_query(call):
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
     elif call.data == "persistence_off":
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
+    
+    elif call.data == 'translations_menu':
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
+
 
 
 

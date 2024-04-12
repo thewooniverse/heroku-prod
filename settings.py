@@ -54,6 +54,10 @@ GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capa
 """
 
 
+translation_presets_string = """
+
+"""
+
 
 
 
