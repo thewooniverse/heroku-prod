@@ -862,9 +862,9 @@ def langauge_model_settings_markup():
 # define the translations option menu
 def translation_options_menu(t1,t2,t3):
     markup = types.InlineKeyboardMarkup()
-    markup.row(types.InlineKeyboardButton(f" 1️⃣: {t1}", callback_data="t1"),
-                types.InlineKeyboardButton(f" 2️⃣: {t2}", callback_data="t2"),
-                types.InlineKeyboardButton(f" 3️⃣: {t3}", callback_data="t3"))
+    markup.row(types.InlineKeyboardButton(f"1:{t1}", callback_data="t1"),
+                types.InlineKeyboardButton(f"2:{t2}", callback_data="t2"),
+                types.InlineKeyboardButton(f"3:{t3}", callback_data="t3"))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="group_settings"))
     return markup
 
