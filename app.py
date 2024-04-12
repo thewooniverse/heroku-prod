@@ -377,7 +377,7 @@ def handle_chat(message):
             return
 
         if api_keys:
-            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'])
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['temperature'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -388,18 +388,19 @@ def handle_chat(message):
 
 
 
-
-
 @bot.message_handler(commands=['t1'])
 def handle_translate_1(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -411,12 +412,15 @@ def handle_translate_1(message):
 def handle_translate_2(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
@@ -430,13 +434,16 @@ def handle_translate_3(message):
     try:
 
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
 
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -532,6 +539,7 @@ def handle_stc(message):
             downloaded_voice = bot.download_file(voice_file_info.file_path)
             logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
 
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
                 temp_voice_file.write(downloaded_voice)
@@ -551,7 +559,8 @@ def handle_stc(message):
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
-                    response_text = ai_commands.text_completion(stt_response, context='', openai_api_key=api_keys[0], model='gpt-4')
+                    context=''
+                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['temperature'])
                     bot.reply_to(message, text=response_text, parse_mode='Markdown')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
@@ -832,10 +841,11 @@ def group_settings_markup():
     persistence_on_btn = types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on')
     persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off')
     lm_btn = types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu')
+    languages_btn = types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu')
     # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
     markup.row_width = 2
-    markup.add(lm_btn, persistence_on_btn, persistence_off_btn)
+    markup.add(lm_btn, persistence_on_btn, persistence_off_btn, languages_btn)
     return markup
 
 # define the language_model_menu
@@ -848,6 +858,14 @@ def langauge_model_settings_markup():
     markup.row_width = 2
     markup.add(back_btn, gpt3_5_btn, gpt4_btn)
     return markup
+
+# define the translations option menu
+
+
+
+
+
+
 
 
 
@@ -934,6 +952,13 @@ def handle_query(call):
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
     elif call.data == "persistence_off":
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
+
+
+
+
+
+
+
 
 
 

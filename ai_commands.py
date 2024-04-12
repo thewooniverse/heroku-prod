@@ -21,18 +21,21 @@ import helper_functions
 
 
 ## Text Handling Commands ##
-def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo'):
+def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo', temperature=1):
     """
-    def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
     """
     client = OpenAI(api_key=openai_api_key)
-    body_text = helper_functions.extract_body(message.text)
+    if isinstance(message, str):
+        body_text = message
+    else:
+        body_text = helper_functions.extract_body(message.text)
 
     system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below as chat history"
     chat_history = f"This is the chat history of the conversation that we've had so far: \n\n {context}"
 
     completion_object = client.chat.completions.create(
     model=model,
+    temperature = temperature,
     messages=[
         {"role": "system", "content": system_prompt},
         {"role": "assistant", "content": chat_history},
@@ -43,28 +46,6 @@ def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo'):
     return response_text
 
 
-
-## Text Handling Commands ##
-def text_completion(text, context, openai_api_key, model='gpt-3.5-turbo'):
-    """
-    def chat_completion(query): This function calls the OpenAI API endpoint. Default Model is 
-    """
-    client = OpenAI(api_key=openai_api_key)
-    body_text = text
-
-    system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below as chat history"
-    chat_history = f"This is the chat history of the conversation that we've had so far: \n\n {context}"
-
-    completion_object = client.chat.completions.create(
-    model=model,
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": chat_history},
-        {"role": "user", "content": body_text}])
-    print(completion_object)
-    response_text = completion_object.choices[0].message.content
-    print(response_text)
-    return response_text
 
 
 

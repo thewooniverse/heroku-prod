@@ -32,7 +32,7 @@ Persistence - customize whether your bot remembers the conversation history of t
 Language Model - choose which language model your assistant will use to complete your chat requests.
 
 -- Manual Settings --
-/lm_temp [0-2] - customize sampling temperature, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+/set_temperature [0-2] - customize sampling temperature, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 /chat_set_openai_key [sk-abcdefg...] - set the openai api key for your group
 """
 
