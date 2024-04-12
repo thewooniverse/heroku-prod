@@ -1039,15 +1039,15 @@ def handle_set_temperature(message):
 
     try:
         # Extract and validate the new temperature setting
-        new_temperature = int(helper_functions.extract_body(message.text))
+        new_temperature = float(helper_functions.extract_body(message.text))
         if new_temperature < 0 or new_temperature > 2:
             bot.reply_to(message, "Invalid temperature. Please enter a value between 0 and 2.")
             return
 
         # Retrieve and update the chat configuration
-        user_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config['lm_temp'] = new_temperature
-        config_db_helper.set_new_config(message.chat.id, 'chat', user_config)
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['lm_temp'] = new_temperature
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         
         bot.reply_to(message, f"Temperature setting updated to {new_temperature}.")
 
