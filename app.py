@@ -132,12 +132,18 @@ Once settings / configuring is made available.
 General development timeline:
 1 - Button based features and customizability
 1.A - First try to do the Language Model configurations first << done
-1.B - Then do the configuration + integrate the temperature as well into the function calls.
+1.B - Then do the configuration + integrate the temperature as well into the function calls << done
+
+
 1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
+^ these support manual configurations as well for custom, valid language codes;
+
+1.D - Image edit mask for user settings and integrations with the functions;
+1.E - Ability to customize contexts to a specific given chat and using it in all calls;
 
 
 2 - Context awareness and chat history storage in vectorstore integration with Chroma
-3 - Premium subscription and manual settings for payments with USDT.
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services.
 4 - Additional API integration and ChatGPT tools integration.
 
 
@@ -967,10 +973,6 @@ def handle_query(call):
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
-
-
-
-
 
 
 

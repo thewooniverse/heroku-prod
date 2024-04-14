@@ -58,6 +58,10 @@ translation_presets_string = """🌐 Language Presets 🌐
 /t1 /t2 /t3 -> all uses your translation presets, you can conveniently
 """
 
+translation_presets_string = """🌐 T1: Language Options 🌐
+/t1 /t2 /t3 -> all uses your translation presets, you can conveniently
+"""
+
 
 
 
