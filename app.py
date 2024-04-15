@@ -106,8 +106,6 @@ Once settings / configuring is made available.
 1.b. /variate
 1.c. translations options
 
-
-
 0 - get patty to test out DMing and fix /vision
 - Checking API key and other formatting / accepted formats or types;
 - Encrypting API keys during setting;
@@ -125,19 +123,23 @@ Once settings / configuring is made available.
 
 
 
-
-
 ----- done above -----
 
 General development timeline:
 1 - Button based features and customizability
 1.A - First try to do the Language Model configurations first << done
-1.B - Then do the configuration + integrate the temperature as well into the function calls.
+1.B - Then do the configuration + integrate the temperature as well into the function calls << done
+
+
 1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
+^ these support manual configurations as well for custom, valid language codes;
+
+1.D - Image edit mask for user settings and integrations with the functions;
+1.E - Ability to customize contexts to a specific given chat and using it in all calls;
 
 
 2 - Context awareness and chat history storage in vectorstore integration with Chroma
-3 - Premium subscription and manual settings for payments with USDT.
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services.
 4 - Additional API integration and ChatGPT tools integration.
 
 
@@ -377,7 +379,7 @@ def handle_chat(message):
             return
 
         if api_keys:
-            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'])
+            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -388,18 +390,19 @@ def handle_chat(message):
 
 
 
-
-
 @bot.message_handler(commands=['t1'])
 def handle_translate_1(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -411,12 +414,15 @@ def handle_translate_1(message):
 def handle_translate_2(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
@@ -430,13 +436,16 @@ def handle_translate_3(message):
     try:
 
         api_keys = config_db_helper.get_apikey_list(message)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
 
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
-            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language='eng', model='gpt-4')
+            response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
@@ -532,6 +541,7 @@ def handle_stc(message):
             downloaded_voice = bot.download_file(voice_file_info.file_path)
             logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
 
             with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
                 temp_voice_file.write(downloaded_voice)
@@ -551,7 +561,8 @@ def handle_stc(message):
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
-                    response_text = ai_commands.text_completion(stt_response, context='', openai_api_key=api_keys[0], model='gpt-4')
+                    context=''
+                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
                     bot.reply_to(message, text=response_text, parse_mode='Markdown')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
@@ -832,10 +843,11 @@ def group_settings_markup():
     persistence_on_btn = types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on')
     persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off')
     lm_btn = types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu')
+    languages_btn = types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu')
     # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
     markup.row_width = 2
-    markup.add(lm_btn, persistence_on_btn, persistence_off_btn)
+    markup.add(lm_btn, persistence_on_btn, persistence_off_btn, languages_btn)
     return markup
 
 # define the language_model_menu
@@ -847,6 +859,31 @@ def langauge_model_settings_markup():
     markup = types.InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(back_btn, gpt3_5_btn, gpt4_btn)
+    return markup
+
+# define the translations option menu
+def translation_options_menu(t1,t2,t3):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f"1:{t1}", callback_data="t1"),
+                types.InlineKeyboardButton(f"2:{t2}", callback_data="t2"),
+                types.InlineKeyboardButton(f"3:{t3}", callback_data="t3"))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="group_settings"))
+    return markup
+
+
+# define translation langauge choice menu
+def language_selection_menu(preset_num):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f"🇬🇧", callback_data=f"lset_{preset_num}_eng"),
+                types.InlineKeyboardButton(f"🇨🇳", callback_data=f"lset_{preset_num}_chi"),
+                types.InlineKeyboardButton(f"🇮🇳", callback_data=f"lset_{preset_num}_hin"))
+    markup.row(types.InlineKeyboardButton(f"🇪🇸", callback_data=f"lset_{preset_num}_spa"),
+                types.InlineKeyboardButton(f"🇫🇷", callback_data=f"lset_{preset_num}_fre"),
+                types.InlineKeyboardButton(f"🇸🇦", callback_data=f"lset_{preset_num}_ara"))
+    markup.row(types.InlineKeyboardButton(f"🇵🇹", callback_data=f"lset_{preset_num}_por"),
+                types.InlineKeyboardButton(f"🇷🇺", callback_data=f"lset_{preset_num}_rus"),
+                types.InlineKeyboardButton(f"🇰🇷", callback_data=f"lset_{preset_num}_kor"))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="translations_menu"))
     return markup
 
 
@@ -869,7 +906,7 @@ def handle_settings(message):
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def handle_query(call):
+def handle_callback(call):
 
     # User Settings callback handler
     if call.data == "user_settings":
@@ -899,8 +936,7 @@ def handle_query(call):
             ## get the currenct chat config
             chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
             chat_config['language_model'] = "gpt-3.5-turbo"
-            new_config = chat_config.copy()
-            config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
+            config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
             bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 3.5! All chats here onwards will use this model")
         
         except Exception as e:
@@ -921,8 +957,7 @@ def handle_query(call):
             ## get the currenct chat config
             chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
             chat_config['language_model'] = "gpt-4"
-            new_config = chat_config.copy()
-            config_db_helper.set_new_config(call.message.chat.id, 'chat', new_config)
+            config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
             bot.send_message(chat_id=call.message.chat.id, text="Group's Language Model set to GPT 4! All chats here onwards will use this model")
         
         except Exception as e:
@@ -934,6 +969,28 @@ def handle_query(call):
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
     elif call.data == "persistence_off":
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
+    
+    elif call.data == 'translations_menu':
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
+    
+    elif call.data in ['t1', 't2', 't3']:
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data))
+    
+    elif call.data[0:4] == "lset":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        preset_nubmer = call.data.split('_')[1]
+        language_choice = call.data.split('_')[2]
+        chat_config[preset_nubmer] = language_choice
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
+        bot.send_message(chat_id=call.message.chat.id, text=f"Translation preset {preset_nubmer} changed to {language_choice}!")
+
+
+
+
+
+
 
 
 
@@ -1039,15 +1096,15 @@ def handle_set_temperature(message):
 
     try:
         # Extract and validate the new temperature setting
-        new_temperature = int(helper_functions.extract_body(message.text))
+        new_temperature = float(helper_functions.extract_body(message.text))
         if new_temperature < 0 or new_temperature > 2:
             bot.reply_to(message, "Invalid temperature. Please enter a value between 0 and 2.")
             return
 
         # Retrieve and update the chat configuration
-        user_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_config['lm_temp'] = new_temperature
-        config_db_helper.set_new_config(message.chat.id, 'chat', user_config)
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['lm_temp'] = new_temperature
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         
         bot.reply_to(message, f"Temperature setting updated to {new_temperature}.")
 
