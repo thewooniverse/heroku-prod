@@ -106,8 +106,6 @@ Once settings / configuring is made available.
 1.b. /variate
 1.c. translations options
 
-
-
 0 - get patty to test out DMing and fix /vision
 - Checking API key and other formatting / accepted formats or types;
 - Encrypting API keys during setting;
@@ -115,8 +113,6 @@ Once settings / configuring is made available.
 2. Encrypted storing of API keys.
 
 -- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
-
-
 
 
 
@@ -876,12 +872,19 @@ def translation_options_menu(t1,t2,t3):
 
 
 # define translation langauge choice menu
-
-
-
-
-
-
+def language_selection_menu(preset_num):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f"🇬🇧", callback_data=f"lset_{preset_num}_eng"),
+                types.InlineKeyboardButton(f"🇨🇳", callback_data=f"lset_{preset_num}_chi"),
+                types.InlineKeyboardButton(f"🇮🇳", callback_data=f"lset_{preset_num}_hin"))
+    markup.row(types.InlineKeyboardButton(f"🇪🇸", callback_data=f"lset_{preset_num}_spa"),
+                types.InlineKeyboardButton(f"🇫🇷", callback_data=f"lset_{preset_num}_fre"),
+                types.InlineKeyboardButton(f"🇸🇦", callback_data=f"lset_{preset_num}_ara"))
+    markup.row(types.InlineKeyboardButton(f"🇵🇹", callback_data=f"lset_{preset_num}_por"),
+                types.InlineKeyboardButton(f"🇷🇺", callback_data=f"lset_{preset_num}_rus"),
+                types.InlineKeyboardButton(f"🇰🇷", callback_data=f"lset_{preset_num}_kor"))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="translations_menu"))
+    return markup
 
 
 
@@ -903,7 +906,7 @@ def handle_settings(message):
 
 
 @bot.callback_query_handler(func=lambda call: True)
-def handle_query(call):
+def handle_callback(call):
 
     # User Settings callback handler
     if call.data == "user_settings":
@@ -973,6 +976,18 @@ def handle_query(call):
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
+    
+    elif call.data in ['t1', 't2', 't3']:
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data))
+    
+    elif call.data[0:4] == "lset":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        preset_nubmer = call.data.split('_')[1]
+        language_choice = call.data.split('_')[2]
+        chat_config[preset_nubmer] = language_choice
+        bot.send_message(chat_id=call.message.chat.id, text=f"Translation preset {preset_nubmer} changed to {language_choice}!")
+
+
 
 
 

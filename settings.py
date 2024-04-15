@@ -54,15 +54,24 @@ GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capa
 """
 
 
-translation_presets_string = """🌐 Language Presets 🌐
-/t1 /t2 /t3 -> all uses your translation presets, you can conveniently
+translation_presets_string = """🌐Language Presets🌐
 
+Translations /t1 /t2 /t3 [prompt] translates any prompt entered to a preset language without the need to ask GPT to "translate X into Y"
+-- Button Settings --
+Press the options below to change your translation language presets to popular language choices.
+
+-- Manual Settings --
+For languages not supported in the options below, you can find the 3 character ISO 639-2 code for your desired language and set it manually with the commands below.
+Find your lannguage's code on: https://www.loc.gov/standards/iso639-2/php/code_list.php
+
+/t1_set [xxx]
+/t2_set [xxx]
+/t3_set [xxx]
 """
 
-translation_presets_string = """🌐 T1: Language Options 🌐
-/t1 /t2 /t3 -> all uses your translation presets, you can conveniently
+def construct_translation_preset_string(preset_num):
+    return f"""🌐{preset_num}: Language Options🌐
+Press the desired language option, press back to see current configuration:
 """
-
-
 
 
