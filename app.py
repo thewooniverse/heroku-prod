@@ -20,6 +20,8 @@ import config_db_helper # this also runs all of the necessary functions in creat
 from config_db_helper import get_or_create_chat_config
 import re
 import settings
+from iso_codes import iso_code_list
+import pandas
 
 
 # database modules
@@ -129,7 +131,6 @@ General development timeline:
 1 - Button based features and customizability
 1.A - First try to do the Language Model configurations first << done
 1.B - Then do the configuration + integrate the temperature as well into the function calls << done
-
 
 1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
 ^ these support manual configurations as well for custom, valid language codes;
@@ -1000,6 +1001,11 @@ def handle_callback(call):
 
 
 
+
+
+
+
+
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['user_set_openai_key'])
 def handle_user_set_openai_apikey(message):
@@ -1080,6 +1086,7 @@ def handle_chat_set_openai_apikey(message):
 
 
 
+
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['set_temperature'])
 def handle_set_temperature(message):
@@ -1118,6 +1125,44 @@ def handle_set_temperature(message):
 
 
 
+
+
+
+
+# Manual configurations of settings that require users to type
+@bot.message_handler(commands=['set_t1'])
+def handle_set_t1(message):
+    """
+    Sets the translation 1 preset of the group.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    # Check permissions for group chats if the user is an administrator
+    if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+        bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+        return
+
+    try:
+        new_iso_code = helper_functions.extract_body(message.text)
+        if new_iso_code not in iso_code_list:
+            bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
+            return
+
+        # Retrieve and update the chat configuration
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['lm_temp'] = new_temperature
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
+        
+        bot.reply_to(message, f"Temperature setting updated to {new_temperature}.")
+
+    except ValueError:
+        # Handle non-integer input gracefully
+        bot.reply_to(message, "Please enter a valid integer for the temperature.")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set temperature, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 
