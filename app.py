@@ -20,7 +20,7 @@ import config_db_helper # this also runs all of the necessary functions in creat
 from config_db_helper import get_or_create_chat_config
 import re
 import settings
-from iso_codes import iso_code_list
+from iso_codes import get_code_and_name
 import pandas
 
 
@@ -1145,16 +1145,16 @@ def handle_set_t1(message):
 
     try:
         new_iso_code = helper_functions.extract_body(message.text)
-        if new_iso_code not in iso_code_list:
+        retrieved_code = get_code_and_name(new_iso_code)
+        if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return
 
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['lm_temp'] = new_temperature
+        chat_config['t1'] = retrieved_code[0]
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
-        
-        bot.reply_to(message, f"Temperature setting updated to {new_temperature}.")
+        bot.reply_to(message, f"Translation Preset 1 (/t1) changed to {retrieved_code[0]}: {retrieved_code[1]}.")
 
     except ValueError:
         # Handle non-integer input gracefully
