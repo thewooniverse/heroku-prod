@@ -1,9 +1,18 @@
 import pandas as pd # needs to be installed
+import os
 
 
-# read the CSV provided by IndiGG
-df = pd.read_csv("iso_codes.csv", header=1)
+def get_data_frame():
+    # Get the directory where the script is located
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    # Construct the path to the CSV file
+    csv_path = os.path.join(dir_path, "iso_codes.csv")
 
+    # Read the CSV file
+    df = pd.read_csv(csv_path, header=1)
+    return df
+
+df = get_data_frame()
 
 def get_code_and_name(code):
     """
