@@ -5,7 +5,7 @@ import pandas as pd # needs to be installed
 df = pd.read_csv("iso_codes.csv", header=1)
 
 
-def get_code_and_name(code, df):
+def get_code_and_name(code):
     """
     Returns a tuple of the row values of columns "iso_code" and "english" if a result is found; 
     returns an empty tuple if it is not.

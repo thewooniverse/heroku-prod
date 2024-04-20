@@ -1156,12 +1156,9 @@ def handle_set_t1(message):
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         bot.reply_to(message, f"Translation Preset 1 (/t1) changed to {retrieved_code[0]}: {retrieved_code[1]}.")
 
-    except ValueError:
-        # Handle non-integer input gracefully
-        bot.reply_to(message, "Please enter a valid integer for the temperature.")
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set temperature, please contact admin.")
+        bot.reply_to(message, "Failed to set translation preset, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
