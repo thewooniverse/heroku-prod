@@ -19,6 +19,7 @@ def get_code_and_name(code):
     Returns a tuple of the row values of columns "iso_code" and "english" if a result is found; 
     returns an empty tuple if it is not.
     """
+    print(df)
     # Filter the DataFrame for rows where the 'iso_code' matches the provided code.
     result = df.loc[df['iso_code'] == code]
 
