@@ -1142,19 +1142,23 @@ def handle_set_t1(message):
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
         bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
         return
-
+    
     try:
         new_iso_code = helper_functions.extract_body(message.text)
-        retrieved_code = get_code_and_name(new_iso_code)
+        # print(new_iso_code)
+
+
+        retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
+        print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return
 
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['t1'] = retrieved_code[0]
+        chat_config['t1'] = retrieved_code
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
-        bot.reply_to(message, f"Translation Preset 1 (/t1) changed to {retrieved_code[0]}: {retrieved_code[1]}.")
+        bot.reply_to(message, f"Translation Preset 1 (/t1) changed to {retrieved_code}: {english_name}.")
 
     except Exception as e:
         # Generic error handling
@@ -1162,6 +1166,79 @@ def handle_set_t1(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
+
+
+
+@bot.message_handler(commands=['set_t2'])
+def handle_set_t2(message):
+    """
+    Sets the translation 2 preset of the group.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    # Check permissions for group chats if the user is an administrator
+    if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+        bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+        return
+    
+    try:
+        new_iso_code = helper_functions.extract_body(message.text)
+        # print(new_iso_code)
+
+        
+        retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
+        print(retrieved_code, english_name)
+        if not retrieved_code:
+            bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
+            return
+
+        # Retrieve and update the chat configuration
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['t2'] = retrieved_code
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
+        bot.reply_to(message, f"Translation Preset 2 (/t2) changed to {retrieved_code}: {english_name}.")
+
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set translation preset, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+@bot.message_handler(commands=['set_t3'])
+def handle_set_t2(message):
+    """
+    Sets the translation 3 preset of the group.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    # Check permissions for group chats if the user is an administrator
+    if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+        bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+        return
+    
+    try:
+        new_iso_code = helper_functions.extract_body(message.text)
+        # print(new_iso_code)
+
+        
+        retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
+        print(retrieved_code, english_name)
+        if not retrieved_code:
+            bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
+            return
+
+        # Retrieve and update the chat configuration
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['t3'] = retrieved_code
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
+        bot.reply_to(message, f"Translation Preset 3 (/t3) changed to {retrieved_code}: {english_name}.")
+
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set translation preset, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 

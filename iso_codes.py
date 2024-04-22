@@ -9,7 +9,7 @@ def get_data_frame():
     csv_path = os.path.join(dir_path, "iso_codes.csv")
 
     # Read the CSV file
-    df = pd.read_csv(csv_path, header=1)
+    df = pd.read_csv(csv_path, header=0)
     return df
 
 df = get_data_frame()
@@ -20,7 +20,9 @@ def get_code_and_name(code):
     returns an empty tuple if it is not.
     """
     # Filter the DataFrame for rows where the 'iso_code' matches the provided code.
+
     result = df.loc[df['iso_code'] == code]
+    # print(result)
 
     # Check if the result is not empty.
     if not result.empty:
@@ -32,3 +34,8 @@ def get_code_and_name(code):
     else:
         # Return an empty tuple if no rows match the given code.
         return ()
+
+        
+
+# print(get_code_and_name('eng'))
+
