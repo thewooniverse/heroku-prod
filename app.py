@@ -1145,8 +1145,10 @@ def handle_set_t1(message):
     
     try:
         new_iso_code = helper_functions.extract_body(message.text)
-        print(new_iso_code)
-        retrieved_code, english_name = get_code_and_name(new_iso_code)
+        # print(new_iso_code)
+
+        
+        retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
         print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
