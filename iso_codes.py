@@ -22,7 +22,7 @@ def get_code_and_name(code):
     # Filter the DataFrame for rows where the 'iso_code' matches the provided code.
 
     result = df.loc[df['iso_code'] == code]
-    print(result)
+    # print(result)
 
     # Check if the result is not empty.
     if not result.empty:
