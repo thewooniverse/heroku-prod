@@ -841,12 +841,10 @@ def user_settings_markup():
 # Chat settings
 def group_settings_markup():
     markup = types.InlineKeyboardMarkup()
-    lm_btn = types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu')
-    languages_btn = types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu')
-    markup.add(lm_btn, languages_btn)
+    markup.row(types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu'))
+    markup.row(types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu'))
     markup.row(types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on'),
         types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off'))
-
     return markup
 
 # define the language_model_menu
