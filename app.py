@@ -840,15 +840,13 @@ def user_settings_markup():
 
 # Chat settings
 def group_settings_markup():
-    # back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
-    persistence_on_btn = types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on')
-    persistence_off_btn = types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off')
+    markup = types.InlineKeyboardMarkup()
     lm_btn = types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu')
     languages_btn = types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu')
-    # Add other buttons for chat settings here
-    markup = types.InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(lm_btn, persistence_on_btn, persistence_off_btn, languages_btn)
+    markup.add(lm_btn, languages_btn)
+    markup.row(types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on'),
+        types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off'))
+
     return markup
 
 # define the language_model_menu

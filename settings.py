@@ -64,9 +64,9 @@ Press the options below to change your translation language presets to popular l
 For languages not supported in the options below, you can find the 3 character ISO 639-2 code for your desired language and set it manually with the commands below.
 Find your lannguage's code on: https://www.loc.gov/standards/iso639-2/php/code_list.php
 
-/t1_set [xxx]
-/t2_set [xxx]
-/t3_set [xxx]
+/t1_set xxx
+/t2_set xxx
+/t3_set xxx
 """
 
 def construct_translation_preset_string(preset_num):
