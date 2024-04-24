@@ -375,9 +375,9 @@ def handle_chat(message):
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
 
-        # load context if it is response to anything;
+        # load chat history if it is response / replying to anything;
         if message.reply_to_message:
-            context = message.reply_to_message.text
+            chat_history = message.reply_to_message.text
 
         # handle API Keys, the usage of the group's API key is prioritized over individual.
         api_keys = config_db_helper.get_apikey_list(message)
@@ -387,11 +387,11 @@ def handle_chat(message):
 
         if api_keys:
             try:
-                context = chat_config['context'][message.from_user.id]
+                context = chat_config['contexts'][message.from_user.id]
             except KeyError:
                 print("No context was set for user")
 
-            response_text = ai_commands.chat_completion(message, context, chat_history = "" ,openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history ,openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -1267,13 +1267,13 @@ def handle_set_context(message):
         
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['context'][message.from_user.id] = new_context
+        chat_config['contexts'][message.from_user.id] = new_context
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         bot.reply_to(message, f"Context has been set.")
 
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set translation preset, please contact admin.")
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 

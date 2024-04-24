@@ -61,7 +61,7 @@ default_chat_config = {
     "t1": "eng", # translation 1
     "t2": "chi", # translation 2
     "t3": "kor", # translation 3
-    "context": {} # context for a user given a chat group;
+    "contexts": {} # context for a user given a chat group;
   }
 
 default_user_config = {
