@@ -21,7 +21,7 @@ import helper_functions
 
 
 ## Text Handling Commands ##
-def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo', temperature=1):
+def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3.5-turbo', temperature=1):
     """
     """
     client = OpenAI(api_key=openai_api_key)
@@ -30,8 +30,8 @@ def chat_completion(message, context, openai_api_key, model='gpt-3.5-turbo', tem
     else:
         body_text = helper_functions.extract_body(message.text)
 
-    system_prompt = "You are a helpful AI assistant - reply all responses in markdown. Some context of the conversation so far is provided below as chat history"
-    chat_history = f"This is the chat history of the conversation that we've had so far: \n\n {context}"
+    system_prompt = f"You are a helpful AI assistant - reply all responses in markdown. The context provided for this user is as follows \n\n {context}"
+    chat_history = f"This is the chat history of the conversation that we've had so far: {chat_history}"
 
     completion_object = client.chat.completions.create(
     model=model,

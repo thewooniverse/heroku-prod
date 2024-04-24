@@ -117,6 +117,14 @@ Once settings / configuring is made available.
 -- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 
 
+1 - Button based features and customizability
+1.A - First try to do the Language Model configurations first << done
+1.B - Then do the configuration + integrate the temperature as well into the function calls << done
+
+1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
+^ these support manual configurations as well for custom, valid language codes; << completed
+
+
 
 
 
@@ -128,28 +136,26 @@ Once settings / configuring is made available.
 ----- done above -----
 
 General development timeline:
-1 - Button based features and customizability
-1.A - First try to do the Language Model configurations first << done
-1.B - Then do the configuration + integrate the temperature as well into the function calls << done
-
-1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
-^ these support manual configurations as well for custom, valid language codes;
 
 1.D - Image edit mask for user settings and integrations with the functions;
-1.E - Ability to customize contexts to a specific given chat and using it in all calls;
+1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
+
+-- do until here today --
 
 
 2 - Context awareness and chat history storage in vectorstore integration with Chroma
-3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services.
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
 4 - Additional API integration and ChatGPT tools integration.
+
+Ability to chat to other bots;
+
 
 
 
 3. Features:
 -- Temperature controls for language models;
--- Context for language models (chat specific)
 
-General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree 
+General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree where its shippable / shareable with people.
 
 - BUTTON SETTINGS!!
 /user_settings;
@@ -380,7 +386,12 @@ def handle_chat(message):
             return
 
         if api_keys:
-            response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+            try:
+                context = chat_config['context'][message.from_user.id]
+            except KeyError:
+                print("No context was set for user")
+
+            response_text = ai_commands.chat_completion(message, context, chat_history = "" ,openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
@@ -1235,6 +1246,36 @@ def handle_set_t2(message):
         # Generic error handling
         bot.reply_to(message, "Failed to set translation preset, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+@bot.message_handler(commands=['set_context'])
+def handle_set_context(message):
+    """
+    Sets the context for the group, whatever instructions it wants to give.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    # Check permissions for group chats if the user is an administrator -> commented out as ANYBODY should be able to set their context within a group
+    # if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+    #     bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+    #     return
+    
+    try:
+        new_context = helper_functions.extract_body(message.text)
+        
+        # Retrieve and update the chat configuration
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['context'][message.from_user.id] = new_context
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
+        bot.reply_to(message, f"Context has been set.")
+
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set translation preset, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
 
 
 
