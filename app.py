@@ -390,6 +390,7 @@ def handle_chat(message):
         if api_keys:
             try:
                 context = chat_config['contexts'][message.from_user.id]
+                print(context)
             except KeyError:
                 print("No context was set for user")
 
@@ -1269,7 +1270,7 @@ def handle_set_context(message):
         
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['contexts'][message.from_user.id] = new_context
+        chat_config['contexts'][str(message.from_user.id)] = new_context
         print(chat_config['contexts'])
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         bot.reply_to(message, f"Context has been set.")
