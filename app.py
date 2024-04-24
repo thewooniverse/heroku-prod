@@ -389,7 +389,7 @@ def handle_chat(message):
 
         if api_keys:
             try:
-                context = chat_config['contexts'][message.from_user.id]
+                context = chat_config['contexts'][str(message.from_user.id)]
                 print(context)
             except KeyError:
                 print("No context was set for user")
