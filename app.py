@@ -1270,6 +1270,7 @@ def handle_set_context(message):
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         chat_config['contexts'][message.from_user.id] = new_context
+        print(chat_config['contexts'])
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         bot.reply_to(message, f"Context has been set.")
 
