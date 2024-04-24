@@ -47,7 +47,7 @@ valid_table_names = ["chat_configs", "user_configs"]
 # For any config changes, remember to update the versions.
 #####
 default_chat_config = {
-    "version": "0.0.7", # the version determines the current version of the configs
+    "version": "0.0.8", # the version determines the current version of the configs
     "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on.
 
     # below are changeable by users / system
