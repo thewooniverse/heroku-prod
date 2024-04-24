@@ -378,6 +378,8 @@ def handle_chat(message):
         # load chat history if it is response / replying to anything;
         if message.reply_to_message:
             chat_history = message.reply_to_message.text
+        else:
+            chat_history = ""
 
         # handle API Keys, the usage of the group's API key is prioritized over individual.
         api_keys = config_db_helper.get_apikey_list(message)
@@ -391,7 +393,7 @@ def handle_chat(message):
             except KeyError:
                 print("No context was set for user")
 
-            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history ,openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
