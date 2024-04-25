@@ -982,7 +982,7 @@ def handle_callback(call):
 
         # change the settings / configurations
         print(new_value)
-        user_image_mask[mask_idx[0]][mask_idx[1]] = new_value
+        user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
