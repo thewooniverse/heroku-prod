@@ -47,6 +47,14 @@ Image Edit Mask - which section of the image
 /user_set_openai_key [sk-abcdefg...] - set the openai api key for yourself (works across all groups)
 """
 
+image_mask_settings_string = """🎨Image Mask Settings🎨
+Below is the current image mask settings; 1 is the section of the image where you want to create a mask over to instruct the image model where to edit the image.
+"""
+
+
+
+
+
 lm_settings_string = """💬Language Model Settings💬
 
 GPT 3.5 turbo - Baseline model for OpenAI's ChatGPT. Fast and cheaper.

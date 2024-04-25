@@ -966,9 +966,11 @@ def handle_callback(call):
         # get the image settings
         user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
+        print(user_image_mask)
 
         # get the mask number clicked
         mask_idx = call.data[3:] # such that if im_00 is called, 00 is returned
+        print(mask_idx)
         current_value_at_idx = user_image_mask[mask_idx[0]][mask_idx[1]]
         if current_value_at_idx == 0:
             new_value = 1
@@ -976,10 +978,11 @@ def handle_callback(call):
             new_value = 0
 
         # change the settings / configurations
-        user_config['image_mask_map'] = new_value
+        print(new_value)
+        user_image_mask[mask_idx[0]][mask_idx[1]] = new_value
+        user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
-
 
     # Group Settings callback handler
     elif call.data == "group_settings":
