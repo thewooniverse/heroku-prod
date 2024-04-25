@@ -959,7 +959,7 @@ def handle_callback(call):
     elif call.data == "image_mask_settings":
         user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
     
     
     elif call.data[0:3] == "im_":
@@ -982,7 +982,10 @@ def handle_callback(call):
         user_image_mask[mask_idx[0]][mask_idx[1]] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+
+
+
 
     # Group Settings callback handler
     elif call.data == "group_settings":
