@@ -126,8 +126,7 @@ Once settings / configuring is made available.
 
 
 
-
-
+1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
 
 
 
@@ -138,7 +137,6 @@ Once settings / configuring is made available.
 General development timeline:
 
 1.D - Image edit mask for user settings and integrations with the functions;
-1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
 
 -- do until here today --
 
@@ -749,6 +747,9 @@ def handle_vision(message):
 
 
 
+
+
+
 @bot.message_handler(commands=['edit_img'])
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
@@ -758,6 +759,8 @@ def handle_edit(message):
         original_message = message.reply_to_message
         original_image = original_message.photo[-1]
         original_image_file_info = bot.get_file(original_image.file_id)
+
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
 
         # try and get the original image and process it as a PNG file
         try:
@@ -772,13 +775,25 @@ def handle_edit(message):
                     mask = img.copy()
                     logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded and resized"))
 
-                    # Apply transparency to the bottom half of the mask
-                    for x in range(width):
-                        for y in range(height // 2, height):
-                            # Get the current pixel's color
-                            r, g, b, a = mask.getpixel((x, y))
-                            # Set alpha to 0 (fully transparent) for the bottom half
-                            mask.putpixel((x, y), (r, g, b, 0))
+                    # determine the grid cells;
+                    cell_width = width // len(user_config['image_mask_map'][0])
+                    cell_height = height // len(user_config['image_mask_map'])
+
+                    # Apply transparency to designated areas defined in the image mask map
+                    for row_index, row in enumerate(user_config['image_mask_map']):
+                        for col_index, cell in enumerate(row):
+                            if cell == 1:  # If the cell is marked for transparency
+                                for x in range(col_index * cell_width, (col_index + 1) * cell_width):
+                                    for y in range(row_index * cell_height, (row_index + 1) * cell_height):
+                                        mask.putpixel((x, y), (0, 0, 0, 0))  # Set alpha to 0 (transparent)
+                    # # OLD APPROACH - Apply transparency to the bottom half of the mask
+                    # for x in range(width):
+                    #     for y in range(height // 2, height):
+                    #         # Get the current pixel's color
+                    #         r, g, b, a = mask.getpixel((x, y))
+                    #         # Set alpha to 0 (fully transparent) for the bottom half
+                    #         mask.putpixel((x, y), (r, g, b, 0))
+
                     
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')
@@ -830,6 +845,13 @@ def handle_edit(message):
 
 
 
+
+
+
+
+
+
+
 ###############################################
 ### Bot configuration handlers and commands ###
 ###############################################
@@ -846,11 +868,32 @@ def handle_edit(message):
 def user_settings_markup():
     # back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
     # Add other buttons for user settings here
-    image_mask_btn = types.InlineKeyboardButton("🖼️ Image Mask", callback_data='language_model_menu')
+    image_mask_btn = types.InlineKeyboardButton("🖼️ Image Mask", callback_data='image_mask_settings')
     markup = types.InlineKeyboardMarkup()
     markup.row_width = 2
     markup.add(image_mask_btn)
     return markup
+
+
+# Image Mask markup
+def image_mask_options_menu(mask_vector):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[0][0]}", callback_data="im_00"),
+                types.InlineKeyboardButton(f"{mask_vector[0][1]}", callback_data="im_01"),
+                types.InlineKeyboardButton(f"{mask_vector[0][2]}", callback_data="im_02"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[1][0]}", callback_data="im_10"),
+                types.InlineKeyboardButton(f"{mask_vector[1][1]}", callback_data="im_11"),
+                types.InlineKeyboardButton(f"{mask_vector[1][2]}", callback_data="im_12"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[2][0]}", callback_data="im_20"),
+                types.InlineKeyboardButton(f"{mask_vector[2][1]}", callback_data="im_21"),
+                types.InlineKeyboardButton(f"{mask_vector[2][2]}", callback_data="im_22"))
+        
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="user_settings"))
+    return markup
+
+
+
+
 
 # Chat settings
 def group_settings_markup():
@@ -880,6 +923,7 @@ def translation_options_menu(t1,t2,t3):
                 types.InlineKeyboardButton(f"3:{t3}", callback_data="t3"))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="group_settings"))
     return markup
+
 
 
 # define translation langauge choice menu
@@ -912,7 +956,11 @@ def handle_settings(message):
 
 @bot.message_handler(commands=['user_settings'])
 def handle_settings(message):
-    bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
+    if message.chat.type != 'private':
+        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.")
+        return
+    else:
+        bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
 
 
 
@@ -924,7 +972,35 @@ def handle_callback(call):
         # Update message to show user settings with a "Back" button
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup())
 
+
+    elif call.data == "image_mask_settings":
+        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_image_mask = user_config['image_mask_map']
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
     
+    
+    elif call.data[0:3] == "im_":
+        # get the image settings
+        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_image_mask = user_config['image_mask_map']
+
+        # get the mask number clicked
+        mask_idx = call.data[3:] # such that if im_00 is called, 00 is returned
+        current_value_at_idx = user_image_mask[int(mask_idx[0])][int(mask_idx[1])]
+        # set the values
+        if current_value_at_idx == 0:
+            new_value = 1
+        else:
+            new_value = 0
+
+        # change the settings / configurations
+        user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
+        user_config['image_mask_map'] = user_image_mask
+        config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+
+
+
     # Group Settings callback handler
     elif call.data == "group_settings":
         # Update message to show chat settings with a "Back" button
