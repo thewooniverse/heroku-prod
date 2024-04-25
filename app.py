@@ -971,7 +971,10 @@ def handle_callback(call):
         # get the mask number clicked
         mask_idx = call.data[3:] # such that if im_00 is called, 00 is returned
         print(mask_idx)
-        current_value_at_idx = user_image_mask[mask_idx[0]][mask_idx[1]]
+
+        current_value_at_idx = user_image_mask[int(mask_idx[0])][int(mask_idx[1])]
+        print(current_value_at_idx)
+
         if current_value_at_idx == 0:
             new_value = 1
         else:
