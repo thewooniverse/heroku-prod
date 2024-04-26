@@ -294,7 +294,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
 # create logging objects
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'ERROR').upper()
 print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
@@ -761,6 +761,7 @@ def handle_edit(message):
         original_image_file_info = bot.get_file(original_image.file_id)
 
         user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
+        print(user_config['image_mask_map'])
 
         # try and get the original image and process it as a PNG file
         try:
@@ -769,37 +770,28 @@ def handle_edit(message):
             width, height = 1024, 1024
 
             with io.BytesIO(downloaded_original_img) as image_stream:
-                # Open the image using Pillow with another 'with' block
                 with Image.open(image_stream).convert('RGBA') as img:
-                    img = img.resize((width, height)) # resize to standard image, same as the mask image
-                    mask = img.copy()
-                    logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded and resized"))
+                    img = img.resize((width, height))  # Resize to standard image dimensions
+                    mask = Image.new("RGBA", (width, height), (0, 0, 0, 255))  # Initially opaque
 
-                    # determine the grid cells;
+                    # Determine the size of each grid cell
                     cell_width = width // len(user_config['image_mask_map'][0])
                     cell_height = height // len(user_config['image_mask_map'])
 
-                    # Apply transparency to designated areas defined in the image mask map
+                    # Apply transparency to the designated areas defined in the image mask map
                     for row_index, row in enumerate(user_config['image_mask_map']):
                         for col_index, cell in enumerate(row):
-                            if cell == 1:  # If the cell is marked for transparency
+                            if cell == 1:  # Apply transparency only where indicated by '1'
                                 for x in range(col_index * cell_width, (col_index + 1) * cell_width):
                                     for y in range(row_index * cell_height, (row_index + 1) * cell_height):
-                                        mask.putpixel((x, y), (0, 0, 0, 0))  # Set alpha to 0 (transparent)
-                    # # OLD APPROACH - Apply transparency to the bottom half of the mask
-                    # for x in range(width):
-                    #     for y in range(height // 2, height):
-                    #         # Get the current pixel's color
-                    #         r, g, b, a = mask.getpixel((x, y))
-                    #         # Set alpha to 0 (fully transparent) for the bottom half
-                    #         mask.putpixel((x, y), (r, g, b, 0))
+                                        mask.putpixel((x, y), (0, 0, 0, 0))  # Set pixel to transparent
 
-                    
+                    # Save the mask to a temporary file for further processing
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')
-                        bot.send_photo(message.chat.id, photo=mask) # test
-                        
                         temp_mask_file_path = temp_mask_file.name
+
+                        bot.send_photo(message.chat.id, photo=mask) # test
                         logger.debug(helper_functions.construct_logs(message, f"Debug: Mask Image generated and saved at {temp_mask_file_path}"))
 
                     # Convert the resized image to a BytesIO object again
