@@ -770,28 +770,37 @@ def handle_edit(message):
             width, height = 1024, 1024
 
             with io.BytesIO(downloaded_original_img) as image_stream:
+                # Open the image using Pillow with another 'with' block
                 with Image.open(image_stream).convert('RGBA') as img:
-                    img = img.resize((width, height))  # Resize to standard image dimensions
-                    mask = Image.new("RGBA", (width, height), (0, 0, 0, 255))  # Initially opaque
+                    img = img.resize((width, height)) # resize to standard image, same as the mask image
+                    mask = img.copy()
+                    logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded and resized"))
 
-                    # Determine the size of each grid cell
+                    # determine the grid cells;
                     cell_width = width // len(user_config['image_mask_map'][0])
                     cell_height = height // len(user_config['image_mask_map'])
 
-                    # Apply transparency to the designated areas defined in the image mask map
+                    # Apply transparency to designated areas defined in the image mask map
                     for row_index, row in enumerate(user_config['image_mask_map']):
                         for col_index, cell in enumerate(row):
-                            if cell == 1:  # Apply transparency only where indicated by '1'
+                            if cell == 1:  # If the cell is marked for transparency
                                 for x in range(col_index * cell_width, (col_index + 1) * cell_width):
                                     for y in range(row_index * cell_height, (row_index + 1) * cell_height):
-                                        mask.putpixel((x, y), (0, 0, 0, 0))  # Set pixel to transparent
+                                        mask.putpixel((x, y), (0, 0, 0, 0))  # Set alpha to 0 (transparent)
+                    # # OLD APPROACH - Apply transparency to the bottom half of the mask
+                    # for x in range(width):
+                    #     for y in range(height // 2, height):
+                    #         # Get the current pixel's color
+                    #         r, g, b, a = mask.getpixel((x, y))
+                    #         # Set alpha to 0 (fully transparent) for the bottom half
+                    #         mask.putpixel((x, y), (r, g, b, 0))
 
-                    # Save the mask to a temporary file for further processing
+                    
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')
-                        temp_mask_file_path = temp_mask_file.name
-
                         bot.send_photo(message.chat.id, photo=mask) # test
+
+                        temp_mask_file_path = temp_mask_file.name
                         logger.debug(helper_functions.construct_logs(message, f"Debug: Mask Image generated and saved at {temp_mask_file_path}"))
 
                     # Convert the resized image to a BytesIO object again
@@ -968,14 +977,14 @@ def handle_callback(call):
 
 
     elif call.data == "image_mask_settings":
-        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
     
     
     elif call.data[0:3] == "im_":
         # get the image settings
-        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
 
         # get the mask number clicked
@@ -990,7 +999,7 @@ def handle_callback(call):
         # change the settings / configurations
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
-        config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
+        config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
 
 
