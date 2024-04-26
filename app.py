@@ -797,6 +797,8 @@ def handle_edit(message):
                     
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')
+                        bot.send_photo(message.chat.id, photo=mask) # test
+                        
                         temp_mask_file_path = temp_mask_file.name
                         logger.debug(helper_functions.construct_logs(message, f"Debug: Mask Image generated and saved at {temp_mask_file_path}"))
 
