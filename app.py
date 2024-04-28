@@ -127,7 +127,7 @@ Once settings / configuring is made available.
 
 
 1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
-
+1.D - Image edit mask for user settings and integrations with the functions;
 
 
 
@@ -135,19 +135,23 @@ Once settings / configuring is made available.
 ----- done above -----
 
 General development timeline:
+2 - Context awareness and chat history storage in vectorstore integration with Pinecone
+This is in multiple parts
+A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
+B- Every /chat or message sent is embedded and stored into the Vectorstore;
+C-
 
-1.D - Image edit mask for user settings and integrations with the functions;
-
--- do until here today --
 
 
-2 - Context awareness and chat history storage in vectorstore integration with Chroma
+
+
+
+
+
 3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
 4 - Additional API integration and ChatGPT tools integration.
 
 Ability to chat to other bots;
-
-
 
 
 3. Features:
