@@ -127,7 +127,7 @@ Once settings / configuring is made available.
 
 
 1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
-
+1.D - Image edit mask for user settings and integrations with the functions;
 
 
 
@@ -135,19 +135,23 @@ Once settings / configuring is made available.
 ----- done above -----
 
 General development timeline:
+2 - Context awareness and chat history storage in vectorstore integration with Pinecone
+This is in multiple parts
+A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
+B- Every /chat or message sent is embedded and stored into the Vectorstore;
+C-
 
-1.D - Image edit mask for user settings and integrations with the functions;
-
--- do until here today --
 
 
-2 - Context awareness and chat history storage in vectorstore integration with Chroma
+
+
+
+
+
 3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
 4 - Additional API integration and ChatGPT tools integration.
 
 Ability to chat to other bots;
-
-
 
 
 3. Features:
@@ -294,7 +298,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
 # create logging objects
-LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
+LOG_LEVEL = os.getenv('LOG_LEVEL', 'ERROR').upper()
 print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
@@ -761,6 +765,7 @@ def handle_edit(message):
         original_image_file_info = bot.get_file(original_image.file_id)
 
         user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
+        print(user_config['image_mask_map'])
 
         # try and get the original image and process it as a PNG file
         try:
@@ -797,6 +802,8 @@ def handle_edit(message):
                     
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')
+                        bot.send_photo(message.chat.id, photo=mask) # test
+
                         temp_mask_file_path = temp_mask_file.name
                         logger.debug(helper_functions.construct_logs(message, f"Debug: Mask Image generated and saved at {temp_mask_file_path}"))
 
@@ -974,14 +981,14 @@ def handle_callback(call):
 
 
     elif call.data == "image_mask_settings":
-        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
     
     
     elif call.data[0:3] == "im_":
         # get the image settings
-        user_config = get_or_create_chat_config(call.message.from_user.id, 'user')
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
 
         # get the mask number clicked
@@ -996,7 +1003,7 @@ def handle_callback(call):
         # change the settings / configurations
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
-        config_db_helper.set_new_config(call.message.from_user.id, 'user', user_config)
+        config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
 
 
