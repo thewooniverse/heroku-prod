@@ -23,6 +23,8 @@ import settings
 from iso_codes import get_code_and_name
 import pandas
 
+# payments modules;
+from telegram import LabeledPrice, Invoice
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
@@ -129,31 +131,6 @@ Once settings / configuring is made available.
 1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
 1.D - Image edit mask for user settings and integrations with the functions;
 
-
-
-
------ done above -----
-
-General development timeline:
-2 - Context awareness and chat history storage in vectorstore integration with Pinecone
-This is in multiple parts
-A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
-B- Every /chat or message sent is embedded and stored into the Vectorstore;
-C-
-
-
-
-
-
-
-
-
-3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
-4 - Additional API integration and ChatGPT tools integration.
-
-Ability to chat to other bots;
-
-
 3. Features:
 -- Temperature controls for language models;
 
@@ -177,41 +154,47 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 > learn to implement message validity
 
 
-
-
-
-
-
-
-
-----
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
--- Post database --
-
 1. /edit dalle v2
 -- /edit_mask(alpha targeting) /edit_img
 -- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
+
+
+
+
+
+
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+So pretty much its:
+- Premium subscriptions (payments integration)
+- Premium features integration v1 (variate, additional mask preset)
+
+- Persistence through vectorstores (Pinecone integration, embedding and retrieval of relevant texts) and related features
+
+- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project;
+- Then you can turn Ab69 into personal jarvis that will integrate with calendly and all that;
+==========================================
+
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
+3.a. - Premium features; gating persistence and things like that with persistence.
+-- This needs to integrate with payments providers;
+
+
+General development timeline:
+2 - Context awareness and chat history storage in vectorstore integration with Pinecone
+This is in multiple parts
+A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
+B- Every /chat or message sent is embedded and stored into the Vectorstore; IF the feature is turned on.
+C- 
+
+4 - Additional API integration and ChatGPT tools integration.
+
+Ability to chat to other bots;
+
+
+
+-- Post database --
 
 2. /variate v2
 -- supports n number of variations depending on configurations
@@ -219,54 +202,8 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 3. /chat v3
 -- chat history based persistence / threads << need to read more on it, or implement context awareness and chat history awareness
 
-4. /settings
 
 --- Build it out robustly to a degree where I can have it as a customer facing interface / product.
-
-
-
-
-
-
-
-Current dev priorities;
-ADD A FEW MORE FEATURES
-
-Logging
-- Thorough logging: basics of logging with metadata, integrating with a persistent solution (papertrail), accessing logs
-
-Databasing + Configurations and customizations
-- Configurations and safety checking best practices using Postgres, key management etc..
-- RAG using threads / Assistant integration, or Chroma vectorstore to introduce persistence in context / chat history. << databases on heroku to manage this.
-
-Refactoring / Cleanup
-- /start cleanup
-- Port over and fork it for family usage version
-
-
-Further Integrations and Features
-- Google calendar API << I can connect it to onenote, to zapier for waaaaaaaaaaaaay more things
-
-DevOps
-- Local testing and automated testing
-- Github Workflows
-
-
-ADDL GPT features
-- Fine tuning the model for different use cases, different finetuned stuff for different usecases.
-- AI Committee? Eventually I suppose
-
-# Bot Features
-- Buttons 
-- premium subscriptions, ability to make different types of requests;
-
-
-
->>>> FORK OUT into OpenAssistant
-- OpenAssistantStaging_Bot - 
-- OpenAssistantProduction_Bot - 
-- AssBlaster69Staging_Bot -
-- AssBlaster69Prod_Bot - 
 """
 
 
@@ -282,6 +219,11 @@ ROOT_URL = os.environ.get('ROOT_URL')
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
+
+STRIPE_PAYMENT_KEY_TEST = os.environ.get('STRIPE_TEST_KEY')
+STRIPE_PAYMENT_KEY = os.environ.get('STRIPE_KEY')
+
+
 
 # instantiate the bot and any key helper functions
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
@@ -358,8 +300,6 @@ def handle_start(message):
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
@@ -1381,7 +1321,40 @@ def handle_clear_memory(message):
 
 
 
-            
+
+
+
+
+
+#########################################################
+################## PAYMENTS FUNCTIONS: ##################
+#########################################################
+
+# Action
+# - Integrate with test payment rails; and setting the configuration for the given user who called the message;
+
+
+@bot.message_handler(commands=['/subscribe'])
+def command_pay(message):
+    title = "OpenAIssistant Premium Subscription"
+    description = "Access advanced features such as: Persistence and context aware agents, granular image mask targeting,"
+    payload = "Custom-Payload"
+    provider_token = STRIPE_PAYMENT_KEY_TEST
+    start_parameter = "premium-feature"
+    currency = "USD"
+    price = [LabeledPrice("Subscription", 1000)]  # price in cents
+
+    bot.send_invoice(message.chat.id, title, description, payload,
+                     provider_token, start_parameter, currency, price)
+
+@bot.pre_checkout_query_handler(func=lambda query: True)
+def checkout(pre_checkout_query):
+    bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
+
+@bot.message_handler(content_types=['successful_payment'])
+def got_payment(message):
+    # Confirm the payment, thank the user, and grant access to the premium features.
+    bot.send_message(message.chat.id, "Thank you for your payment. Premium features enabled!")
 
 
 
@@ -1397,19 +1370,12 @@ def handle_clear_memory(message):
 
 
 
-
-
-
-
-
-
-
-
+#########################################################
+######################## RUN BOT ########################
+#########################################################
 
 
 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
-
-
