@@ -24,7 +24,8 @@ from iso_codes import get_code_and_name
 import pandas
 
 # payments modules;
-from telegram import LabeledPrice, Invoice
+from telebot.types import LabeledPrice
+from telebot import Invoice
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
