@@ -25,7 +25,6 @@ import pandas
 
 # payments modules;
 from telebot.types import LabeledPrice
-from telebot import Invoice
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
