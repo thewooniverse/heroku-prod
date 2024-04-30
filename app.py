@@ -24,7 +24,7 @@ from iso_codes import get_code_and_name
 import pandas
 
 # payments modules;
-from telegram import LabeledPrice, Invoice
+from telebot.types import LabeledPrice
 
 # database modules
 from flask_sqlalchemy import SQLAlchemy
@@ -1334,7 +1334,7 @@ def handle_clear_memory(message):
 # - Integrate with test payment rails; and setting the configuration for the given user who called the message;
 
 
-@bot.message_handler(commands=['/subscribe'])
+@bot.message_handler(commands=['subscribe'])
 def command_pay(message):
     title = "OpenAIssistant Premium Subscription"
     description = "Access advanced features such as: Persistence and context aware agents, granular image mask targeting,"
