@@ -1357,7 +1357,7 @@ def command_pay(message):
 
     try:
         bot.send_invoice(message.chat.id, title, description, payload,
-                         provider_token, start_parameter, currency, price=price)
+                         provider_token, start_parameter, currency, price)
     except Exception as e:
         print(f"Failed to send invoice: {str(e)}")
         bot.send_message(message.chat.id, f"Failed to send invoice: {str(e)}")
