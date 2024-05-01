@@ -1347,7 +1347,9 @@ def command_pay(message):
     provider_token = STRIPE_PAYMENT_KEY_TEST
     start_parameter = "premium-feature-subscription"
     currency = "USD"
-    price = [LabeledPrice("Subscription", 1000)]  # price in cents
+    # price = [LabeledPrice("Subscription", 1000)]  # price in cents
+    price = [{'label': "Subscription", 'amount': 1000}]
+
 
     print(f"Payload: {payload}")
     print(f"Provider Token: {provider_token}")
@@ -1355,7 +1357,7 @@ def command_pay(message):
 
     try:
         bot.send_invoice(message.chat.id, title, description, payload,
-                         provider_token, start_parameter, currency, prices=price)
+                         provider_token, start_parameter, currency, price=price)
     except Exception as e:
         print(f"Failed to send invoice: {str(e)}")
         bot.send_message(message.chat.id, f"Failed to send invoice: {str(e)}")
