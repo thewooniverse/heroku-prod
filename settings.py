@@ -83,3 +83,30 @@ Press the desired language option, press back to see current configuration:
 """
 
 
+
+
+
+
+
+
+
+
+
+# PREMIUM SUBSCRIPTION STRINGS:
+
+premium_subscription_string = """🌟Premium Features🌟
+
+1. Context Awareness and Persistence 🧠
+Your assistant can now remember conversation history in each group that it is in with you.
+
+2. Ads-Free 💨
+Poof, your ads gone.
+
+3. Image Mask Granualrity 🖼️
+Your assistant can now target image masks in a given image with further granularity;
+
+4. Multiple Image Generation
+Your assistant can now generate multiple variations of images from a single prompt.
+"""
+
+

@@ -65,7 +65,7 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.0.2", # the version determines the current version of the configs
+    "version": "0.0.3", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
@@ -76,6 +76,13 @@ default_user_config = {
           [0, 0, 0],
           [0, 0, 0],
           [1, 1, 1]
+        ],
+    "premium_image_mask_map": [ # determines how each user wants to edit the images
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
+          [0, 0, 0, 0, 0],
         ]
   }
 

@@ -166,6 +166,9 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 
 
 
+
+
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
@@ -181,6 +184,16 @@ So pretty much its:
 3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
 3.a. - Premium features; gating persistence and things like that with persistence.
 -- This needs to integrate with payments providers;
+How premium features integrates;
+- Mask targeting Granularity;
+- Context awareness and persistence;
+
+> Introduce simple ads.
+
+
+
+
+
 
 
 General development timeline:
@@ -188,11 +201,17 @@ General development timeline:
 This is in multiple parts
 A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
 B- Every /chat or message sent is embedded and stored into the Vectorstore; IF the feature is turned on.
-C- 
 
-4 - Additional API integration and ChatGPT tools integration.
 
-Ability to chat to other bots;
+
+
+
+
+
+
+-------
+4 - Additional API integration and ChatGPT toolkit / agent integration?
+
 
 
 
@@ -203,7 +222,6 @@ Ability to chat to other bots;
 
 3. /chat v3
 -- chat history based persistence / threads << need to read more on it, or implement context awareness and chat history awareness
-
 
 --- Build it out robustly to a degree where I can have it as a customer facing interface / product.
 """
@@ -323,7 +341,7 @@ def handle_chat(message):
         if message.reply_to_message:
             chat_history = message.reply_to_message.text
         else:
-            chat_history = ""
+            chat_history = "" #> introduce chat history here;
 
         # handle API Keys, the usage of the group's API key is prioritized over individual.
         api_keys = config_db_helper.get_apikey_list(message)
@@ -1341,19 +1359,21 @@ def generate_txid(user_id):
 
 @bot.message_handler(commands=['subscribe'])
 def command_pay(message):
-    title = "OpenAIssistant Premium Subscription"
-    description = "Access advanced features such as: Persistence and context aware agents, granular image mask targeting,"
+    if message.from_user.is_bot:
+        return
+    
+    title = "🌟OpenAIssistant Premium Subscription🌟"
+    description = settings.premium_subscription_string
     payload = generate_txid(message.from_user.id)
     provider_token = STRIPE_PAYMENT_KEY_TEST
     start_parameter = "premium-feature-subscription"
     currency = "USD"
-    price = [LabeledPrice("Subscription", 1000)]  # price in cents
-    # price = [{'label': "Subscription", 'amount': 1000}]
+    price = [LabeledPrice("Lifetime Subscription", 1000)]  # price in cents
 
 
-    print(f"Payload: {payload}")
-    print(f"Provider Token: {provider_token}")
-    print(f"Price: {price}")
+    # print(f"Payload: {payload}")
+    # print(f"Provider Token: {provider_token}")
+    # print(f"Price: {price}")
 
     try:
         bot.send_invoice(message.chat.id, title, description, payload,
@@ -1369,10 +1389,15 @@ def checkout(pre_checkout_query):
 @bot.message_handler(content_types=['successful_payment'])
 def got_payment(message):
     # Confirm the payment, thank the user, and grant access to the premium features.
-    bot.send_message(message.chat.id, "Thank you for your payment. Premium features enabled!")
+    ## Get the configuration for the user;
+    user_config = get_or_create_chat_config(message.from_user.id, 'user')
 
+    ## change state and re-save it
+    user_config['is_premium'] = True
+    config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
 
-
+    ## Thank the user
+    bot.send_message(message.chat.id, "Thank you for your payment. Premium features have been enabled for your account!")
 
 
 
