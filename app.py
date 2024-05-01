@@ -22,6 +22,8 @@ import re
 import settings
 from iso_codes import get_code_and_name
 import pandas
+import datetime
+
 
 # payments modules;
 from telebot.types import LabeledPrice
@@ -1332,20 +1334,29 @@ def handle_clear_memory(message):
 
 # Action
 # - Integrate with test payment rails; and setting the configuration for the given user who called the message;
+def generate_txid(user_id):
+    current_date = datetime.date.today()
+    return f"{user_id}_{current_date}"
 
 
 @bot.message_handler(commands=['subscribe'])
 def command_pay(message):
     title = "OpenAIssistant Premium Subscription"
     description = "Access advanced features such as: Persistence and context aware agents, granular image mask targeting,"
-    payload = "Custom-Payload"
+    payload = generate_txid(message.from_user.id)
     provider_token = STRIPE_PAYMENT_KEY_TEST
-    start_parameter = "premium-feature"
+    start_parameter = "premium-feature-subscription"
     currency = "USD"
     price = [LabeledPrice("Subscription", 1000)]  # price in cents
+    print(payload)
+    print(provider_token)
 
-    bot.send_invoice(message.chat.id, title, description, payload,
-                     provider_token, start_parameter, currency, price)
+    try:
+        bot.send_invoice(message.chat.id, title, description, payload,
+                         provider_token, start_parameter, currency, price)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Failed to send invoice: {str(e)}")
+
 
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def checkout(pre_checkout_query):
