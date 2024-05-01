@@ -30,8 +30,8 @@ def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3
     else:
         body_text = helper_functions.extract_body(message.text)
 
-    system_prompt = f"You are a helpful AI assistant - reply all responses in markdown. The context provided for this user is as follows \n\n {context}"
-    chat_history = f"This is the chat history of the conversation that we've had so far: {chat_history}"
+    system_prompt = f"You are a helpful AI assistant - reply all responses in markdown. The context provided by this given user is as follows \n\n {context}"
+    chat_history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
 
     completion_object = client.chat.completions.create(
     model=model,
