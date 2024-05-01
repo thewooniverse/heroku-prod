@@ -1348,15 +1348,17 @@ def command_pay(message):
     start_parameter = "premium-feature-subscription"
     currency = "USD"
     price = [LabeledPrice("Subscription", 1000)]  # price in cents
-    print(payload)
-    print(provider_token)
+
+    print(f"Payload: {payload}")
+    print(f"Provider Token: {provider_token}")
+    print(f"Price: {price}")
 
     try:
         bot.send_invoice(message.chat.id, title, description, payload,
                          provider_token, start_parameter, currency, price)
     except Exception as e:
+        print(f"Failed to send invoice: {str(e)}")
         bot.send_message(message.chat.id, f"Failed to send invoice: {str(e)}")
-
 
 @bot.pre_checkout_query_handler(func=lambda query: True)
 def checkout(pre_checkout_query):
