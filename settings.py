@@ -106,4 +106,17 @@ Poof, your ads gone.
 Multi-image generation, mask targeting granularity.
 """
 
+premium_user_settings_string = """🌟Premium User Settings🌟
+
+Customize how your bot responds to your requests (applies to all interactions in any group):
+-- Button Settings --
+Context Awareness ON or OFF - control whether your bot uses conversation history from the group to search for relevant conversation threads.
+Granual Image Mask Settings - Image Mask, but with more granular targeting of image sections.
+"""
+
+
+premium_image_mask_settings_string = """🌌Granual Image Mask Settings🌌
+Below is the current image mask settings; 1 is the section of the image where you want to create a mask over to instruct the image model where to edit the image.
+Premium features give you additional granular targeting for image edits.
+"""
 

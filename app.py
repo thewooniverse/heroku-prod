@@ -161,10 +161,14 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 -- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
 
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
+3.a. - Premium features; gating persistence and things like that with persistence.
+-- This needs to integrate with payments providers;
+How premium features integrates;
+- Mask targeting Granularity;
 
-
-
-
+- Premium subscriptions (payments integration)
+- Premium features integration v1 (variate, additional mask preset)
 
 
 
@@ -172,26 +176,14 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-- Premium subscriptions (payments integration)
-- Premium features integration v1 (variate, additional mask preset)
-
 - Persistence through vectorstores (Pinecone integration, embedding and retrieval of relevant texts) and related features
 
-- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project;
+- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project that integrates into various things.
+-- Suggestions for commands, pre-completions.
 - Then you can turn Ab69 into personal jarvis that will integrate with calendly and all that;
 ==========================================
-
-3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
-3.a. - Premium features; gating persistence and things like that with persistence.
--- This needs to integrate with payments providers;
-How premium features integrates;
-- Mask targeting Granularity;
-- Context awareness and persistence;
-
-> Introduce simple ads.
-
-
-
+Next up;
+- Integrate as a final point logic for using premium subscription in image mask edits.
 
 
 
@@ -985,7 +977,7 @@ def handle_callback(call):
         # check whether the calling user has a premium subscriptipn
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         if user_config['is_premium']:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=premium_user_settings_markup())
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup())
         else:
             # if they don't then
             bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting. Pleaes subscribe using /subscribe")
@@ -1014,7 +1006,7 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
 
 
 
@@ -1022,7 +1014,7 @@ def handle_callback(call):
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         premium_user_image_mask = user_config['premium_image_mask_map']
         print(premium_user_image_mask)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
     
     elif call.data[0:4] == "pim_":
         # get the image settings
@@ -1437,6 +1429,7 @@ def handle_user_settings_reset(message):
     
     try:
         config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
+        bot.reply_to(message, "User configurations and settings have been reset to defaults.")
  
     except Exception as e:
         bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
