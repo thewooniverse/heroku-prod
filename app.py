@@ -1021,7 +1021,7 @@ def handle_callback(call):
     elif call.data == "premium_image_mask_settings":
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         premium_user_image_mask = user_config['premium_image_mask_map']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(premium_user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
     
     elif call.data[0:4] == "pim_":
         # get the image settings
@@ -1040,7 +1040,7 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['premium_image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['premium_image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
 
 
 
