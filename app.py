@@ -1426,6 +1426,22 @@ def handle_clear_memory(message):
     pass
 
 
+# Manual configurations of settings that require users to type
+@bot.message_handler(commands=['reset_user_settings'])
+def handle_user_settings_reset(message):
+    """
+    Resets user settings
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
 
 
 
