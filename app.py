@@ -1026,19 +1026,19 @@ def handle_callback(call):
     elif call.data[0:4] == "pim_":
         # get the image settings
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
-        user_image_mask = user_config['image_mask_map']
+        premium_user_image_mask = user_config['premium_image_mask_map']
 
         # get the mask number clicked
         mask_idx = call.data[4:] # such that if im_00 is called, 00 is returned
-        current_value_at_idx = user_image_mask[int(mask_idx[0])][int(mask_idx[1])]
+        current_value_at_idx = premium_user_image_mask[int(mask_idx[0])][int(mask_idx[1])]
         # set the values
         if current_value_at_idx == 0:
             new_value = 1
         else:
             new_value = 0
         # change the settings / configurations
-        user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
-        user_config['premium_image_mask_map'] = user_image_mask
+        premium_user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
+        user_config['premium_image_mask_map'] = premium_user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
 
