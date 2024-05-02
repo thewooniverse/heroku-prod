@@ -161,10 +161,14 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 -- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
 -- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
 
+3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
+3.a. - Premium features; gating persistence and things like that with persistence.
+-- This needs to integrate with payments providers;
+How premium features integrates;
+- Mask targeting Granularity;
 
-
-
-
+- Premium subscriptions (payments integration)
+- Premium features integration v1 (variate, additional mask preset)
 
 
 
@@ -172,26 +176,14 @@ General tidy up and refactoring -> exporting to another production level "OpenAI
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-- Premium subscriptions (payments integration)
-- Premium features integration v1 (variate, additional mask preset)
-
 - Persistence through vectorstores (Pinecone integration, embedding and retrieval of relevant texts) and related features
 
-- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project;
+- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project that integrates into various things.
+-- Suggestions for commands, pre-completions.
 - Then you can turn Ab69 into personal jarvis that will integrate with calendly and all that;
 ==========================================
-
-3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
-3.a. - Premium features; gating persistence and things like that with persistence.
--- This needs to integrate with payments providers;
-How premium features integrates;
-- Mask targeting Granularity;
-- Context awareness and persistence;
-
-> Introduce simple ads.
-
-
-
+Next up;
+- Integrate as a final point logic for using premium subscription in image mask edits.
 
 
 
@@ -835,11 +827,23 @@ def handle_edit(message):
 def user_settings_markup():
     # back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='back_to_main')
     # Add other buttons for user settings here
-    image_mask_btn = types.InlineKeyboardButton("🖼️ Image Mask", callback_data='image_mask_settings')
+    image_mask_btn = types.InlineKeyboardButton("🖼️ Basic Image Mask", callback_data='image_mask_settings')
+    premium_features = types.InlineKeyboardButton("🌟 Premium Features", callback_data='premium_user_settings')
     markup = types.InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(image_mask_btn)
+    markup.row_width = 1
+    markup.add(image_mask_btn, premium_features)
     return markup
+
+
+# premium user settings
+def premium_user_settings_markup():
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton("🌌 Granular Image Masks", callback_data='premium_image_mask_settings'))
+    markup.row(types.InlineKeyboardButton("Contexts ON", callback_data='context_awareness_on'),
+        types.InlineKeyboardButton("Contexts OFF", callback_data='context_awareness_off'))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data='user_settings'))
+    return markup
+
 
 
 # Image Mask markup
@@ -854,9 +858,42 @@ def image_mask_options_menu(mask_vector):
     markup.row(types.InlineKeyboardButton(f"{mask_vector[2][0]}", callback_data="im_20"),
                 types.InlineKeyboardButton(f"{mask_vector[2][1]}", callback_data="im_21"),
                 types.InlineKeyboardButton(f"{mask_vector[2][2]}", callback_data="im_22"))
-        
+    markup.row(types.InlineKeyboardButton("🌌 Granular Masks (Premium)", callback_data="premium_user_settings"))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="user_settings"))
     return markup
+
+# Image Mask markup
+def premium_image_mask_options_menu(mask_vector):
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[0][0]}", callback_data="pim_00"),
+                types.InlineKeyboardButton(f"{mask_vector[0][1]}", callback_data="pim_01"),
+                types.InlineKeyboardButton(f"{mask_vector[0][2]}", callback_data="pim_02"),
+                types.InlineKeyboardButton(f"{mask_vector[0][3]}", callback_data="pim_03"),
+                types.InlineKeyboardButton(f"{mask_vector[0][4]}", callback_data="pim_04"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[1][0]}", callback_data="pim_10"),
+                types.InlineKeyboardButton(f"{mask_vector[1][1]}", callback_data="pim_11"),
+                types.InlineKeyboardButton(f"{mask_vector[1][2]}", callback_data="pim_12"),
+                types.InlineKeyboardButton(f"{mask_vector[1][3]}", callback_data="pim_13"),
+                types.InlineKeyboardButton(f"{mask_vector[1][4]}", callback_data="pim_14"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[2][0]}", callback_data="pim_20"),
+                types.InlineKeyboardButton(f"{mask_vector[2][1]}", callback_data="pim_21"),
+                types.InlineKeyboardButton(f"{mask_vector[2][2]}", callback_data="pim_22"),
+                types.InlineKeyboardButton(f"{mask_vector[2][3]}", callback_data="pim_23"),
+                types.InlineKeyboardButton(f"{mask_vector[2][4]}", callback_data="pim_24"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[3][0]}", callback_data="pim_30"),
+                types.InlineKeyboardButton(f"{mask_vector[3][1]}", callback_data="pim_31"),
+                types.InlineKeyboardButton(f"{mask_vector[3][2]}", callback_data="pim_32"),
+                types.InlineKeyboardButton(f"{mask_vector[3][3]}", callback_data="pim_33"),
+                types.InlineKeyboardButton(f"{mask_vector[3][4]}", callback_data="pim_34"))
+    markup.row(types.InlineKeyboardButton(f"{mask_vector[4][0]}", callback_data="pim_40"),
+                types.InlineKeyboardButton(f"{mask_vector[4][1]}", callback_data="pim_41"),
+                types.InlineKeyboardButton(f"{mask_vector[4][2]}", callback_data="pim_42"),
+                types.InlineKeyboardButton(f"{mask_vector[4][3]}", callback_data="pim_43"),
+                types.InlineKeyboardButton(f"{mask_vector[4][4]}", callback_data="pim_44"))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="premium_user_settings"))
+    return markup
+
+
 
 
 
@@ -873,13 +910,10 @@ def group_settings_markup():
 
 # define the language_model_menu
 def langauge_model_settings_markup():
-    gpt3_5_btn = types.InlineKeyboardButton("GPT 3.5 Turbo", callback_data='set_lm_gpt3.5')
-    gpt4_btn = types.InlineKeyboardButton("GPT 4.0 ", callback_data='set_lm_gpt4')
-    back_btn = types.InlineKeyboardButton("🔙 Back", callback_data='group_settings') # back to main should point to previous chat setting.
-    # Add other buttons for chat settings here
     markup = types.InlineKeyboardMarkup()
-    markup.row_width = 2
-    markup.add(back_btn, gpt3_5_btn, gpt4_btn)
+    markup.row(types.InlineKeyboardButton("GPT 3.5 Turbo", callback_data='set_lm_gpt3.5'),
+        types.InlineKeyboardButton("GPT 4.0 ", callback_data='set_lm_gpt4'))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data='group_settings')) # back to main should point to previous chat setting.)
     return markup
 
 # define the translations option menu
@@ -939,12 +973,20 @@ def handle_callback(call):
         # Update message to show user settings with a "Back" button
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup())
 
+    if call.data == "premium_user_settings":
+        # check whether the calling user has a premium subscriptipn
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
+        if user_config['is_premium']:
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup())
+        else:
+            # if they don't then
+            bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting. Pleaes subscribe using /subscribe")
+
 
     elif call.data == "image_mask_settings":
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
-    
     
     elif call.data[0:3] == "im_":
         # get the image settings
@@ -964,7 +1006,41 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+
+
+
+    elif call.data == "premium_image_mask_settings":
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
+        premium_user_image_mask = user_config['premium_image_mask_map']
+        print(premium_user_image_mask)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
+    
+    elif call.data[0:4] == "pim_":
+        # get the image settings
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
+        premium_user_image_mask = user_config['premium_image_mask_map']
+        print(premium_user_image_mask)
+
+        # get the mask number clicked
+        mask_idx = call.data[4:] # such that if pim_00 is called, 00 is returned
+        current_value_at_idx = premium_user_image_mask[int(mask_idx[0])][int(mask_idx[1])]
+        # set the values
+        if current_value_at_idx == 0:
+            new_value = 1
+        else:
+            new_value = 0
+        # change the settings / configurations
+        premium_user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
+        print(premium_user_image_mask)
+        user_config['premium_image_mask_map'] = premium_user_image_mask
+        config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
+
+
+
+
+
 
 
 
@@ -1039,6 +1115,8 @@ def handle_callback(call):
         chat_config[preset_nubmer] = language_choice
         config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text=f"Translation preset {preset_nubmer} changed to {language_choice}!")
+
+
 
 
 
@@ -1340,6 +1418,23 @@ def handle_clear_memory(message):
     pass
 
 
+# Manual configurations of settings that require users to type
+@bot.message_handler(commands=['reset_user_settings'])
+def handle_user_settings_reset(message):
+    """
+    Resets user settings
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
+        bot.reply_to(message, "User configurations and settings have been reset to defaults.")
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
 
 
 
@@ -1369,7 +1464,6 @@ def command_pay(message):
     start_parameter = "premium-feature-subscription"
     currency = "USD"
     price = [LabeledPrice("Lifetime Subscription", 1000)]  # price in cents
-
 
     # print(f"Payload: {payload}")
     # print(f"Provider Token: {provider_token}")
