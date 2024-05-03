@@ -717,7 +717,13 @@ def handle_edit(message):
         original_image_file_info = bot.get_file(original_image.file_id)
 
         user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
-        print(user_config['image_mask_map'])
+        if user_config['is_premium']:
+            user_image_mask_map = user_config['premium_image_mask_map']
+        else:
+            user_image_mask_map = user_config['image_mask_map']
+
+
+        print(user_image_mask_map)
 
         # try and get the original image and process it as a PNG file
         try:
@@ -733,11 +739,11 @@ def handle_edit(message):
                     logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded and resized"))
 
                     # determine the grid cells;
-                    cell_width = width // len(user_config['image_mask_map'][0])
-                    cell_height = height // len(user_config['image_mask_map'])
+                    cell_width = width // len(user_image_mask_map[0])
+                    cell_height = height // len(user_image_mask_map)
 
                     # Apply transparency to designated areas defined in the image mask map
-                    for row_index, row in enumerate(user_config['image_mask_map']):
+                    for row_index, row in enumerate(user_image_mask_map):
                         for col_index, cell in enumerate(row):
                             if cell == 1:  # If the cell is marked for transparency
                                 for x in range(col_index * cell_width, (col_index + 1) * cell_width):
@@ -1006,7 +1012,7 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
 
 
 
@@ -1035,7 +1041,7 @@ def handle_callback(call):
         print(premium_user_image_mask)
         user_config['premium_image_mask_map'] = premium_user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
 
 
 
