@@ -33,6 +33,10 @@ from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from psycopg2 import pool
 
+# vectorstore modules
+from pinecone import Pinecone, ServerlessSpec
+
+
 import templates
 
 
@@ -171,6 +175,9 @@ How premium features integrates;
 - Premium features integration v1 (variate, additional mask preset)
 
 
+- Integrate as a final point logic for using premium subscription in image mask edits.
+
+
 
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
@@ -182,19 +189,33 @@ So pretty much its:
 -- Suggestions for commands, pre-completions.
 - Then you can turn Ab69 into personal jarvis that will integrate with calendly and all that;
 ==========================================
+
 Next up;
-- Integrate as a final point logic for using premium subscription in image mask edits.
 
-
-
-
-General development timeline:
 2 - Context awareness and chat history storage in vectorstore integration with Pinecone
-This is in multiple parts
+This is in multiple parts:
+
+A.) Handling all responses by the bot;
+- If message is sent by the bot itself, AND the group's setting for chat history saving is on.
+- Take the text that it is reply_to text, as well as the text itself
+- Chunk, embed and upload both texts - reply to (/chat query) and the response
+
+B.) RAG:
+- Integrating RAG into /chat command based on user presets
+
+
+
+
+
+
+
+
+
+
 A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
 B- Every /chat or message sent is embedded and stored into the Vectorstore; IF the feature is turned on.
 
-
+- Calculate; and show workings.
 
 
 
@@ -232,8 +253,14 @@ WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WE
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
 DYNO_NAME = os.environ.get('DYNO', 'unknown-dyno')
 
+# payments keys
 STRIPE_PAYMENT_KEY_TEST = os.environ.get('STRIPE_TEST_KEY')
 STRIPE_PAYMENT_KEY = os.environ.get('STRIPE_KEY')
+
+# vectorstore setup
+PINECONE_KEY = os.environ.get('PINECONE_API')
+pc = Pinecone(api_key=PINECONE_KEY)
+
 
 
 
