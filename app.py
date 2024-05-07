@@ -997,6 +997,23 @@ def handle_settings(message):
         bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
 
 
+@bot.message_handler(commands=['reset_user_settings'])
+def handle_user_settings_reset(message):
+    """
+    Resets user settings
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
+        bot.reply_to(message, "User configurations and settings have been reset to defaults.")
+ 
+    except Exception as e:
+        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
 
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback(call):
@@ -1442,7 +1459,25 @@ def handle_set_context(message):
 
 
 
-# Memory / storage management
+# Handler for managing chat history as context for the given group;
+@bot.message_handler(func=lambda message: True)
+def log_all_messages(message):
+    # check whether the chatgroup has context turned on at all.
+    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+    if not chat_config['persistence']:
+        # message is not saved, exit the function
+        return
+
+    # check whether the messsage was sent by itself
+    if message.from_user.id == bot.get_me().id:  # Compare with the bot username
+        pass
+
+    # get the conversation /chat message and the reply message as texts
+    
+    # Further processing logic can go here
+    
+    # You can log outbound messages as well by registering a MessageHandler and logging messages before sending them to users
+
 @bot.message_handler(commands=['clear_memory'])
 def handle_clear_memory(message):
     """
@@ -1451,22 +1486,17 @@ def handle_clear_memory(message):
     pass
 
 
-# Manual configurations of settings that require users to type
-@bot.message_handler(commands=['reset_user_settings'])
-def handle_user_settings_reset(message):
-    """
-    Resets user settings
-    """
-    if message.from_user.is_bot:
-        return
-    
-    try:
-        config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
-        bot.reply_to(message, "User configurations and settings have been reset to defaults.")
- 
-    except Exception as e:
-        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1525,6 +1555,7 @@ def got_payment(message):
 
     ## Thank the user
     bot.send_message(message.chat.id, "Thank you for your payment. Premium features have been enabled for your account!")
+
 
 
 
