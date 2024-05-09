@@ -124,7 +124,6 @@ Once settings / configuring is made available.
 
 -- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
 
-
 1 - Button based features and customizability
 1.A - First try to do the Language Model configurations first << done
 1.B - Then do the configuration + integrate the temperature as well into the function calls << done
@@ -194,6 +193,13 @@ Next up;
 
 2 - Context awareness and chat history storage in vectorstore integration with Pinecone
 This is in multiple parts:
+
+A.) Alternative approach to logging:
+- If the conversation history is an API call by a premium user who has their 
+
+
+
+
 
 A.) Handling all responses by the bot;
 - If message is sent by the bot itself, AND the group's setting for chat history saving is on.
@@ -1456,9 +1462,7 @@ def handle_set_context(message):
 
 
 
-
-
-
+ 
 # Handler for managing chat history as context for the given group;
 @bot.message_handler(func=lambda message: True)
 def log_all_messages(message):
@@ -1473,7 +1477,9 @@ def log_all_messages(message):
         pass
 
     # get the conversation /chat message and the reply message as texts
-    
+    replyto_text = message.reply_to_message.text
+    response_text = message
+
     # Further processing logic can go here
     
     # You can log outbound messages as well by registering a MessageHandler and logging messages before sending them to users
