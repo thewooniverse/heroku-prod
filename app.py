@@ -195,7 +195,11 @@ Next up;
 This is in multiple parts:
 
 A.) Alternative approach to logging:
-- If the conversation history is an API call by a premium user who has their 
+- If the /chat function is by a premium user who has their context turned ON; then that /chat conversation (bot the initial query and the response) is logged.
+- If the conversation history is an API call by a premium user who has their context turned ON.
+
+
+
 
 
 
