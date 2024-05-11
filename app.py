@@ -1169,8 +1169,14 @@ def handle_callback(call):
 
 
     elif call.data == "persistence_on":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        chat_config['persistence'] = True
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
     elif call.data == "persistence_off":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        chat_config['persistence'] = False
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
     
     elif call.data == 'translations_menu':
