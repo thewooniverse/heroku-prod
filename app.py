@@ -368,6 +368,7 @@ def handle_chat(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        body_text = helper_functions.extract_body(message.text)
 
         # load chat history if it is response / replying to anything;
         if message.reply_to_message:
@@ -394,8 +395,8 @@ def handle_chat(message):
 
             if user_config['is_premium'] and chat_config['persistence']:
                 print(response_text)
-                print(message.text)
-                print(message.reply_to_message.text)
+                print(body_text)
+                print(chat_history)
 
 
     except Exception as e:
