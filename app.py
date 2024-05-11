@@ -194,9 +194,12 @@ Next up;
 2 - Context awareness and chat history storage in vectorstore integration with Pinecone
 This is in multiple parts:
 
+The bot is and should not be usually used by a large group of people;
+
 A.) Alternative approach to logging:
 - If the /chat function is by a premium user who has their context turned ON; then that /chat conversation (bot the initial query and the response) is logged.
-- If the conversation history is an API call by a premium user who has their context turned ON.
+- API keys wise, the key that is going to be used is the one that is called by the given user, the chat history is shared by the people in the group.
+
 
 
 
@@ -365,6 +368,7 @@ def handle_chat(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        body_text = helper_functions.extract_body(message.text)
 
         # load chat history if it is response / replying to anything;
         if message.reply_to_message:
@@ -389,9 +393,19 @@ def handle_chat(message):
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
+            if user_config['is_premium'] and chat_config['persistence']:
+                print(response_text)
+                print(body_text)
+                print(chat_history)
+
+
     except Exception as e:
         bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
 
 
 
@@ -1156,8 +1170,14 @@ def handle_callback(call):
 
 
     elif call.data == "persistence_on":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        chat_config['persistence'] = True
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
     elif call.data == "persistence_off":
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        chat_config['persistence'] = False
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
     
     elif call.data == 'translations_menu':
