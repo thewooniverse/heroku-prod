@@ -25,6 +25,7 @@ import pandas
 import datetime
 
 
+
 # payments modules;
 from telebot.types import LabeledPrice
 
@@ -33,8 +34,9 @@ from flask_sqlalchemy import SQLAlchemy
 import psycopg2
 from psycopg2 import pool
 
-# vectorstore modules
+# vectorstore related modules
 from pinecone import Pinecone, ServerlessSpec
+from langchain.text_splitter import CharacterTextSplitter
 
 
 import templates
@@ -393,10 +395,18 @@ def handle_chat(message):
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
+            # if the user is a premium user, and the chat has persistence on?
             if user_config['is_premium'] and chat_config['persistence']:
-                print(response_text)
-                print(body_text)
-                print(chat_history)
+                # construct the string to upload;
+                upload_string = f"""QUERY:{body_text}\n\n\n\n\n\nRESPONSE{response_text}"""
+
+                # chunk, embed and upsert
+                text_splitter = CharacterTextSplitter(
+                    separator = "\n\n",
+                    chunk_size = 512,
+                    chunk_overlap  = 20
+                )
+
 
 
     except Exception as e:
@@ -1170,16 +1180,58 @@ def handle_callback(call):
 
 
     elif call.data == "persistence_on":
-        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-        chat_config['persistence'] = True
-        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
-        bot.send_message(chat_id=call.message.chat.id, text="Persistence turned on for group! OpenAIssistant will now remember conversation history / context from here on!")
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
+
+        # check whether the user is a premium user
+        if not user_config['is_premium']:
+            bot.answer_callback_query(call.id, "Persistence is a premium feature, please buy a premium subscription to turn this feature on!")
+            return
+        
+        # if they are, then you are free to add this group to the list of persistent chats for that given user.
+        current_persistent_chat_groups = user_config['persistent_chats']
+        current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
+        user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
+        config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
+        bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this group.")
+        print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
+
+
     elif call.data == "persistence_off":
+        user_config = get_or_create_chat_config(call.from_user.id, 'user')
+
+        # check whether the user is a premium user
+        if not user_config['is_premium']:
+            bot.answer_callback_query(call.id, "Persistence is a premium feature, please buy a premium subscription to turn this feature on!")
+            return
+        
+        # if they are, then you are free to add this group to the list of persistent chats for that given user.
+        current_persistent_chat_groups = user_config['persistent_chats']
+
+        try:
+            current_persistent_chat_groups.remove(call.message.chat.id) # remove the list from its copy
+            user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly removed list
+            config_db_helper.set_new_config(call.from_user.id, 'user', user_config) # save the new config to the database
+            print(f"persistence removed for this user {call.from_user.id} in group {call.message.chat.id}")
+            bot.answer_callback_query(call.id, "Persistence is turned off for this group.")
+        except ValueError as e:
+            bot.answer_callback_query(call.id, "Persistence is already off for this group.")
+        
+        
+
+
+
+
+
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         chat_config['persistence'] = False
         config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
         bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
     
+
+
+
+
+
     elif call.data == 'translations_menu':
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
