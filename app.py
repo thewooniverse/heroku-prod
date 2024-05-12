@@ -395,10 +395,11 @@ def handle_chat(message):
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
-            # if the user is a premium user, and the chat has persistence on?
-            if user_config['is_premium'] and chat_config['persistence']:
+            # if the user is a premium user, and is the user wanting to save chat history for this chat group?
+            if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
                 # construct the string to upload;
                 upload_string = f"""QUERY:{body_text}\n\n\n\n\n\nRESPONSE{response_text}"""
+                print(upload_string)
 
                 # chunk, embed and upsert
                 text_splitter = CharacterTextSplitter(
@@ -1215,20 +1216,6 @@ def handle_callback(call):
             bot.answer_callback_query(call.id, "Persistence is turned off for this group.")
         except ValueError as e:
             bot.answer_callback_query(call.id, "Persistence is already off for this group.")
-        
-        
-
-
-
-
-
-        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-        chat_config['persistence'] = False
-        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
-        bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
-    
-
-
 
 
 
