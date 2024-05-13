@@ -317,13 +317,13 @@ def chunk_and_split(target_text, chunk_size=256):
     docs = text_splitter.create_documents([target_text])
     return docs
 
-def create_and_upsert_embeddings(message, target_text, OpenAI_api_key, pinecone_api_key, index_name="teleGPT_staging", model="text-embedding-ada-002"):
+def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_api_key, index_name="teleGPT_staging", model="text-embedding-ada-002"):
     """
     
     """
     try:
         # create the OpenAI client and the index
-        client = OpenAI(api_key=OpenAI_api_key)
+        client = OpenAI(api_key=openai_api_key)
         index = get_or_create_index(pinecone_api_key, index_name)
 
         # generate the metadata from the received message for upserting
@@ -339,9 +339,9 @@ def create_and_upsert_embeddings(message, target_text, OpenAI_api_key, pinecone_
         for document in documents:
             text = document.page_content
             res = client.embeddings.create(input=[text], model=model).data[0].embedding
-            to_upsert = {"id": f"{msg_id}|c{str(count)}", "values":res, "metadata": {"sender_id": user_id, "chat_id": chatid_namespace,'text': text}}
-            index.upsert(vectors=[to_upsert], namespace=chatid_namespace)
+            to_upsert = {"id": f"{msg_id}---c{str(count)}", "values":res, "metadata": {"sender_id": user_id, "chat_id": chatid_namespace,'text': text}}
             print(to_upsert)
+            index.upsert(vectors=[to_upsert], namespace=chatid_namespace)
     except Exception as e:
         print(e)
     
