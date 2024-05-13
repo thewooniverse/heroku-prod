@@ -36,7 +36,6 @@ from psycopg2 import pool
 
 # vectorstore related modules
 from pinecone import Pinecone, ServerlessSpec
-from langchain.text_splitter import CharacterTextSplitter
 
 
 import templates
@@ -398,15 +397,12 @@ def handle_chat(message):
             # if the user is a premium user, and is the user wanting to save chat history for this chat group?
             if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
                 # construct the string to upload;
-                upload_string = f"""QUERY:{body_text}\n\n\n\n\n\nRESPONSE{response_text}"""
-                print(upload_string)
+                upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
+                openai_api_key = api_keys[0]
 
-                # chunk, embed and upsert
-                text_splitter = CharacterTextSplitter(
-                    separator = "\n\n",
-                    chunk_size = 512,
-                    chunk_overlap  = 20
-                )
+                # create and upsert the embeddings into the index
+                ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
+                print("Safely upserted data into pinecone")
 
 
 
@@ -1527,27 +1523,7 @@ def handle_set_context(message):
 
  
 # Handler for managing chat history as context for the given group;
-@bot.message_handler(func=lambda message: True)
-def log_all_messages(message):
-    # check whether the chatgroup has context turned on at all.
-    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-    if not chat_config['persistence']:
-        # message is not saved, exit the function
-        return
-
-    # check whether the messsage was sent by itself
-    if message.from_user.id == bot.get_me().id:  # Compare with the bot username
-        pass
-
-    # get the conversation /chat message and the reply message as texts
-    replyto_text = message.reply_to_message.text
-    response_text = message
-
-    # Further processing logic can go here
-    
-    # You can log outbound messages as well by registering a MessageHandler and logging messages before sending them to users
-
-@bot.message_handler(commands=['clear_memory'])
+@bot.message_handler(commands=['clear_chat_hist'])
 def handle_clear_memory(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
