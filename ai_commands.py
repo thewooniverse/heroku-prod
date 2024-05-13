@@ -317,7 +317,7 @@ def chunk_and_split(target_text, chunk_size=256):
     docs = text_splitter.create_documents([target_text])
     return docs
 
-def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_api_key, index_name="teleGPT_staging", model="text-embedding-ada-002"):
+def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_api_key, index_name="telegpt-staging", model="text-embedding-ada-002"):
     """
     
     """
