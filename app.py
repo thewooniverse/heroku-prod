@@ -379,7 +379,7 @@ def handle_chat(message):
 
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
-            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{"---"*3}"
+            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
         else:
             chat_history = ""
         

@@ -376,7 +376,7 @@ def similarity_search_on_index(message, openai_api_key, pinecone_api_key, index_
         namespace=chatid_namespace,
         vector=query_embeddings_vector,
         top_k=5,
-        # include_values=True,
+        include_values=True,
         include_metadata=True
         )
     result_text = "\nBELOW IS THE MATCHED CONTEXT STRINGS FROM THE CONVERSATION HISTORY, USE AS APPROPRIATE AS CONTEXT. IT IS RANKED BASED ON SIMILARITY. SYNTAX SCORE: TEXT\n"
