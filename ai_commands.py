@@ -8,7 +8,14 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage
 # from templates import system_template
 from pathlib import Path
 import helper_functions
+from langchain.text_splitter import CharacterTextSplitter
 
+# pinecone / vectorstore related imports:
+from pinecone import Pinecone, ServerlessSpec
+import os
+import pinecone, openai
+from openai import OpenAI
+import time
 
 
 
@@ -273,6 +280,110 @@ def speech_to_text(voice_file_path, openai_api_key):
 
 
 
+
+# Chroma Vectorstore / embedding related functions
+def get_or_create_index(pinecone_api_key, index_name):
+    pc = Pinecone(api_key=pinecone_api_key)
+    if index_name not in pc.list_indexes().names():
+        pc.create_index(
+            name=index_name,
+            dimension=1536,
+            metric="cosine",
+            spec=ServerlessSpec(
+                cloud='aws', 
+                region='us-east-1'
+            ) 
+        )
+    
+    # wait for index to be initialized
+    while not pc.describe_index(index_name).status['ready']:
+        time.sleep(1)
+    
+    index = pc.Index(index_name)
+    return index
+
+
+def chunk_and_split(target_text, chunk_size=256):
+    """
+    api_key = OpenAI API key
+    target_text = is the full length string that needs to be chunked and embedded
+    returns --> chunks the piece of text a dictionary of {'text': 'embed_value pairs'}.
+    """
+    text_splitter = CharacterTextSplitter(
+        separator = "\n\n",
+        chunk_size = chunk_size,
+        chunk_overlap  = 20
+    )
+    docs = text_splitter.create_documents([target_text])
+    return docs
+
+def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_api_key, index_name="telegpt-staging", model="text-embedding-ada-002"):
+    """
+    
+    """
+    try:
+        # create the OpenAI client and the index
+        client = OpenAI(api_key=openai_api_key)
+        index = get_or_create_index(pinecone_api_key, index_name)
+
+        # generate the metadata from the received message for upserting
+        chatid_namespace = str(message.chat.id)
+        user_id = str(message.from_user.id)
+        msg_id = str(message.message_id)
+
+        # get the chunked documents
+        documents = chunk_and_split(target_text)
+
+        count = 0
+        # loop through each document, creating embedding and the 
+        for document in documents:
+            text = document.page_content
+            res = client.embeddings.create(input=[text], model=model).data[0].embedding
+            to_upsert = {"id": f"{msg_id}---c{str(count)}", "values":res, "metadata": {"sender_id": user_id, "chat_id": chatid_namespace,'text': text}}
+            print(to_upsert)
+            index.upsert(vectors=[to_upsert], namespace=chatid_namespace)
+    except Exception as e:
+        print(e)
+    
+
+def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
+    """
+    Simple function to create return embeddings value
+    """
+    client = OpenAI(api_key=openai_api_key)
+    query_vector_embeddings = client.embeddings.create(
+        model="text-embedding-ada-002",
+        input="What school did Tommy go to.",
+        encoding_format="float",
+        )
+    query_vector = query_vector_embeddings.data[0].embedding
+    return query_vector
+
+def similarity_search_on_index(message, openai_api_key, pinecone_api_key, index_name="telegpt-staging", model="text-embedding-ada-002"):
+    """
+    returns a string summary of relevant pieces of texts:
+    
+    """
+    # create the OpenAI client and the index
+    client = OpenAI(api_key=openai_api_key)
+    index = get_or_create_index(pinecone_api_key, index_name)
+    query_text = helper_functions.extract_body(message.text)
+    query_embeddings_vector = create_embeddings(query_text, openai_api_key, model)
+    chatid_namespace = str(message.chat.id)
+
+    # match the vectors
+    result = index.query(
+        namespace=chatid_namespace,
+        vector=query_embeddings_vector,
+        top_k=5,
+        # include_values=True,
+        include_metadata=True
+        )
+    result_text = "\nBELOW IS THE MATCHED CONTEXT STRINGS FROM THE CONVERSATION HISTORY, USE AS APPROPRIATE AS CONTEXT. IT IS RANKED BASED ON SIMILARITY. SYNTAX SCORE: TEXT\n"
+    for match in result['matches']:
+        result_text += f"\nMATCH_SCORE:{match['score']}: TEXT:\n{match.metadata['text']}"
+        print(f"{match['score']:.2f}: {match.metadata}")
+    return result_text
 
 
 

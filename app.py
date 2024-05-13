@@ -36,7 +36,6 @@ from psycopg2 import pool
 
 # vectorstore related modules
 from pinecone import Pinecone, ServerlessSpec
-from langchain.text_splitter import CharacterTextSplitter
 
 
 import templates
@@ -372,17 +371,22 @@ def handle_chat(message):
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         body_text = helper_functions.extract_body(message.text)
 
-        # load chat history if it is response / replying to anything;
-        if message.reply_to_message:
-            chat_history = message.reply_to_message.text
-        else:
-            chat_history = "" #> introduce chat history here;
-
         # handle API Keys, the usage of the group's API key is prioritized over individual.
         api_keys = config_db_helper.get_apikey_list(message)
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
+        # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
+        if message.reply_to_message:
+            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{"---"*3}"
+        else:
+            chat_history = ""
+        
+        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
+            history_similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_keys[0], PINECONE_KEY)
+            print(history_similarity_search_result_string)
+            chat_history += history_similarity_search_result_string
 
         if api_keys:
             try:
@@ -395,18 +399,15 @@ def handle_chat(message):
             bot.reply_to(message, text=response_text, parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
-            # if the user is a premium user, and the chat has persistence on?
-            if user_config['is_premium'] and chat_config['persistence']:
+            # if the user is a premium user, and is the user wanting to save chat history for this chat group?
+            if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
                 # construct the string to upload;
-                upload_string = f"""QUERY:{body_text}\n\n\n\n\n\nRESPONSE{response_text}"""
+                upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
+                openai_api_key = api_keys[0]
 
-                # chunk, embed and upsert
-                text_splitter = CharacterTextSplitter(
-                    separator = "\n\n",
-                    chunk_size = 512,
-                    chunk_overlap  = 20
-                )
-
+                # create and upsert the embeddings into the index
+                ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
+                print("Safely upserted data into pinecone")
 
 
     except Exception as e:
@@ -1215,20 +1216,6 @@ def handle_callback(call):
             bot.answer_callback_query(call.id, "Persistence is turned off for this group.")
         except ValueError as e:
             bot.answer_callback_query(call.id, "Persistence is already off for this group.")
-        
-        
-
-
-
-
-
-        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
-        chat_config['persistence'] = False
-        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
-        bot.send_message(chat_id=call.message.chat.id, text="Persistence turned off for group! OpenAIssistant will no longer remember conversation history / context!")
-    
-
-
 
 
 
@@ -1540,27 +1527,7 @@ def handle_set_context(message):
 
  
 # Handler for managing chat history as context for the given group;
-@bot.message_handler(func=lambda message: True)
-def log_all_messages(message):
-    # check whether the chatgroup has context turned on at all.
-    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-    if not chat_config['persistence']:
-        # message is not saved, exit the function
-        return
-
-    # check whether the messsage was sent by itself
-    if message.from_user.id == bot.get_me().id:  # Compare with the bot username
-        pass
-
-    # get the conversation /chat message and the reply message as texts
-    replyto_text = message.reply_to_message.text
-    response_text = message
-
-    # Further processing logic can go here
-    
-    # You can log outbound messages as well by registering a MessageHandler and logging messages before sending them to users
-
-@bot.message_handler(commands=['clear_memory'])
+@bot.message_handler(commands=['clear_chat_hist'])
 def handle_clear_memory(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history

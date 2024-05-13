@@ -70,7 +70,7 @@ default_user_config = {
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
     "is_premium": False, # determines whether the user is a premium user and has access to premium features.
-    "persistent_chats": [], # list of chat groups that a user is persistent in
+    "persistent_chats": [], # list of chat groups that a user is persistent in.
     # "language_model": "gpt-3.5-turbo", # determines the default language model used by the user
     "openai_api_key": "", # determines the OpenAI API Key of a given user
     "image_mask_map": [ # determines how each user wants to edit the images
@@ -328,7 +328,7 @@ def decrypt(token):
 def get_apikey_list(message):
     chat_config = get_or_create_chat_config(message.chat.id, 'chat')
     user_config = get_or_create_chat_config(message.from_user.id, 'user')
-    openai_api_keys = [chat_config['openai_api_key'], user_config['openai_api_key']]
+    openai_api_keys = [user_config['openai_api_key'], chat_config['openai_api_key']]
 
     decrypted_keys = []
     for key in openai_api_keys:
@@ -337,6 +337,7 @@ def get_apikey_list(message):
             if decrypted_key:
                 decrypted_keys.append(decrypted_key)
     return decrypted_keys
+
 
 
 
