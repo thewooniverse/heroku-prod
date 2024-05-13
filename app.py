@@ -371,17 +371,22 @@ def handle_chat(message):
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         body_text = helper_functions.extract_body(message.text)
 
-        # load chat history if it is response / replying to anything;
-        if message.reply_to_message:
-            chat_history = message.reply_to_message.text
-        else:
-            chat_history = "" #> introduce chat history here;
-
         # handle API Keys, the usage of the group's API key is prioritized over individual.
         api_keys = config_db_helper.get_apikey_list(message)
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
+        # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
+        if message.reply_to_message:
+            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{"---"*3}"
+        else:
+            chat_history = ""
+        
+        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
+            history_similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_keys[0], PINECONE_KEY)
+            print(history_similarity_search_result_string)
+            chat_history += history_similarity_search_result_string
 
         if api_keys:
             try:
@@ -403,7 +408,6 @@ def handle_chat(message):
                 # create and upsert the embeddings into the index
                 ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
                 print("Safely upserted data into pinecone")
-
 
 
     except Exception as e:

@@ -346,6 +346,48 @@ def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_
         print(e)
     
 
+def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
+    """
+    Simple function to create return embeddings value
+    """
+    client = OpenAI(api_key=openai_api_key)
+    query_vector_embeddings = client.embeddings.create(
+        model="text-embedding-ada-002",
+        input="What school did Tommy go to.",
+        encoding_format="float",
+        )
+    query_vector = query_vector_embeddings.data[0].embedding
+    return query_vector
+
+def similarity_search_on_index(message, openai_api_key, pinecone_api_key, index_name="telegpt-staging", model="text-embedding-ada-002"):
+    """
+    returns a string summary of relevant pieces of texts:
+    
+    """
+    # create the OpenAI client and the index
+    client = OpenAI(api_key=openai_api_key)
+    index = get_or_create_index(pinecone_api_key, index_name)
+    query_text = helper_functions.extract_body(message.text)
+    query_embeddings_vector = create_embeddings(query_text, openai_api_key, model)
+    chatid_namespace = str(message.chat.id)
+
+    # match the vectors
+    result = index.query(
+        namespace=chatid_namespace,
+        vector=query_embeddings_vector,
+        top_k=5,
+        # include_values=True,
+        include_metadata=True
+        )
+    result_text = "\nBELOW IS THE MATCHED CONTEXT STRINGS FROM THE CONVERSATION HISTORY, USE AS APPROPRIATE AS CONTEXT. IT IS RANKED BASED ON SIMILARITY. SYNTAX SCORE: TEXT\n"
+    for match in result['matches']:
+        result_text += f"\nMATCH_SCORE:{match['score']}: TEXT:\n{match.metadata['text']}"
+        print(f"{match['score']:.2f}: {match.metadata}")
+    return result_text
+
+
+
+
 
 
 
