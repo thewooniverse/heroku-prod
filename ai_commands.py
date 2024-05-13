@@ -327,9 +327,9 @@ def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_
         index = get_or_create_index(pinecone_api_key, index_name)
 
         # generate the metadata from the received message for upserting
-        chatid_namespace = message.chat.id
-        user_id = message.from_user.id
-        msg_id = message.message_id
+        chatid_namespace = str(message.chat.id)
+        user_id = str(message.from_user.id)
+        msg_id = str(message.message_id)
 
         # get the chunked documents
         documents = chunk_and_split(target_text)
