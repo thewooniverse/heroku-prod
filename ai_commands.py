@@ -352,8 +352,8 @@ def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
     """
     client = OpenAI(api_key=openai_api_key)
     query_vector_embeddings = client.embeddings.create(
-        model="text-embedding-ada-002",
-        input="What school did Tommy go to.",
+        model=model,
+        input=text,
         encoding_format="float",
         )
     query_vector = query_vector_embeddings.data[0].embedding
