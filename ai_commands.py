@@ -352,8 +352,8 @@ def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
     """
     client = OpenAI(api_key=openai_api_key)
     query_vector_embeddings = client.embeddings.create(
-        model="text-embedding-ada-002",
-        input="What school did Tommy go to.",
+        model=model,
+        input=text,
         encoding_format="float",
         )
     query_vector = query_vector_embeddings.data[0].embedding
@@ -376,7 +376,7 @@ def similarity_search_on_index(message, openai_api_key, pinecone_api_key, index_
         namespace=chatid_namespace,
         vector=query_embeddings_vector,
         top_k=5,
-        # include_values=True,
+        include_values=True,
         include_metadata=True
         )
     result_text = "\nBELOW IS THE MATCHED CONTEXT STRINGS FROM THE CONVERSATION HISTORY, USE AS APPROPRIATE AS CONTEXT. IT IS RANKED BASED ON SIMILARITY. SYNTAX SCORE: TEXT\n"
