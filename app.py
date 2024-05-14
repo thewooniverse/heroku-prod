@@ -839,6 +839,9 @@ def language_selection_menu(preset_num):
 
 
 
+
+
+
 # Core settings button functionality;
 @bot.message_handler(commands=['settings'])
 def handle_settings(message):
@@ -848,15 +851,15 @@ def handle_settings(message):
 
 @bot.message_handler(commands=['group_settings'])
 def handle_group_settings(message):
-    bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup())
+    bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
 
 @bot.message_handler(commands=['user_settings'])
 def handle_user_settings(message):
     if message.chat.type != 'private':
-        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.")
+        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
         return
     else:
-        bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
+        bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup(), parse_mode="HTML")
 
 
 @bot.message_handler(commands=['reset_user_settings'])
