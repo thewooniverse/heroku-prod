@@ -55,202 +55,25 @@ import templates
 
 
 """
-Use this bot as a test environment for building out whatever features that you want to build out;
-To its maximum, it doesn't matter if it breaks, it can be rolled back as well.
-Its a playground; its also pretty exciting to just like build bigger and bigger projects with more and more features.
-Eventually, it would be really cool and amazing to write a full fledged AI assistant that can really help automate MANY parts of my life.
-
-------To do lists:--------
-#### Completed ####
-- Secure environment variables <- done
-- Different chat request sorters that sort through chat requests and call different commands and responses to the texts. <-
-- Integration with basic ChatGPT using langchain
-- Dall-E 3 Image generation commands with optional image inputand sending --> need to update the send message function as well.
--- v1 it will send just the URL link, but the next version it w ill save and delete.
-- Text to Speech
->>>> tts bugfix
-
-- Local testing environments + CI/CD devops stuff so I can test apps locally in Dev environment, test things in test builds, and then deploy to production.
-- In staging, the first one I'll develop is /t1 /t2 /t3; configurable languages. (defaults set to english, Chinese, Korean).
-- translate - t1, t2, t3 <<<- translate whatever 
-
-Current dev priorities;
-- speech to text and various sorts of it; 
--- Speech to Text (speech to text) <- need to do reply to
--- Speech to Chat (transcribe and then chat) <- basically spt and then calling the /chat function
-- stt bugfix
-- imagine bugfix
-- setwebhook coded into the app sourcecode; << fixed this to instead run once within startup.sh, and procfile to trigger a startup script.
-- /variant dalle2
-- /chat v2 with reply functions << this is complete, and I am not building addl. features on top of it because the bot will have built in chat history in the future
-
-- /Vision << works as is.
-logging conflicts and basic logging throughout helper functions as well as centralized logging in main app.py
-
-Finish logging v1 throughout;
-logging -> 
-
-
-DB:
-- Read through and learn basics of CRUD / SQL and Psycopg2 to integrate with Heroku PostgreSQL << done
-- Design the initial configurations based on the configurability of the different functions and handlers << done
--- chat_model, name etc... << done
-- Test implementation of returning "name" value from the configuration file for each chat along with connection pooling and test model implementations. << done
-
-
-0. get or set configuration attribute.
-Basic Get/Set - retrieval and updating database / config schema.
-1. Integrate the retrieval and usage of openai api keys through all command handlers so they are sending it correctly; currently working for just /chat rn.
-2. Set up the chat_set_openai_apikey and test it in a group setting;
-
-3. Testing the chats and settings from a user that does not have an openai api key; and from a chat group that does not have it as well;
-
-Once settings / configuring is made available.
-1. Basic integrations of configurations into functions such as /chat based models.
-1.a. /chat
-1.a.i. I need to first get the OpenAI API Keys of both configs. In that I would need to first get both the API keys, and if possible, always use that of the groups.
-------> But I would also nee to handle for API Key validity, and multiple key entry and trying with both;
----------> ask GPT, ok so I have two keys, and I want to try with one, and if one fails I want to try again for the other key.
-------------> Perhaps a way that I could do this is populate a list of keys, one after the other, then try by popping;
-1.a.ii. Then, I would need to get 
-
-1.b. /variate
-1.c. translations options
-
-0 - get patty to test out DMing and fix /vision
-- Checking API key and other formatting / accepted formats or types;
-- Encrypting API keys during setting;
-- Decrypting API keys;
-2. Encrypted storing of API keys.
-
--- Speech to Chat method for convenience sake; talk your questions -> its basically /stt -> /chat;
-
-1 - Button based features and customizability
-1.A - First try to do the Language Model configurations first << done
-1.B - Then do the configuration + integrate the temperature as well into the function calls << done
-
-1.C - T1 / T2 / T3 -> https://www.babbel.com/en/magazine/the-10-most-spoken-languages-in-the-world OR https://www.loc.gov/standards/iso639-2/php/code_list.php << custom;
-^ these support manual configurations as well for custom, valid language codes; << completed
-
-
-
-1.E - Ability to customize contexts to a specific given chat and using it in all calls; < this first
-1.D - Image edit mask for user settings and integrations with the functions;
-
-3. Features:
--- Temperature controls for language models;
-
-General tidy up and refactoring -> exporting to another production level "OpenAI_TG_Bot" and tidy it up to the degree where its shippable / shareable with people.
-
-- BUTTON SETTINGS!!
-/user_settings;
-/chat_settings;
-
-- The /settings messages are valid for 24 hours validity, after which they stop responding and the user needs to use the /settings command to configure.
-- For settings that require typing, the message contains a guide for users to set these individually, for example /set_apikey <API_KEY>.
-- Buttons to allow for simple configurations that simply requires a selection among supported options.
--- For example: user clicks "Chat_Models" button -> goes to another state of the message that has two buttons "gpt-4" or "gpt-3.5-turbo"
--- User clicks one of the models, and the bot updates the configuration to use that specific model, and sends the chat the notification that it has updated.
--- User is then able to click back, or continue changing the models.
--- When user clicks back, they go back to the main settings screen which currently displays the current settings in terms of the buttons.
-
--- T1 T2 T3 configurations
-> learn inline keyboards
-> learn stateful transitions and state management for messages;
-> learn to implement message validity
-
-
-1. /edit dalle v2
--- /edit_mask(alpha targeting) /edit_img
--- /edit_img mask settings to target different chunks of the image (divided into 9 cells) - you can activate which area you want to create the alpha with buttons.
--- takes the /edit_img configurations for the chat, and creates a mask copy of the image, and then runs the edit_img command through OpenAI Dalle2 endpoint
-
-3 - Premium subscription and manual settings for payments with USDT - one time payments for premium services; get it for life.
-3.a. - Premium features; gating persistence and things like that with persistence.
--- This needs to integrate with payments providers;
-How premium features integrates;
-- Mask targeting Granularity;
-
-- Premium subscriptions (payments integration)
-- Premium features integration v1 (variate, additional mask preset)
-
-
-- Integrate as a final point logic for using premium subscription in image mask edits.
-
-
-
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-- Persistence through vectorstores (Pinecone integration, embedding and retrieval of relevant texts) and related features
 
-- Overall tidy up of software, user facing, forking and having a user facing client (@OpenAIsisstant_bot) as a hobby project that integrates into various things.
--- Suggestions for commands, pre-completions.
-- Then you can turn Ab69 into personal jarvis that will integrate with calendly and all that;
+1. Go through settings, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
+2. Suggestions for commands, pre-completion options
+Admin Command Handlers; Clear chat history command.
+
+3. Forking it into TeleGPT bot and making the bot public for usage.
+4. Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
+--> Wooniverse bot will interact with my webpages etc...
+
+That then marks the end of it;
+Additional optional features:
+- Context saving from pictures;
 ==========================================
 
-Next up;
 
-2 - Context awareness and chat history storage in vectorstore integration with Pinecone
-This is in multiple parts:
-
-The bot is and should not be usually used by a large group of people;
-
-A.) Alternative approach to logging:
-- If the /chat function is by a premium user who has their context turned ON; then that /chat conversation (bot the initial query and the response) is logged.
-- API keys wise, the key that is going to be used is the one that is called by the given user, the chat history is shared by the people in the group.
-
-
-
-
-
-
-
-
-
-A.) Handling all responses by the bot;
-- If message is sent by the bot itself, AND the group's setting for chat history saving is on.
-- Take the text that it is reply_to text, as well as the text itself
-- Chunk, embed and upload both texts - reply to (/chat query) and the response
-
-B.) RAG:
-- Integrating RAG into /chat command based on user presets
-
-
-
-
-
-
-
-
-
-
-A- Integration into Pinecone (singular API key) - and collections based on chats that require context awareness; collection IDs (in this case namespace) within db is chat_id.
-B- Every /chat or message sent is embedded and stored into the Vectorstore; IF the feature is turned on.
-
-- Calculate; and show workings.
-
-
-
-
-
-
--------
-4 - Additional API integration and ChatGPT toolkit / agent integration?
-
-
-
-
--- Post database --
-
-2. /variate v2
--- supports n number of variations depending on configurations
-
-3. /chat v3
--- chat history based persistence / threads << need to read more on it, or implement context awareness and chat history awareness
-
---- Build it out robustly to a degree where I can have it as a customer facing interface / product.
 """
 
 
@@ -391,7 +214,7 @@ def handle_chat(message):
         if api_keys:
             try:
                 context = chat_config['contexts'][str(message.from_user.id)]
-                print(context)
+                # print(context)
             except KeyError:
                 print("No context was set for user")
 
@@ -509,7 +332,9 @@ def handle_tts(message):
     except Exception as e:
         bot.reply_to(message, "/tts command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-    
+
+
+
 
 
 @bot.message_handler(commands=['stt'])
@@ -907,8 +732,8 @@ def user_settings_markup():
 def premium_user_settings_markup():
     markup = types.InlineKeyboardMarkup()
     markup.row(types.InlineKeyboardButton("🌌 Granular Image Masks", callback_data='premium_image_mask_settings'))
-    markup.row(types.InlineKeyboardButton("Contexts ON", callback_data='context_awareness_on'),
-        types.InlineKeyboardButton("Contexts OFF", callback_data='context_awareness_off'))
+    # markup.row(types.InlineKeyboardButton("Contexts ON", callback_data='context_awareness_on'),
+        # types.InlineKeyboardButton("Contexts OFF", callback_data='context_awareness_off'))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data='user_settings'))
     return markup
 
@@ -972,8 +797,8 @@ def group_settings_markup():
     markup = types.InlineKeyboardMarkup()
     markup.row(types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu'))
     markup.row(types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu'))
-    markup.row(types.InlineKeyboardButton("Persistence ON", callback_data='persistence_on'),
-        types.InlineKeyboardButton("Persistence OFF", callback_data='persistence_off'))
+    markup.row(types.InlineKeyboardButton("🟢 Persistence ON", callback_data='persistence_on'),
+        types.InlineKeyboardButton("🔴 Persistence OFF", callback_data='persistence_off'))
     return markup
 
 # define the language_model_menu
@@ -1193,7 +1018,7 @@ def handle_callback(call):
         current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
         user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this group.")
+        bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this chat. Please note that in a public group with more users, your converesation in this group may be saved and used as context in prompts by other users.")
         print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
 
 
@@ -1511,7 +1336,7 @@ def handle_set_context(message):
         # Retrieve and update the chat configuration
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         chat_config['contexts'][str(message.from_user.id)] = new_context
-        print(chat_config['contexts'])
+        # print(chat_config['contexts'])
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
         bot.reply_to(message, f"Context has been set.")
 
@@ -1520,6 +1345,27 @@ def handle_set_context(message):
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
+
+
+@bot.message_handler(commands=['set_user_context'])
+def handle_set_user_context(message):
+    """
+    Sets the context for the user, whatever instructions it wants to give.
+    """
+    if message.from_user.is_bot:
+        return
+    
+    try:
+        new_context = helper_functions.extract_body(message.text)
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        user_config['user_context'] = new_context
+
+        config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+        bot.reply_to(message, f"New user context has been set to \n{new_context}.")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 

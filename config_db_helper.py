@@ -47,7 +47,7 @@ valid_table_names = ["chat_configs", "user_configs"]
 # For any config changes, remember to update the versions.
 #####
 default_chat_config = {
-    "version": "0.0.9", # the version determines the current version of the configs
+    "version": "0.1.0", # the version determines the current version of the configs
     # "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on. A chat cannot be premium.
 
     # below are changeable by users / system
@@ -57,15 +57,14 @@ default_chat_config = {
     "lm_temp": 0.5, # default is 0.5, but language model can be made more deterministic
     "openai_api_key": "", # group's OpenAI API Key, this is used if the user's API key is not valid.
     "language_model": "gpt-3.5-turbo", # determines the default language model used by the user
-    "context": "", # Additional context
     "t1": "eng", # translation 1
     "t2": "chi", # translation 2
     "t3": "kor", # translation 3
-    "contexts": {} # context for a user given a chat group;
+    "contexts": {} # context for users given a chat group;
   }
 
 default_user_config = {
-    "version": "0.0.4269", # the version determines the current version of the configs
+    "version": "0.1.0", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
@@ -78,6 +77,8 @@ default_user_config = {
           [0, 0, 0],
           [1, 1, 1]
         ],
+    "user_context": "", # user context allows user to have context about themselves that persist between chat groups.
+
     "premium_image_mask_map": [ # determines how each user wants to edit the images
           [0, 0, 0, 0, 0],
           [0, 0, 0, 0, 0],
