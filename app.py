@@ -842,7 +842,9 @@ def language_selection_menu(preset_num):
 # Core settings button functionality;
 @bot.message_handler(commands=['settings'])
 def handle_settings(message):
-    bot.send_message(chat_id=message.chat.id, text=settings.settings_string)
+    bot.send_message(chat_id=message.chat.id, text=settings.settings_string, parse_mode="HTML")
+
+
 
 @bot.message_handler(commands=['group_settings'])
 def handle_group_settings(message):

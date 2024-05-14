@@ -20,7 +20,7 @@ Configurations
 
 
 
-settings_string = """⚙️TeleGPT Settings⚙️
+settings_string = """⚙️<b>TeleGPT Settings</b>⚙️
 
 Customize telebot with the following options:
 
