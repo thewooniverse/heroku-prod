@@ -54,11 +54,11 @@ user_settings_string = """👤<b>User Settings</b>👤
 
 Customize how your bot responds to your requests (applies to all interactions in any group):
 <b>-- Button Settings --</b>
-*Image Edit Mask* - which section of the image
-*Premium Features* - 
+Image Edit Mask - which section of the image
+Premium Features - 
 
 <b>-- Manual Settings -</b>
-*/set_context* [200 words] - Set the context for yourself across all chat groups. You can set things like what the bot should call you, your preferences.
+/set_context [200 words] - Set the context for yourself across all chat groups. You can set things like what the bot should call you, your preferences.
 /user_set_openai_key [sk-abcdefg...] - set the openai api key for yourself (works across all groups)
 """
 
@@ -110,7 +110,7 @@ Press the desired language option, press back to see current configuration:
 
 # PREMIUM SUBSCRIPTION STRINGS:
 
-premium_subscription_string = """--Premium Features--
+premium_subscription_string = """🌟Premium Features🌟
 
 1. Context Awareness and Persistence 🧠
 Bot can now remember.

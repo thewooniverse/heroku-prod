@@ -886,13 +886,13 @@ def handle_callback(call):
     # User Settings callback handler
     if call.data == "user_settings":
         # Update message to show user settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup(), parse_mode="HTML")
 
     if call.data == "premium_user_settings":
         # check whether the calling user has a premium subscriptipn
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         if user_config['is_premium']:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup())
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup(), parse_mode="HTML")
         else:
             # if they don't then
             bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting. Pleaes subscribe using /subscribe")
@@ -901,7 +901,7 @@ def handle_callback(call):
     elif call.data == "image_mask_settings":
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask), parse_mode="HTML")
     
     elif call.data[0:3] == "im_":
         # get the image settings
@@ -921,7 +921,7 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']), parse_mode="HTML")
 
 
 
@@ -929,7 +929,7 @@ def handle_callback(call):
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         premium_user_image_mask = user_config['premium_image_mask_map']
         print(premium_user_image_mask)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask), parse_mode="HTML")
     
     elif call.data[0:4] == "pim_":
         # get the image settings
@@ -950,7 +950,7 @@ def handle_callback(call):
         print(premium_user_image_mask)
         user_config['premium_image_mask_map'] = premium_user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']), parse_mode="HTML")
 
 
 
@@ -962,11 +962,11 @@ def handle_callback(call):
     # Group Settings callback handler
     elif call.data == "group_settings":
         # Update message to show chat settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=group_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
     
     elif call.data == "language_model_menu":
         # User pressed the "Back" button, return to main settings screen
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup(), parse_mode="HTML")
     
     # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt3.5":
@@ -1052,10 +1052,10 @@ def handle_callback(call):
     elif call.data == 'translations_menu':
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3), parse_mode="HTML")
     
     elif call.data in ['t1', 't2', 't3']:
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data), parse_mode="HTML")
     
     elif call.data[0:4] == "lset":
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
