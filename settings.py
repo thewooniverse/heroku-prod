@@ -34,19 +34,19 @@ Customize how your assistant functions in this group (DM covnersation is also co
 All settings and configurations for a group is ONLY availble to be changed by the administrator of the group / chat;
 To customize new bots with new configurations and settings, you can create new groups and invite the bot in to customize different chat threads with the bot.
 
--- Button Settings --
+*-- Button Settings --
 *Persistence ON or OFF* - Premium users only. ON - your /chat queries remain context aware, and your /chat conversations with the bot in this group is saved for context.
 Along with context - this is useful for creating different conversation threads with the bot with persistent memory for different topics.
 
-*Language Model* - choose which language model your assistant will use to complete your chat requests.
-*Language Presets* - choose which languages /t1 /t2 /t3 translate to for each group.
+Language Models - choose which language model your assistant will use to complete your chat requests.
+Language Presets - choose which languages /t1 /t2 /t3 translate to for each group.
 
--- Manual Settings --
-*/set_context* [200 words] - Set the context for yourself in the given chatgroup. You can set things like what you want this conversation to be about, or what you want the bot to call you or remember.
+*-- Manual Settings --*
+/set_context [200 words] - Set the context for yourself in the given chatgroup. You can set things like what you want this conversation to be about, or what you want the bot to call you or remember.
 This is a more lightweight version to pass your bot some persistent context
 
-*/set_temperature* [0-2] - set sampling temperature, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
-*/chat_set_openai_key* [sk-abcdefg...] - set the openai api key for this group. ONLY USE in public groups when you want to allow other useres to also use your API Key to access Open AI. For most use cases, please set your personal API key in DM with the bot.
+/set_temperature [0-2] - set sampling temperature, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
+/chat_set_openai_key [sk-abcdefg...] - set the openai api key for this group. ONLY USE in public groups when you want to allow other useres to also use your API Key to access Open AI. For most use cases, please set your personal API key in DM with the bot.
 """
 
 
