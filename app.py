@@ -208,7 +208,7 @@ def handle_chat(message):
         
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
             history_similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_keys[0], PINECONE_KEY)
-            print(history_similarity_search_result_string)
+            # print(history_similarity_search_result_string)
             chat_history += history_similarity_search_result_string
 
         if api_keys:

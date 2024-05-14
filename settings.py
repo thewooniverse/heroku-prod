@@ -4,16 +4,28 @@
 
 getting_started_string = """
 
+Chat Functionality
+/chat [query] - 
+/t1/t2/t3 - 
+
+Voice Functionality
+/tts [text] - text-to-speech function,
+/stt [in reply to a speech] - 
+
+Image Functionality
+
+Configurations
+
 """
 
 
 
 settings_string = """⚙️OpenAIssistant Settings⚙️
 
-*Customize telebot with the following options:*
-*/group_setting* - Only available to administrators of groups. Customize how the bot functions within a group setting. 
+**Customize telebot with the following options:**
 
-*/user_settings* - Only available by DM-ing the bot. Customize and personalize how the bot functions or responds to your requests across all interactions with the bot.
+**/group_setting** - Only available to administrators of groups. Customize how the bot functions within a group setting. 
+**/user_settings** - Only available by DM-ing the bot. Customize and personalize how the bot functions or responds to your requests across all interactions with the bot.
 """
 
 group_settings_string = """👥Chat Group Settings👥
@@ -30,6 +42,9 @@ Along with context - this is useful for creating different conversation threads 
 *Language Presets* - choose which languages /t1 /t2 /t3 translate to for each group.
 
 -- Manual Settings --
+*/set_context* [200 words] - Set the context for yourself in the given chatgroup. You can set things like what you want this conversation to be about, or what you want the bot to call you or remember.
+This is a more lightweight version to pass your bot some persistent context
+
 */set_temperature* [0-2] - set sampling temperature, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.
 */chat_set_openai_key* [sk-abcdefg...] - set the openai api key for this group. ONLY USE in public groups when you want to allow other useres to also use your API Key to access Open AI. For most use cases, please set your personal API key in DM with the bot.
 """
@@ -39,9 +54,11 @@ user_settings_string = """👤User Settings👤
 
 Customize how your bot responds to your requests (applies to all interactions in any group):
 -- Button Settings --
-Image Edit Mask - which section of the image
+*Image Edit Mask* - which section of the image
+*Premium Features* - 
 
 -- Manual Settings -
+*/set_context* [200 words] - Set the context for yourself across all chat groups. You can set things like what the bot should call you, your preferences.
 /user_set_openai_key [sk-abcdefg...] - set the openai api key for yourself (works across all groups)
 """
 
@@ -54,7 +71,6 @@ Below is the current image mask settings; 1 is the section of the image where yo
 
 
 lm_settings_string = """💬Language Model Settings💬
-
 GPT 3.5 turbo - Baseline model for OpenAI's ChatGPT. Fast and cheaper.
 GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capabilities.
 """
