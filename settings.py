@@ -20,11 +20,11 @@ Configurations
 
 
 
-settings_string = """⚙️OpenAIssistant Settings⚙️
+settings_string = """⚙️TeleGPT Settings⚙️
 
-*Customize telebot with the following options:*
+Customize telebot with the following options:
 
-/group_setting - Only available to administrators of groups. Customize how the bot functions within a group setting. 
+/group_settings - Only available to administrators of groups. Customize how the bot functions within a group setting. 
 /user_settings - Only available by DM-ing the bot. Customize and personalize how the bot functions or responds to your requests across all interactions with the bot.
 """
 
