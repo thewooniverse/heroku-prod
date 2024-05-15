@@ -55,16 +55,17 @@ import templates
 
 
 """
+1. Go through settigs, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-
-1. Go through settings, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 2. Suggestions for commands, pre-completion options
 Admin Command Handlers; Clear chat history command.
 
-3. Forking it into TeleGPT bot and making the bot public for usage.
+--- up to here today ---
+3. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
+
 4. Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
 --> Wooniverse bot will interact with my webpages etc...
 
@@ -72,6 +73,9 @@ That then marks the end of it;
 Additional optional features:
 - Context saving from pictures;
 ==========================================
+
+Potential future features:
+- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
 
 
 """
@@ -839,22 +843,27 @@ def language_selection_menu(preset_num):
 
 
 
+
+
+
 # Core settings button functionality;
 @bot.message_handler(commands=['settings'])
 def handle_settings(message):
-    bot.send_message(chat_id=message.chat.id, text=settings.settings_string)
+    bot.send_message(chat_id=message.chat.id, text=settings.settings_string, parse_mode="HTML")
+
+
 
 @bot.message_handler(commands=['group_settings'])
-def handle_settings(message):
-    bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup())
+def handle_group_settings(message):
+    bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
 
 @bot.message_handler(commands=['user_settings'])
-def handle_settings(message):
+def handle_user_settings(message):
     if message.chat.type != 'private':
-        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.")
+        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
         return
     else:
-        bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup())
+        bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup(), parse_mode="HTML")
 
 
 @bot.message_handler(commands=['reset_user_settings'])
@@ -881,13 +890,13 @@ def handle_callback(call):
     # User Settings callback handler
     if call.data == "user_settings":
         # Update message to show user settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.user_settings_string, reply_markup=user_settings_markup(), parse_mode="HTML")
 
     if call.data == "premium_user_settings":
         # check whether the calling user has a premium subscriptipn
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         if user_config['is_premium']:
-            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup())
+            bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_user_settings_string, reply_markup=premium_user_settings_markup(), parse_mode="HTML")
         else:
             # if they don't then
             bot.answer_callback_query(call.id, "You do not have administrative permissions to change this setting. Pleaes subscribe using /subscribe")
@@ -896,7 +905,7 @@ def handle_callback(call):
     elif call.data == "image_mask_settings":
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         user_image_mask = user_config['image_mask_map']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_image_mask), parse_mode="HTML")
     
     elif call.data[0:3] == "im_":
         # get the image settings
@@ -916,7 +925,7 @@ def handle_callback(call):
         user_image_mask[int(mask_idx[0])][int(mask_idx[1])] = new_value
         user_config['image_mask_map'] = user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.image_mask_settings_string, reply_markup=image_mask_options_menu(user_config['image_mask_map']), parse_mode="HTML")
 
 
 
@@ -924,7 +933,7 @@ def handle_callback(call):
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
         premium_user_image_mask = user_config['premium_image_mask_map']
         print(premium_user_image_mask)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(premium_user_image_mask), parse_mode="HTML")
     
     elif call.data[0:4] == "pim_":
         # get the image settings
@@ -945,7 +954,7 @@ def handle_callback(call):
         print(premium_user_image_mask)
         user_config['premium_image_mask_map'] = premium_user_image_mask
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.premium_image_mask_settings_string, reply_markup=premium_image_mask_options_menu(user_config['premium_image_mask_map']), parse_mode="HTML")
 
 
 
@@ -957,11 +966,11 @@ def handle_callback(call):
     # Group Settings callback handler
     elif call.data == "group_settings":
         # Update message to show chat settings with a "Back" button
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=group_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
     
     elif call.data == "language_model_menu":
         # User pressed the "Back" button, return to main settings screen
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup())
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup(), parse_mode="HTML")
     
     # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt3.5":
@@ -1047,10 +1056,10 @@ def handle_callback(call):
     elif call.data == 'translations_menu':
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         t1,t2,t3 = chat_config['t1'], chat_config['t2'], chat_config['t3']
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.translation_presets_string, reply_markup=translation_options_menu(t1,t2,t3), parse_mode="HTML")
     
     elif call.data in ['t1', 't2', 't3']:
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data))
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data), parse_mode="HTML")
     
     elif call.data[0:4] == "lset":
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
@@ -1263,7 +1272,7 @@ def handle_set_t2(message):
 
         
         retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
-        print(retrieved_code, english_name)
+        # print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return
@@ -1299,7 +1308,7 @@ def handle_set_t2(message):
 
         
         retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
-        print(retrieved_code, english_name)
+        # print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return
