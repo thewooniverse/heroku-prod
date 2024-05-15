@@ -55,16 +55,17 @@ import templates
 
 
 """
+1. Go through settigs, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-
-1. Go through settings, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 2. Suggestions for commands, pre-completion options
 Admin Command Handlers; Clear chat history command.
 
-3. Forking it into TeleGPT bot and making the bot public for usage.
+--- up to here today ---
+3. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
+
 4. Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
 --> Wooniverse bot will interact with my webpages etc...
 
@@ -72,6 +73,9 @@ That then marks the end of it;
 Additional optional features:
 - Context saving from pictures;
 ==========================================
+
+Potential future features:
+- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
 
 
 """
@@ -1268,7 +1272,7 @@ def handle_set_t2(message):
 
         
         retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
-        print(retrieved_code, english_name)
+        # print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return
@@ -1304,7 +1308,7 @@ def handle_set_t2(message):
 
         
         retrieved_code, english_name = get_code_and_name(new_iso_code) ## This is where the issue is; probably simplify the code a bit here.
-        print(retrieved_code, english_name)
+        # print(retrieved_code, english_name)
         if not retrieved_code:
             bot.reply_to(message, "ISO is not in the ISO codes, please look up and try again.")
             return

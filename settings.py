@@ -51,8 +51,8 @@ This is a more lightweight version to pass your bot some persistent context
 
 
 user_settings_string = """👤<b>User Settings</b>👤
-
 Customize how your bot responds to your requests (applies to all interactions in any group):
+
 <b>-- Button Settings --</b>
 Image Edit Mask - which section of the image
 Premium Features - 
@@ -79,8 +79,8 @@ GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capa
 
 
 translation_presets_string = """🌐Language Presets🌐
-
 Translations /t1 /t2 /t3 [prompt] translates any prompt entered to a preset language without the need to ask GPT to "translate X into Y"
+
 <b>-- Button Settings --</b>
 Press the options below to change your translation language presets to popular language choices.
 
@@ -113,7 +113,7 @@ Press the desired language option, press back to see current configuration:
 premium_subscription_string = """🌟Premium Features🌟
 
 1. Context Awareness and Persistence 🧠
-Bot can now remember.
+Bot can now remember what
 
 2. Ads-Free 💨
 Poof, your ads gone.
