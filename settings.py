@@ -3,19 +3,36 @@
 
 
 getting_started_string = """
+All new accounts get a free trial of 10 free requests before being required to enter their own OpenAI API Key.
 
 Chat Functionality
-/chat [query] - 
-/t1/t2/t3 - 
+/chat [prompt] - replies with AI response to the prompt, based on several parameters.
+- In-reply context: simplest way to provide context, replying to a text message will provide the message that the /chat request is in reply to as context for the request.
+- User context: set in user_settings, context that user set for all chat requests from the user. Things like "my name is Jon Applepeel".
+- Chat context: set in chat groups, context that the user wants to keep in mind for a specific chat group or thread. Things like "You are an expert fitness chef, for all recipes please answer with exact measurements and estimated calories"
+- Chat history / persistence: premium feature that allows users to have all of their /chat and other conversations within a chat thread / group with the bot and used as context and history for all future chat requests.
+
+/vision [in-reply to image + prompt] - image recognition powered chat completion. Embeddings from provided image as primary context. Useful for things like "What is this menu in English?"
+
+/t1/t2/t3 [prompt] - translates the prompted text into the preset languages. 
+e.g. if /t1 is set to english, any other text in any languages as prompt to /t1 will translate it to English.
 
 Voice Functionality
-/tts [text] - text-to-speech function,
-/stt [in reply to a speech] - 
+/tts [prompt] - text-to-speech, narrate and read out the prompt provided.
+/stt [in reply to a voice note] - speech-to-text, transcribe the voice note into text
+/stc [in reply to a voice note]- speech-to-chat, transcribe the voice note and use it as a prompt for chat completion.
+/sts [in reply to a voice note] - speech-to-speech(chat), transcribe the voice note, use it as a prompt for chat completion, and send the chat completion response in a voice message.
+"Hey Telebot" (in development) - voice activated /stc feature, without needing to type, send a voice note with your prompt starting with the trigger word set to generate a chat completion request.
+
 
 Image Functionality
+/imagine [prompt] - generate image, using image models. Default is Dall-E 3.
+/variate [in-reply-to-image] - generate variations of image that the request is in reply to.
+/edit_img [in-reply-to-image + mask settings + prompt] - generate an edited version of the image, based on the prompt, the image mask area targeting the area of the image that you want to edit.
 
-Configurations
-
+Configurations:
+/user_settings - configure how your bot behaves with ALL of your interactions over different groups and chat threads.
+/group_settings - configure how your bot behaves to your requests in a given chat group. Useful for creating multiple conversations for different topics with the bot.
 """
 
 
@@ -123,9 +140,9 @@ Multi-image generation, mask targeting granularity.
 """
 
 premium_user_settings_string = """🌟Premium User Settings🌟
-
 Customize how your bot responds to your requests (applies to all interactions in any group):
--- Button Settings --
+
+<b>-- Button Settings --</b>
 Context Awareness ON or OFF - control whether your bot uses conversation history from the group to search for relevant conversation threads.
 Granual Image Mask Settings - Image Mask, but with more granular targeting of image sections.
 """

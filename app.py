@@ -76,7 +76,8 @@ Additional optional features:
 
 Potential future features:
 - "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
-
+- Voice agent / type options for
+- Free users getting up to 10 free requests of any type;
 
 """
 
