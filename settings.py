@@ -5,7 +5,7 @@
 getting_started_string = """
 All new accounts get a free trial of 10 free requests before being required to enter their own OpenAI API Key.
 
-Chat Functionality
+<b>Chat Functionality</b>
 /chat [prompt] - replies with AI response to the prompt, based on several parameters.
 - In-reply context: simplest way to provide context, replying to a text message will provide the message that the /chat request is in reply to as context for the request.
 - User context: set in user_settings, context that user set for all chat requests from the user. Things like "my name is Jon Applepeel".
@@ -17,7 +17,7 @@ Chat Functionality
 /t1/t2/t3 [prompt] - translates the prompted text into the preset languages. 
 e.g. if /t1 is set to english, any other text in any languages as prompt to /t1 will translate it to English.
 
-Voice Functionality
+<b>Voice Functionality</b>
 /tts [prompt] - text-to-speech, narrate and read out the prompt provided.
 /stt [in reply to a voice note] - speech-to-text, transcribe the voice note into text
 /stc [in reply to a voice note]- speech-to-chat, transcribe the voice note and use it as a prompt for chat completion.
@@ -25,12 +25,12 @@ Voice Functionality
 "Hey Telebot" (in development) - voice activated /stc feature, without needing to type, send a voice note with your prompt starting with the trigger word set to generate a chat completion request.
 
 
-Image Functionality
+<b>Image Functionality</b>
 /imagine [prompt] - generate image, using image models. Default is Dall-E 3.
 /variate [in-reply-to-image] - generate variations of image that the request is in reply to.
 /edit_img [in-reply-to-image + mask settings + prompt] - generate an edited version of the image, based on the prompt, the image mask area targeting the area of the image that you want to edit.
 
-Configurations:
+<b>Configurations:</b>
 /user_settings - configure how your bot behaves with ALL of your interactions over different groups and chat threads.
 /group_settings - configure how your bot behaves to your requests in a given chat group. Useful for creating multiple conversations for different topics with the bot.
 """

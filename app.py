@@ -56,17 +56,21 @@ import templates
 
 """
 1. Go through settigs, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
-
+2. Suggestions for commands, pre-completion options
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
-2. Suggestions for commands, pre-completion options
-Admin Command Handlers; Clear chat history command.
+
+3. Admin Command Handlers - check if the;
+4. Clear chat history command.
+5. "Free Trial" Configuration with 10 free calls to GPT-3;
+6. Growth, marketing
+
+Bug fixes on certain chat requests that require the bot to search the web
 
 --- up to here today ---
-3. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
-
-4. Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
+X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
+Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
 --> Wooniverse bot will interact with my webpages etc...
 
 That then marks the end of it;
@@ -176,7 +180,7 @@ def handle_start(message):
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
-        bot.reply_to(message, templates.start_menu)
+        bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -1383,12 +1387,17 @@ def handle_set_user_context(message):
 
  
 # Handler for managing chat history as context for the given group;
-@bot.message_handler(commands=['clear_chat_hist'])
-def handle_clear_memory(message):
+@bot.message_handler(commands=['clear_history'])
+def handle_clear_chat_history(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
     """
+    # deletes the namespace
+
+
     pass
+
+
 
 
 

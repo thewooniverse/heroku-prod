@@ -1,7 +1,7 @@
 import templates
 import os
 import base64
-
+import settings
 
 
 
@@ -35,7 +35,7 @@ def start_menu():
     """
     def start_menu(): returns the current template menu message
     """
-    return templates.start_menu
+    return settings.getting_started_string
 
 
 
