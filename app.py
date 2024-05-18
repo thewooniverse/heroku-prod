@@ -64,7 +64,8 @@ So pretty much its:
 3. Admin Command Handlers - check if the;
 4. Clear chat history command.
 5. "Free Trial" Configuration with 10 free calls to GPT-3;
-6. Growth, marketing
+6. Growth, marketing and metrics;
+7. Fixes for /command calls without entering prompts etc... sending messages to correct.
 
 Bug fixes on certain chat requests that require the bot to search the web
 
