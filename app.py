@@ -61,9 +61,13 @@ import templates
 =========================================================================================================
 So pretty much its:
 
+0. OpenAI API key format checker reset;
 3. Admin Command Handlers - check if the;
-4. Clear chat history command.
-5. "Free Trial" Configuration with 10 free calls to GPT-3;
+4. Clear chat history command; clearing the namespace;
+---
+
+5. "Free Trial" Configuration with 10 free calls to GPT-3; --> updating the config per user;
+
 6. Growth, marketing and metrics;
 7. Fixes for /command calls without entering prompts etc... sending messages to correct.
 
@@ -107,8 +111,6 @@ STRIPE_PAYMENT_KEY = os.environ.get('STRIPE_KEY')
 # vectorstore setup
 PINECONE_KEY = os.environ.get('PINECONE_API')
 pc = Pinecone(api_key=PINECONE_KEY)
-
-
 
 
 # instantiate the bot and any key helper functions
