@@ -46,6 +46,14 @@ valid_table_names = ["chat_configs", "user_configs"]
 #####
 # For any config changes, remember to update the versions.
 #####
+
+default_system_config = {
+    "version": "0.0.1", # version of the config schema
+    "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
+    "admins": [], # list of administrators of the bot
+}
+
+
 default_chat_config = {
     "version": "0.1.0", # the version determines the current version of the configs
     # "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on. A chat cannot be premium.
