@@ -1505,8 +1505,9 @@ def got_payment(message):
 @bot.message_handler(commands=['give_premium'])
 def admin_give_premium(message):
     # check that the user is an admin
-    if (message.from_user.id != OWNER_USER_ID): # later this needs to be changed to check whether it is within the list of Administrators;
-        bot.reply_to(message, f"Your ID is{message.from_user.id}  | {OWNER_USER_ID}")
+    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
+
+        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
         bot.reply_to(message, f"This command is only available to the owner of the bot")
         return
     
