@@ -108,7 +108,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environ
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # again, same environment variable, different api keys accessed
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
 # ADMIN_USER_ID = os.environ.get('ADMIN_UID', "7032361920")
-ONWER_USD_ID = os.environ.get('OWNER_UID', "7032361920")
+OWNER_USER_ID = os.environ.get('OWNER_UID', "7032361920")
 
 # setting up web app and webhooks
 ROOT_URL = os.environ.get('ROOT_URL')
@@ -1505,7 +1505,8 @@ def got_payment(message):
 @bot.message_handler(commands=['give_premium'])
 def admin_give_premium(message):
     # check that the user is an admin
-    if (message.from_user.id != ONWER_USD_ID): # later this needs to be changed to check whether it is within the list of Administrators;
+    if (message.from_user.id != OWNER_USER_ID): # later this needs to be changed to check whether it is within the list of Administrators;
+        bot.reply_to(message, f"Your ID is{message.from_user.id}  | {OWNER_USER_ID}")
         bot.reply_to(message, f"This command is only available to the owner of the bot")
         return
     
