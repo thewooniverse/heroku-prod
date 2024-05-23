@@ -55,14 +55,22 @@ import templates
 
 
 """
+0. OpenAI API key format checker reset;
 1. Go through settigs, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 2. Suggestions for commands, pre-completion options
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 So pretty much its:
 
-0. OpenAI API key format checker reset;
-3. Admin Command Handlers - check if the;
+X - System configuration and owner turning on and off the bot
+
+3. Admin Command Handlers - check if the sender is the owner of the bot from environ.
+- Need a new system_configuration
+- Give other users premium features, any other features? I can configure the bot to no longer respond to messages and turn off the bot from telegram as well.
+- Give the ability to clear chat history for a given user.
+
+
+
 4. Clear chat history command; clearing the namespace;
 ---
 
@@ -99,6 +107,10 @@ app = Flask(__name__)
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN') # for prod and staging environments it means this would be different
 OPENAI_API_KEY=os.environ.get('OPENAI_API_KEY', 'YourAPIKey_BACKUP') # again, same environment variable, different api keys accessed
 TELEGRAM_API_URL = f'https://api.telegram.org/bot{TELEGRAM_TOKEN}/'
+# ADMIN_USER_ID = os.environ.get('ADMIN_UID', "7032361920")
+OWNER_USER_ID = os.environ.get('OWNER_UID', "7032361920")
+
+# setting up web app and webhooks
 ROOT_URL = os.environ.get('ROOT_URL')
 WEBHOOK_URL_PATH = '/webhook'  # This path should match the path component of WEBHOOK_URL
 WEBHOOK_URL = (ROOT_URL + WEBHOOK_URL_PATH)
@@ -112,9 +124,10 @@ STRIPE_PAYMENT_KEY = os.environ.get('STRIPE_KEY')
 PINECONE_KEY = os.environ.get('PINECONE_API')
 pc = Pinecone(api_key=PINECONE_KEY)
 
-
 # instantiate the bot and any key helper functions
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
+
+
 
 
 
@@ -1109,7 +1122,7 @@ def handle_user_set_openai_apikey(message):
     
     try:
         new_openai_key = helper_functions.extract_body(message.text)
-        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'):
+        if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'): # config val checking is temporary turned off for now as openAI Api Key formats continue to change.
 
             # encrypt the key;
             new_openai_key = config_db_helper.encrypt(new_openai_key)
@@ -1393,7 +1406,9 @@ def handle_set_user_context(message):
 @bot.message_handler(commands=['clear_history'])
 def handle_clear_chat_history(message):
     """
-    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history
+    handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history.
+    - clear_my_chats -> search within vectorstore, delete their entries and responses.
+    - clear_group_history -> delete the whole group's chat history, only available to admins with delete permissions.
     """
     # deletes the namespace
 
@@ -1475,6 +1490,46 @@ def got_payment(message):
 
 
 
+
+
+
+
+
+#########################################################
+################## PAYMENTS FUNCTIONS: ##################
+#########################################################
+# - Where will Admin user_ids be stored? Perhaps in system configurations, where I can turn the bot on and off and all commands are handled by that; I think that will be p cool.
+    
+
+
+@bot.message_handler(commands=['give_premium'])
+def admin_give_premium(message):
+    # check that the user is an admin
+    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
+
+        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
+        bot.reply_to(message, f"This command is only available to the owner of the bot")
+        return
+    
+    if not message.reply_to_message:
+        bot.reply_to(message, f"Please make")
+        return
+    # gets the user ID from the tagged username.
+    try:
+        new_admin_uid = message.reply_to_message.from_user.id
+        user_config = get_or_create_chat_config(new_admin_uid, 'user')
+        user_config['is_premium'] = True
+        config_db_helper.set_new_config(new_admin_uid, 'user', user_config)
+        bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}")
+    
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+    
+
+
+# define function to 
 
 
 
