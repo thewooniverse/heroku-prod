@@ -28,7 +28,8 @@ fernet_key = os.getenv('FERNET_KEY')
 cipher_suite = Fernet(fernet_key)
 
 
-
+# Get environment variables
+OWNER_USER_ID = os.environ.get('OWNER_UID', "7032361920")
 
 
 
@@ -50,7 +51,7 @@ valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 default_system_config = {
     "version": "0.0.1", # version of the config schema
     "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
-    "admins": [], # list of administrators of the bot
+    "admins": [OWNER_USER_ID], # list of administrators of the bot
 }
 
 default_chat_config = {
@@ -247,21 +248,27 @@ def set_new_config(id, config_type, new_config):
     Args:
         id (str): The unique identifier for the chat or user.
         config_type (str): The type of configuration ('chat' or 'user').
-        config_attribute (str): The attribute name within the configuration to be updated.
         new_config (dict): The new configuration value to be set for the specified attribute.
         
-    Raises:
-        ValueError: If `config_type` is not 'chat' or 'user', or if `config_attribute` is invalid.
     """
     conn = connection_pool.getconn()
     # check if the configuration type is valid.
-    if config_type not in ['chat', 'user']:
+    if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
     
     # check if the configuration attribute it is trying to retrieve is value.
     # valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
     # determine which configuration type is being retrieved or created.
-    config_table = "chat_configs" if config_type == "chat" else "user_configs"
+    config_table = None
+    if config_type == "chat":
+        config_table = "chat_configs"
+    elif config_type == "user":
+        config_table = "user_configs"
+    elif config_type == "owner":
+        config_table = "system_configs"
+    else:
+        print("Invalid config type!")
+        return
 
     try:
         with conn.cursor() as cursor:
