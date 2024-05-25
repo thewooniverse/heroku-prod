@@ -62,19 +62,21 @@ import templates
 =========================================================================================================
 So pretty much its:
 
-X - System configuration and owner turning on and off the bot
+X - System configuration and owner turning on and off the bot; << ask chat GPT
+
+
 
 3. Admin Command Handlers - check if the sender is the owner of the bot from environ.
 - Need a new system_configuration
 - Give other users premium features, any other features? I can configure the bot to no longer respond to messages and turn off the bot from telegram as well.
-- Give the ability to clear chat history for a given user.
 
 
-
-4. Clear chat history command; clearing the namespace;
+4. Clear chat history command; clearing the namespace -> admins can do this;
 ---
 
-5. "Free Trial" Configuration with 10 free calls to GPT-3; --> updating the config per user;
+5. "Free Trial" Configuration with 10 free calls to GPT-3; --> updating the config per user; -> this should go in user_config potentially; and the reset should not reset this value.
+- It osuld reset everything but this value.
+
 
 6. Growth, marketing and metrics;
 7. Fixes for /command calls without entering prompts etc... sending messages to correct.
@@ -1407,13 +1409,15 @@ def handle_set_user_context(message):
 def handle_clear_chat_history(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history.
-    - clear_my_chats -> search within vectorstore, delete their entries and responses.
     - clear_group_history -> delete the whole group's chat history, only available to admins with delete permissions.
     """
     # deletes the namespace
+    if message.from_user.is_bot:
+        return
+    
+    # check whether the person requesting the clear_history request is an administrator with delete permissions
 
-
-    pass
+    # if so - go to the namespace in pinecone and delete the chat.
 
 
 
@@ -1528,8 +1532,6 @@ def admin_give_premium(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
     
 
-
-# define function to 
 
 
 

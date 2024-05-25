@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 ### variables and templates ###
-valid_table_names = ["chat_configs", "user_configs"]
+valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 
 
 #####
@@ -52,7 +52,6 @@ default_system_config = {
     "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     "admins": [], # list of administrators of the bot
 }
-
 
 default_chat_config = {
     "version": "0.1.0", # the version determines the current version of the configs
@@ -96,7 +95,6 @@ default_user_config = {
         ]
   }
 
-
 valid_configval_patterns = {
     # valid_formats contain the syntaxes in regex that are accepted by a configuration that is typed / entered by the user.
     "openai_api_key": r'^sk-[A-Za-z0-9]{45,60}$' # regex
@@ -105,9 +103,6 @@ valid_configval_patterns = {
 valid_configval_options = {
     "language_model": ['gpt-4', 'gpt-3.5-turbo'],
 }
-
-
-
 
 
 
@@ -130,10 +125,6 @@ def put_conn_back_in_pool(conn):
     logger.info("Connection returned successfully.")
 
 
-
-
-
-
 ### Define and create the necessary tables if they are not already created ###
 def create_config_table(table_name, config_type):
     # Ensure table_name is a safe string to prevent SQL injection
@@ -141,7 +132,7 @@ def create_config_table(table_name, config_type):
     if table_name not in valid_table_names:
         raise ValueError("Invalid table name")
     
-    if config_type not in ['chat', 'user']:
+    if config_type not in ['chat', 'user', 'system']:
         raise ValueError("Invalid config type")
 
     conn = get_conn_from_pool()
@@ -160,7 +151,7 @@ def create_config_table(table_name, config_type):
 # Create the necessary tables
 create_config_table("chat_configs", "chat")
 create_config_table("user_configs", "user")
-
+create_config_table("system_configs", "owner")
 
 
 
@@ -171,21 +162,26 @@ def get_or_create_chat_config(id, config_type):
     new record is created for that given user or chat group in the relevant tables: chat_configs or user_configs.
     """
     conn = connection_pool.getconn()
-    if config_type not in ['chat', 'user']:
+    if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
 
     # determine which configuration type is being retrieved or created.
     if config_type == "chat":
         default_config = default_chat_config
         config_table = "chat_configs"
-    else:
+    elif config_type == "user":
         default_config = default_user_config
         config_table = "user_configs"
+    else:
+        default_config = default_system_config
+        config_table = "system_configs"
     
     try:
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT config FROM {config_table} WHERE {config_type}_id = %s;", (id,))
             config_row = cursor.fetchone()
+
+            # if the config row does not exist, a table is created
             if config_row is None:
                 # default config is imported as a python dict of a Default Config from templates.py; from templates import default_config at the top of the app.
                 # this automatically sets it to the most up to date version of default configs as written above.
@@ -193,9 +189,11 @@ def get_or_create_chat_config(id, config_type):
                 conn.commit()
                 config = default_config 
                 # print(f"config default is {type(config)}")
+            
+            # if a config row is found;
             else:
                 if isinstance(config_row[0], str):
-                    config = json.loads(config_row[0])  # Deserialize if it's a string
+                    config = json.loads(config_row[0])  # Type assertion: deserialize if it's a string
                 else:
                     config = config_row[0]  # Use directly if it's already a dictionary
                 
@@ -219,7 +217,7 @@ def get_or_create_chat_config(id, config_type):
 
                     # dump the updated default configuration into the targeted ID;
                     ## the default config should now have: 
-                    ## 1.) All existing configuration from existing config copied except version num. 
+                    ## 1.) All existing configuration from existing config copied except version num, thus preserving the data.
                     ## 2.) Any new configurations and default values, and 3.) Any old attribute in existing config that is no longer supported is dropped.
                     cursor.execute(f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s", (json.dumps(updated_config), id))
                     conn.commit()
@@ -278,8 +276,6 @@ def set_new_config(id, config_type, new_config):
 
     finally:
         connection_pool.putconn(conn)
-
-
 
 
 
