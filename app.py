@@ -62,25 +62,44 @@ import templates
 =========================================================================================================
 So pretty much its:
 
-X - System configuration and owner turning on and off the bot
+->System configuration and owner turning on and off the bot and adding new administrators; << ask chat GPT
+--> new config_table for system_configs have been added to the database
+--> this seems like a suitable approach for operations like adding new admins
+--> However for turning the bot on and off; if every single command handler is going to be checking the database for whether the bot is on 
+--> so as to determine whether to handle a command request from a user or not at the beginning of the command, this starts to feel
+--> like an resource intense approach (by constantly connecting + reconnecting and querying the database).
+--> what is a good alternative way to fix this? Would it be better to cache it and access it ever so often (but still maintain it in the DB)?
+--> Or is there a better approach I am not aware of?
+-----> If caching, whenever the system config IS updated, the cache should also be updated; should always be cached imo.
 
-3. Admin Command Handlers - check if the sender is the owner of the bot from environ.
-- Need a new system_configuration
-- Give other users premium features, any other features? I can configure the bot to no longer respond to messages and turn off the bot from telegram as well.
-- Give the ability to clear chat history for a given user.
 
 
+Admin / Owner Features:
+1. Owner can add new admins or remove admins, and has all the permissions that an admin does.
+2. Admins can turn the bot on and off (accepting or not accepting features)
+3. Admins can also restart the bot entirely
+4. Admins can set the OpenAI API Key for trial users to use
+5. Admins can add more "free trial" credits for users
+6. Owners can give users premium access
+--> for 5. 6. I need to check whether the
 
-4. Clear chat history command; clearing the namespace;
+Additional features:
+1. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
+
+Bug Fixes and shipping:
+1. Handling chat requests and response objects that require it to search the web or a search engine.
+2. Logging upgrades and tidy up of print statements
+3. Baseline testing
+4. Redeploy onto new Heroku environment thats NOT AB69 / Telebot; 
+--> although I can just change the endpoint to another bot API token, redploying is good practice for backend skills.
+
+
+Potential future features:
+- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
+- Voice agent / type options for
+- Free users getting up to 10 free requests of any type;
+
 ---
-
-5. "Free Trial" Configuration with 10 free calls to GPT-3; --> updating the config per user;
-
-6. Growth, marketing and metrics;
-7. Fixes for /command calls without entering prompts etc... sending messages to correct.
-
-Bug fixes on certain chat requests that require the bot to search the web
-
 --- up to here today ---
 X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
 Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
@@ -90,11 +109,6 @@ That then marks the end of it;
 Additional optional features:
 - Context saving from pictures;
 ==========================================
-
-Potential future features:
-- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
-- Voice agent / type options for
-- Free users getting up to 10 free requests of any type;
 
 """
 
@@ -1407,13 +1421,15 @@ def handle_set_user_context(message):
 def handle_clear_chat_history(message):
     """
     handle_clear_memory(message): clears the chat history and logs saved on the vectorstore and basically resets the conversation history.
-    - clear_my_chats -> search within vectorstore, delete their entries and responses.
     - clear_group_history -> delete the whole group's chat history, only available to admins with delete permissions.
     """
     # deletes the namespace
+    if message.from_user.is_bot:
+        return
+    
+    # check whether the person requesting the clear_history request is an administrator with delete permissions
 
-
-    pass
+    # if so - go to the namespace in pinecone and delete the chat.
 
 
 
@@ -1501,10 +1517,38 @@ def got_payment(message):
 # - Where will Admin user_ids be stored? Perhaps in system configurations, where I can turn the bot on and off and all commands are handled by that; I think that will be p cool.
     
 
-
+# Owner only features
+#### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 @bot.message_handler(commands=['give_premium'])
-def admin_give_premium(message):
-    # check that the user is an admin
+def owner_give_premium(message):
+    # check that the user is an owner
+    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
+
+        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
+        bot.reply_to(message, f"This command is only available to the owner of the bot")
+        return
+    
+    if not message.reply_to_message:
+        bot.reply_to(message, f"Please make sure that you are responding to a user messge, so that the bot knows who to perform actions towards.")
+        return
+    # gets the user ID from the tagged username.
+    try:
+        new_premium_user_id = message.reply_to_message.from_user.id
+        user_config = get_or_create_chat_config(new_premium_user_id, 'user')
+        user_config['is_premium'] = True
+        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
+        bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
+    
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to give premmium for this user, please see logs.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+@bot.message_handler(commands=['add_admin'])
+def owner_add_admin(message):
+    # check that the user is an owner
     if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
 
         bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
@@ -1514,24 +1558,51 @@ def admin_give_premium(message):
     if not message.reply_to_message:
         bot.reply_to(message, f"Please make")
         return
-    # gets the user ID from the tagged username.
+
     try:
         new_admin_uid = message.reply_to_message.from_user.id
-        user_config = get_or_create_chat_config(new_admin_uid, 'user')
-        user_config['is_premium'] = True
-        config_db_helper.set_new_config(new_admin_uid, 'user', user_config)
-        bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}")
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        system_config['admins'].append(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been added to the admin list")
     
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
     
+@bot.message_handler(commands=['remove_admin'])
+def owner_remove_admin(message):
+    # check that the user is an owner
+    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
+
+        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
+        bot.reply_to(message, f"This command is only available to the owner of the bot")
+        return
+    
+    if not message.reply_to_message:
+        bot.reply_to(message, f"Please make")
+        return
+
+    try:
+        new_admin_uid = message.reply_to_message.from_user.id
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        system_config['admins'].remove(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been added to the admin list")
+    
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-# define function to 
 
 
+
+
+# Admin featues here
+        
 
 
 
