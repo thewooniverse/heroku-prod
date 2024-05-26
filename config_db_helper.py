@@ -133,7 +133,7 @@ def create_config_table(table_name, config_type):
     if table_name not in valid_table_names:
         raise ValueError("Invalid table name")
     
-    if config_type not in ['chat', 'user', 'system']:
+    if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
 
     conn = get_conn_from_pool()
@@ -150,9 +150,9 @@ def create_config_table(table_name, config_type):
         put_conn_back_in_pool(conn)
 
 # Create the necessary tables
-create_config_table("chat_configs", "chat")
-create_config_table("user_configs", "user")
-create_config_table("system_configs", "owner")
+# create_config_table("chat_configs", "chat")
+# create_config_table("user_configs", "user")
+# create_config_table("system_configs", "owner")
 
 
 
@@ -259,7 +259,8 @@ def set_new_config(id, config_type, new_config):
     # check if the configuration attribute it is trying to retrieve is value.
     # valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
     # determine which configuration type is being retrieved or created.
-    config_table = None
+    config_table = ""
+
     if config_type == "chat":
         config_table = "chat_configs"
     elif config_type == "user":
@@ -269,7 +270,7 @@ def set_new_config(id, config_type, new_config):
     else:
         print("Invalid config type!")
         return
-
+    
     try:
         with conn.cursor() as cursor:
             # Safe way to insert variable table names into SQL queries

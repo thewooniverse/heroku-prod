@@ -1536,7 +1536,7 @@ def owner_give_premium(message):
         new_premium_user_id = message.reply_to_message.from_user.id
         user_config = get_or_create_chat_config(new_premium_user_id, 'user')
         user_config['is_premium'] = True
-        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
+        config_db_helper.set_new_config(new_premium_user_id, 'owner', user_config)
         bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
     
     except Exception as e:
