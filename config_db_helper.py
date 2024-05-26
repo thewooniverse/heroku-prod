@@ -259,7 +259,8 @@ def set_new_config(id, config_type, new_config):
     # check if the configuration attribute it is trying to retrieve is value.
     # valid_keys = set(default_chat_config.keys()) | set(default_user_config.keys())
     # determine which configuration type is being retrieved or created.
-    config_table = None
+    config_table = ""
+
     if config_type == "chat":
         config_table = "chat_configs"
     elif config_type == "user":
@@ -269,7 +270,7 @@ def set_new_config(id, config_type, new_config):
     else:
         print("Invalid config type!")
         return
-
+    
     try:
         with conn.cursor() as cursor:
             # Safe way to insert variable table names into SQL queries
