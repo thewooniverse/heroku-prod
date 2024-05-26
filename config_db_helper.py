@@ -133,7 +133,7 @@ def create_config_table(table_name, config_type):
     if table_name not in valid_table_names:
         raise ValueError("Invalid table name")
     
-    if config_type not in ['chat', 'user', 'system']:
+    if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
 
     conn = get_conn_from_pool()
