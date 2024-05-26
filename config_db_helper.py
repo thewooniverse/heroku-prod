@@ -150,9 +150,9 @@ def create_config_table(table_name, config_type):
         put_conn_back_in_pool(conn)
 
 # Create the necessary tables
-create_config_table("chat_configs", "chat")
-create_config_table("user_configs", "user")
-create_config_table("system_configs", "owner")
+# create_config_table("chat_configs", "chat")
+# create_config_table("user_configs", "user")
+# create_config_table("system_configs", "owner")
 
 
 
