@@ -1571,7 +1571,7 @@ def owner_add_admin(message):
     
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
+        bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
     
 @bot.message_handler(commands=['remove_admin'])
@@ -1600,7 +1600,7 @@ def owner_remove_admin(message):
     
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
+        bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
