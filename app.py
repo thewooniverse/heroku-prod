@@ -72,10 +72,13 @@ So pretty much its:
 --> Or is there a better approach I am not aware of?
 -----> If caching, whenever the system config IS updated, the cache should also be updated; should always be cached imo.
 
+--------> implement Redis or Memcached;
+
+
 
 
 Admin / Owner Features:
-1. Owner can add new admins or remove admins, and has all the permissions that an admin does.
+1. Owner can add new admins or remove admins, and has all the permissions that an admin does. << done
 2. Admins can turn the bot on and off (accepting or not accepting features)
 3. Admins can also restart the bot entirely
 4. Admins can set the OpenAI API Key for trial users to use
@@ -1536,7 +1539,7 @@ def owner_give_premium(message):
         new_premium_user_id = message.reply_to_message.from_user.id
         user_config = get_or_create_chat_config(new_premium_user_id, 'user')
         user_config['is_premium'] = True
-        config_db_helper.set_new_config(new_premium_user_id, 'owner', user_config)
+        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
         bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
     
     except Exception as e:
@@ -1587,9 +1590,13 @@ def owner_remove_admin(message):
     try:
         new_admin_uid = message.reply_to_message.from_user.id
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        system_config['admins'].remove(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+        try:
+            system_config['admins'].remove(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+            bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been removed from the admin list")
+        except ValueError:
+            bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} is not in the admin list.")
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been added to the admin list")
+        
     
     except Exception as e:
         # Generic error handling
