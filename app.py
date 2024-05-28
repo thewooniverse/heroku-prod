@@ -78,13 +78,21 @@ So pretty much its:
 
 
 Admin / Owner Features:
-1. Owner can add new admins or remove admins, and has all the permissions that an admin does. << done
-2. Admins can turn the bot on and off (accepting or not accepting features)
+1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
+6. Owners can give users premium access <<- done
+---
+5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
+
+
+
+
+
+2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis in there.
 3. Admins can also restart the bot entirely
-4. Admins can set the OpenAI API Key for trial users to use
-5. Admins can add more "free trial" credits for users
-6. Owners can give users premium access
---> for 5. 6. I need to check whether the
+
+
+
+
 
 Additional features:
 1. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
@@ -1609,7 +1617,7 @@ def owner_remove_admin(message):
 
 
 # Admin featues here
-        
+
 
 
 
