@@ -72,16 +72,27 @@ So pretty much its:
 --> Or is there a better approach I am not aware of?
 -----> If caching, whenever the system config IS updated, the cache should also be updated; should always be cached imo.
 
+--------> implement Redis or Memcached;
+
+
 
 
 Admin / Owner Features:
-1. Owner can add new admins or remove admins, and has all the permissions that an admin does.
-2. Admins can turn the bot on and off (accepting or not accepting features)
+1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
+6. Owners can give users premium access <<- done
+---
+5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
+
+
+
+
+
+2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis in there.
 3. Admins can also restart the bot entirely
-4. Admins can set the OpenAI API Key for trial users to use
-5. Admins can add more "free trial" credits for users
-6. Owners can give users premium access
---> for 5. 6. I need to check whether the
+
+
+
+
 
 Additional features:
 1. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
@@ -1536,7 +1547,7 @@ def owner_give_premium(message):
         new_premium_user_id = message.reply_to_message.from_user.id
         user_config = get_or_create_chat_config(new_premium_user_id, 'user')
         user_config['is_premium'] = True
-        config_db_helper.set_new_config(new_premium_user_id, 'owner', user_config)
+        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
         bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
     
     except Exception as e:
@@ -1568,7 +1579,7 @@ def owner_add_admin(message):
     
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
+        bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
     
 @bot.message_handler(commands=['remove_admin'])
@@ -1587,13 +1598,17 @@ def owner_remove_admin(message):
     try:
         new_admin_uid = message.reply_to_message.from_user.id
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        system_config['admins'].remove(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+        try:
+            system_config['admins'].remove(new_admin_uid) #<- double check whether return None and inplace or I need to copy
+            bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been removed from the admin list")
+        except ValueError:
+            bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} is not in the admin list.")
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User: {message.reply_to_message.from_user.username} has now been added to the admin list")
+        
     
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please see logs.")
+        bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
@@ -1602,7 +1617,7 @@ def owner_remove_admin(message):
 
 
 # Admin featues here
-        
+
 
 
 
