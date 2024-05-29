@@ -40,19 +40,20 @@ def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3
     system_prompt = f"""You are a helpful AI assistant. Use the contexts and chat history provided by the user to help the user to the best of your ability, regardless of your limitations as an AI agent.
     The context provided by this user for you in this conversation is as below. \n\n {context}"""
     chat_history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
-
-    completion_object = client.chat.completions.create(
-    model=model,
-    temperature = temperature,
-    messages=[
-        {"role": "system", "content": system_prompt},
-        {"role": "assistant", "content": chat_history},
-        {"role": "user", "content": body_text}])
-    print(completion_object)
-    response_text = completion_object.choices[0].message.content
-    print(response_text)
-    return response_text
-
+    try:
+        completion_object = client.chat.completions.create(
+        model=model,
+        temperature = temperature,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "assistant", "content": chat_history},
+            {"role": "user", "content": body_text}])
+        print(completion_object)
+        response_text = completion_object.choices[0].message.content
+        print(response_text)
+        return response_text
+    except Exception as e:
+        return e
 
 
 
