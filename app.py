@@ -74,6 +74,8 @@ So pretty much its:
 
 --------> implement Redis or Memcached;
 
+Redis -> caching -> on / off state and trial credits;
+-> port over
 
 
 
@@ -82,13 +84,11 @@ Admin / Owner Features:
 6. Owners can give users premium access <<- done
 ---
 5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
-
-
-
-
-
-2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis in there.
+2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there.
 3. Admins can also restart the bot entirely
+
+
+
 
 
 
