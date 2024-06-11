@@ -62,21 +62,10 @@ import templates
 =========================================================================================================
 So pretty much its:
 
-->System configuration and owner turning on and off the bot and adding new administrators; << ask chat GPT
---> new config_table for system_configs have been added to the database
---> this seems like a suitable approach for operations like adding new admins
---> However for turning the bot on and off; if every single command handler is going to be checking the database for whether the bot is on 
---> so as to determine whether to handle a command request from a user or not at the beginning of the command, this starts to feel
---> like an resource intense approach (by constantly connecting + reconnecting and querying the database).
---> what is a good alternative way to fix this? Would it be better to cache it and access it ever so often (but still maintain it in the DB)?
---> Or is there a better approach I am not aware of?
------> If caching, whenever the system config IS updated, the cache should also be updated; should always be cached imo.
-
---------> implement Redis or Memcached;
-
-Redis -> caching -> on / off state and trial credits;
--> port over
-
+redis for persistent bot states across restarts that admin can turn on and off;
++ wrapper function for all command handlers to check whether the command is good to go;
+++ wrapper wrapper function to check all other checks like is_bot, reply etc...
+--
 
 
 Admin / Owner Features:
