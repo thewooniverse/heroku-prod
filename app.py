@@ -24,7 +24,8 @@ from iso_codes import get_code_and_name
 import pandas
 import datetime
 
-
+# state management
+import redis
 
 # payments modules;
 from telebot.types import LabeledPrice
@@ -142,6 +143,15 @@ pc = Pinecone(api_key=PINECONE_KEY)
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 
+# redis set up
+## Get the URL from environment variable
+redis_url = os.getenv('REDIS_URL')
+## Create a Redis connection
+redis_db = redis.Redis.from_url(redis_url)
+## Key for storing bot state
+BOT_STATE_KEY = 'telegram_bot_state'
+
+
 
 
 
@@ -164,8 +174,6 @@ logger = logging.getLogger(__name__)
 # create necessary tables
 config_db_helper.create_config_table("chat_configs", "chat")
 config_db_helper.create_config_table("user_configs", "user")
-
-
 
 
 
@@ -199,7 +207,64 @@ def receive_update():
 
 
 
+
+"""
+Wrapper / Checker functions and on/off handlers
+"""
+
+
+@bot.message_handler(commands=['start_bot'])
+# @wrapper function to check whether the sender is an admin or owner
+def start_bot(message):
+    # Set the bot state to "on" in Redis
+    redis_db.set(BOT_STATE_KEY, 'on')
+    bot.reply_to(message, "Bot is now ON and will respond to commands.")
+
+@bot.message_handler(commands=['stop_bot'])
+# @wrapper function to check whether the sender is an admin or owner
+def stop_bot(message):
+    # Set the bot state to "off" in Redis
+    redis_db.set(BOT_STATE_KEY, 'off')
+    bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
+
+
+
+# decorator / wrapper function to check whether bot is active
+def is_bot_active(func):
+    def wrapper(message):
+        # Check the bot state
+        state = redis_db.get(BOT_STATE_KEY)
+        if state and state.decode('utf-8') == 'on':
+            return func(message)
+        elif state and state.decode('utf-8') == 'off':
+            bot.send_message(message.chat.id, "Bot is currently turned OFF.")
+    return wrapper
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @bot.message_handler(commands=['start'])
+@is_bot_active
 def handle_start(message):
     if message.from_user.is_bot:
         return
@@ -215,8 +280,6 @@ def handle_start(message):
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
