@@ -66,7 +66,14 @@ So pretty much its:
 redis for persistent bot states across restarts that admin can turn on and off;
 + wrapper function for all command handlers to check whether the command is good to go;
 ++ wrapper wrapper function to check all other checks like is_bot, reply etc...
+>>>> additional wrapper checkers for isadmin, isowner, isuser
 --
+>>>> Write decorator for isadmin checker, isowner is not needed as owner can run any function at any time, always.
+>>>> Then also write ban function for admin;
+
+
+
+
 
 
 Admin / Owner Features:
@@ -151,7 +158,7 @@ redis_db = redis.Redis.from_url(redis_url)
 ## Key for storing bot state
 BOT_STATE_KEY = 'telegram_bot_state'
 
-
+ 
 
 
 
@@ -213,7 +220,7 @@ Wrapper / Checker functions and on/off handlers
 """
 
 
-@bot.message_handler(commands=['start_bot'])
+@bot.message_handler(commands=['st'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
     # Set the bot state to "on" in Redis
@@ -241,10 +248,26 @@ def is_bot_active(func):
     return wrapper
 
 
-
-
-
-
+# decorator / wrapper function to check whether bot is active
+def is_valid_user(func):
+    def wrapper(message):
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        
+        # Check if the sender is a bot
+        if message.from_user.is_bot:
+            bot.send_message(message.chat.id, "The bot is not available for other bots to use.")
+            return  # Just return without calling the decorated function
+        
+        # Check if the user is banned
+        elif message.from_user.id in system_config['banned_users']:
+            bot.reply_to(message, "It appears that you are currently banned from using this bot, please contact admin.")
+            return  # Just return without calling the decorated function
+        
+        else:
+            # Call the original function if the user is valid
+            return func(message)
+    
+    return wrapper
 
 
 
@@ -265,10 +288,8 @@ def is_bot_active(func):
 
 @bot.message_handler(commands=['start'])
 @is_bot_active
+@is_valid_user
 def handle_start(message):
-    if message.from_user.is_bot:
-        return
-
     try:
         # import the configs
         # previous test, to be deleted. Commented out to prevent unnecessary database connections.
@@ -283,13 +304,13 @@ def handle_start(message):
 
 
 
+
+
 # text handlers
 @bot.message_handler(commands=['chat'])
+@is_bot_active
+@is_valid_user
 def handle_chat(message):
-    # bot check
-    if message.from_user.is_bot:
-        return
-
     context = ""
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -347,6 +368,8 @@ def handle_chat(message):
 
 
 @bot.message_handler(commands=['t1'])
+@is_bot_active
+@is_valid_user
 def handle_translate_1(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
@@ -367,6 +390,8 @@ def handle_translate_1(message):
 
 
 @bot.message_handler(commands=['t2'])
+@is_bot_active
+@is_valid_user
 def handle_translate_2(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
@@ -388,6 +413,8 @@ def handle_translate_2(message):
 
     
 @bot.message_handler(commands=['t3'])
+@is_bot_active
+@is_valid_user
 def handle_translate_3(message):
     try:
 
@@ -414,6 +441,8 @@ def handle_translate_3(message):
 
 # voice based handlers
 @bot.message_handler(commands=['tts'])
+@is_bot_active
+@is_valid_user
 def handle_tts(message):
     try:
         api_keys = config_db_helper.get_apikey_list(message)
@@ -440,6 +469,8 @@ def handle_tts(message):
 
 
 @bot.message_handler(commands=['stt'])
+@is_bot_active
+@is_valid_user
 def handle_stt(message):
     # check whether it is replying to a message - must be used in reply to a message
     if message.reply_to_message and message.reply_to_message.content_type == 'voice':
@@ -485,6 +516,8 @@ def handle_stt(message):
 
 
 @bot.message_handler(commands=['stc'])
+@is_bot_active
+@is_valid_user
 def handle_stc(message):
     """
     handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
@@ -548,6 +581,8 @@ def handle_stc(message):
 
 # image based handlers
 @bot.message_handler(commands=['imagine'])
+@is_bot_active
+@is_valid_user
 def handle_imagine(message):
     # query = helper_functions.extract_body(message.text)
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
@@ -573,6 +608,8 @@ def handle_imagine(message):
 
 
 @bot.message_handler(commands=['variate'])
+@is_bot_active
+@is_valid_user
 def handle_variations(message):
     """
     Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
@@ -638,6 +675,8 @@ def handle_variations(message):
 
 
 @bot.message_handler(commands=['vision'])
+@is_bot_active
+@is_valid_user
 def handle_vision(message):
     """
     Queries: Returns a chat completion text response from a image + query
@@ -696,6 +735,8 @@ def handle_vision(message):
 
 
 @bot.message_handler(commands=['edit_img'])
+@is_bot_active
+@is_valid_user
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
@@ -946,16 +987,22 @@ def language_selection_menu(preset_num):
 
 # Core settings button functionality;
 @bot.message_handler(commands=['settings'])
+@is_bot_active
+@is_valid_user
 def handle_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.settings_string, parse_mode="HTML")
 
 
 
 @bot.message_handler(commands=['group_settings'])
+@is_bot_active
+@is_valid_user
 def handle_group_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
 
 @bot.message_handler(commands=['user_settings'])
+@is_bot_active
+@is_valid_user
 def handle_user_settings(message):
     if message.chat.type != 'private':
         bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
@@ -965,12 +1012,12 @@ def handle_user_settings(message):
 
 
 @bot.message_handler(commands=['reset_user_settings'])
+@is_bot_active
+@is_valid_user
 def handle_user_settings_reset(message):
     """
     Resets user settings
     """
-    if message.from_user.is_bot:
-        return
     
     try:
         config_db_helper.set_new_config(message.from_user.id, 'user', config_db_helper.default_user_config)
@@ -1190,13 +1237,12 @@ def handle_callback(call):
 
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['user_set_openai_key'])
+@is_bot_active
+@is_valid_user
 def handle_user_set_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
     """
-    if message.from_user.is_bot:
-        return
-    
     try:
         new_openai_key = helper_functions.extract_body(message.text)
         if config_db_helper.check_configval_pattern(new_openai_key, config_attr='openai_api_key'): # config val checking is temporary turned off for now as openAI Api Key formats continue to change.
@@ -1226,12 +1272,12 @@ def handle_user_set_openai_apikey(message):
 
 
 @bot.message_handler(commands=['chat_set_openai_key'])
+@is_bot_active
+@is_valid_user
 def handle_chat_set_openai_apikey(message):
     """
     handle_chat_set_openai_apikey(message): sets openAI key for the user
     """
-    if message.from_user.is_bot:
-        return
 
     # Check permissions for group chats
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
@@ -1271,13 +1317,12 @@ def handle_chat_set_openai_apikey(message):
 
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['set_temperature'])
+@is_bot_active
+@is_valid_user
 def handle_set_temperature(message):
     """
     Sets the language model temperature for a user or chat. Valid range is between 0 and 2.
     """
-    if message.from_user.is_bot:
-        return
-    
     # Check permissions for group chats
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
         bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
@@ -1313,13 +1358,12 @@ def handle_set_temperature(message):
 
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['set_t1'])
+@is_bot_active
+@is_valid_user
 def handle_set_t1(message):
     """
     Sets the translation 1 preset of the group.
     """
-    if message.from_user.is_bot:
-        return
-    
     # Check permissions for group chats if the user is an administrator
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
         bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
@@ -1352,12 +1396,12 @@ def handle_set_t1(message):
 
 
 @bot.message_handler(commands=['set_t2'])
+@is_bot_active
+@is_valid_user
 def handle_set_t2(message):
     """
     Sets the translation 2 preset of the group.
     """
-    if message.from_user.is_bot:
-        return
     
     # Check permissions for group chats if the user is an administrator
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
@@ -1388,13 +1432,12 @@ def handle_set_t2(message):
 
 
 @bot.message_handler(commands=['set_t3'])
+@is_bot_active
+@is_valid_user
 def handle_set_t2(message):
     """
     Sets the translation 3 preset of the group.
     """
-    if message.from_user.is_bot:
-        return
-    
     # Check permissions for group chats if the user is an administrator
     if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
         bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
@@ -1425,13 +1468,12 @@ def handle_set_t2(message):
 
 
 @bot.message_handler(commands=['set_context'])
+@is_bot_active
+@is_valid_user
 def handle_set_context(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
     """
-    if message.from_user.is_bot:
-        return
-    
     # Check permissions for group chats if the user is an administrator -> commented out as ANYBODY should be able to set their context within a group
     # if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
     #     bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
@@ -1455,13 +1497,13 @@ def handle_set_context(message):
 
 
 @bot.message_handler(commands=['set_user_context'])
+@is_bot_active
+@is_valid_user
 def handle_set_user_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
     """
-    if message.from_user.is_bot:
-        return
-    
+
     try:
         new_context = helper_functions.extract_body(message.text)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -1527,9 +1569,9 @@ def generate_txid(user_id):
 
 
 @bot.message_handler(commands=['subscribe'])
+@is_bot_active
+@is_valid_user
 def command_pay(message):
-    if message.from_user.is_bot:
-        return
     
     title = "🌟OpenAIssistant Premium Subscription🌟"
     description = settings.premium_subscription_string
@@ -1583,6 +1625,8 @@ def got_payment(message):
 # Owner only features
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 @bot.message_handler(commands=['give_premium'])
+@is_bot_active
+# @is_valid_user < change to admin check
 def owner_give_premium(message):
     # check that the user is an owner
     if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
@@ -1608,6 +1652,12 @@ def owner_give_premium(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
+
+
+
+
+
+# Owner-only feature
 
 @bot.message_handler(commands=['add_admin'])
 def owner_add_admin(message):
@@ -1681,9 +1731,6 @@ def owner_remove_admin(message):
 #########################################################
 ######################## RUN BOT ########################
 #########################################################
-
-
-
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
