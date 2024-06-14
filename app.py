@@ -67,9 +67,13 @@ redis for persistent bot states across restarts that admin can turn on and off;
 + wrapper function for all command handlers to check whether the command is good to go;
 ++ wrapper wrapper function to check all other checks like is_bot, reply etc...
 >>>> additional wrapper checkers for isadmin, isowner, isuser
---
 >>>> Write decorator for isadmin checker, isowner is not needed as owner can run any function at any time, always.
+--
 >>>> Then also write ban function for admin;
+---
+Then implement free trial credits for user_config schemas, adding or subtracting from it.
+
+
 
 
 
@@ -78,14 +82,10 @@ redis for persistent bot states across restarts that admin can turn on and off;
 Admin / Owner Features:
 1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
 6. Owners can give users premium access <<- done
+2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there. <<- done
 ---
+4. Admins can ban users
 5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
-2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there.
-3. Admins can also restart the bot entirely
-
-
-
-
 
 
 
@@ -93,12 +93,23 @@ Admin / Owner Features:
 Additional features:
 1. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
 
+
+
+
+
+
+
+
+
 Bug Fixes and shipping:
 1. Handling chat requests and response objects that require it to search the web or a search engine.
 2. Logging upgrades and tidy up of print statements
 3. Baseline testing
 4. Redeploy onto new Heroku environment thats NOT AB69 / Telebot; 
+5. Hosting it onto a website TeleGPT.bot, new bot token etc...
 --> although I can just change the endpoint to another bot API token, redploying is good practice for backend skills.
+
+
 
 
 Potential future features:
@@ -266,17 +277,31 @@ def is_valid_user(func):
     
     return wrapper
 
-# decorator / wrapper function to check whether bot is active
+# decorator / wrapper function to check whether a user is an admin
 def is_admin(func):
     def wrapper(message):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
 
+        # Check if the user is listed as an admin in the system configuration
         if message.from_user.id in system_config['admins']:
             return func(message)
         else:
-            bot.reply_to(message, "You do not have admin permissions.")
+            # Notify the user they do not have permission if they are not an admin
+            bot.send_message(message.chat.id, "You do not have permission to use this command.")
+            return None  # Explicitly return None to indicate no further action should be taken
+    
+    return wrapper
+
+
+def is_in_reply(func):
+    def wrapper(message):
+        if message.reply_to_message:
+            return func(message)
+        else:
             return None
     return wrapper
+
+
 
 
 
@@ -1625,39 +1650,24 @@ def got_payment(message):
 
 # Admin features
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
-@bot.message_handler(commands=['give_premium'])
-@is_bot_active
-@is_admin
-# @is_valid_user < change to admin check
-def owner_give_premium(message):
-    # check that the user is an owner
-    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
-
-        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
-        bot.reply_to(message, f"This command is only available to the owner of the bot")
-        return
-    
-    if not message.reply_to_message:
-        bot.reply_to(message, f"Please make sure that you are responding to a user messge, so that the bot knows who to perform actions towards.")
-        return
-    # gets the user ID from the tagged username.
-    try:
-        new_premium_user_id = message.reply_to_message.from_user.id
-        user_config = get_or_create_chat_config(new_premium_user_id, 'user')
-        user_config['is_premium'] = True
-        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
-        bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
-    
-    except Exception as e:
-        # Generic error handling
-        bot.reply_to(message, "Failed to give premmium for this user, please see logs.")
-        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
-
-
 
 # ban user; function
-
-
+@bot.message_handler(commands=['ban_user'])
+@is_bot_active
+@is_admin
+@is_in_reply
+def ban_user(message):
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        user_id_banned = message.reply_to_message.from_user.id
+        if user_id_banned not in system_config['banned_users']:
+            system_config['banned_users'].append(user_id_banned)
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        bot.reply_to(message, f"User {user_id_banned} has been successfully banned.")
+        
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 
@@ -1723,9 +1733,36 @@ def owner_remove_admin(message):
 
 
 
+@bot.message_handler(commands=['give_premium'])
+@is_bot_active
+# @is_valid_user < change to admin check
+def owner_give_premium(message):
+    # check that the user is an owner
+    if (str(message.from_user.id) != str(OWNER_USER_ID)): # later this needs to be changed to check whether it is within the list of Administrators;
+
+        bot.reply_to(message, f"Your ID is {message.from_user.id} - {type(message.from_user.id)}  | {OWNER_USER_ID} - {type(OWNER_USER_ID)}")
+        bot.reply_to(message, f"This command is only available to the owner of the bot")
+        return
+    
+    if not message.reply_to_message:
+        bot.reply_to(message, f"Please make sure that you are responding to a user messge, so that the bot knows who to perform actions towards.")
+        return
+    # gets the user ID from the tagged username.
+    try:
+        new_premium_user_id = message.reply_to_message.from_user.id
+        user_config = get_or_create_chat_config(new_premium_user_id, 'user')
+        user_config['is_premium'] = True
+        config_db_helper.set_new_config(new_premium_user_id, 'user', user_config)
+        bot.reply_to(message, f"Premium Features enabled for {message.reply_to_message.from_user.username}! Congrats!")
+    
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to give premmium for this user, please see logs.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-# Admin featues here
+
+
 
 
 
