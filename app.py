@@ -75,7 +75,6 @@ redis for persistent bot states across restarts that admin can turn on and off;
 
 
 
-
 Admin / Owner Features:
 1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
 6. Owners can give users premium access <<- done
@@ -216,11 +215,11 @@ def receive_update():
 
 
 """
-Wrapper / Checker functions and on/off handlers
+Permission handlers and wrapper functions
 """
 
 
-@bot.message_handler(commands=['st'])
+@bot.message_handler(commands=['start_bot'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
     # Set the bot state to "on" in Redis
@@ -233,8 +232,6 @@ def stop_bot(message):
     # Set the bot state to "off" in Redis
     redis_db.set(BOT_STATE_KEY, 'off')
     bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
-
-
 
 # decorator / wrapper function to check whether bot is active
 def is_bot_active(func):
@@ -269,11 +266,17 @@ def is_valid_user(func):
     
     return wrapper
 
+# decorator / wrapper function to check whether bot is active
+def is_admin(func):
+    def wrapper(message):
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
 
-
-
-
-
+        if message.from_user.id in system_config['admins']:
+            return func(message)
+        else:
+            bot.reply_to(message, "You do not have admin permissions.")
+            return None
+    return wrapper
 
 
 
@@ -301,8 +304,6 @@ def handle_start(message):
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
@@ -1622,10 +1623,11 @@ def got_payment(message):
 # - Where will Admin user_ids be stored? Perhaps in system configurations, where I can turn the bot on and off and all commands are handled by that; I think that will be p cool.
     
 
-# Owner only features
+# Admin features
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 @bot.message_handler(commands=['give_premium'])
 @is_bot_active
+@is_admin
 # @is_valid_user < change to admin check
 def owner_give_premium(message):
     # check that the user is an owner
@@ -1650,6 +1652,11 @@ def owner_give_premium(message):
         # Generic error handling
         bot.reply_to(message, "Failed to give premmium for this user, please see logs.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+# ban user; function
+
 
 
 
