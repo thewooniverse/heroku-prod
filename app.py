@@ -83,15 +83,32 @@ Admin / Owner Features:
 1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
 6. Owners can give users premium access <<- done
 2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there. <<- done
----
 4. Admins can ban users
+---
+
+
 5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
+5.5. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
+---> this means, that per request if the thing is not set -> then a default chat request is sent.
+--------> it feels like an overhaul in general of the chatting request is required; to handle errors more effectively, as well as to accommodate logic for free trial credits.
+I need to specify exactly what users can do on a free trial credit before implementing this logic.
+
+
+
+---
+Messages serviced and users interacted -> useful data to host on the webpage;
+---
 
 
 
 
-Additional features:
-1. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
+
+
+
+
+
+
+
 
 
 
@@ -110,14 +127,11 @@ Bug Fixes and shipping:
 --> although I can just change the endpoint to another bot API token, redploying is good practice for backend skills.
 
 
-
-
 Potential future features:
 - "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
 - Voice agent / type options for
 - Free users getting up to 10 free requests of any type;
 
----
 --- up to here today ---
 X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
 Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
@@ -1664,7 +1678,7 @@ def ban_user(message):
             system_config['banned_users'].append(user_id_banned)
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         bot.reply_to(message, f"User {user_id_banned} has been successfully banned.")
-        
+
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
