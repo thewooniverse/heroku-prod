@@ -59,8 +59,7 @@ import templates
 0. OpenAI API key format checker reset;
 1. Go through settigs, strings etc... tidy that up, and get a function to change the settings.py name import to conversation strings.
 2. Suggestions for commands, pre-completion options
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
+
 So pretty much its:
 
 redis for persistent bot states across restarts that admin can turn on and off;
@@ -68,24 +67,26 @@ redis for persistent bot states across restarts that admin can turn on and off;
 ++ wrapper wrapper function to check all other checks like is_bot, reply etc...
 >>>> additional wrapper checkers for isadmin, isowner, isuser
 >>>> Write decorator for isadmin checker, isowner is not needed as owner can run any function at any time, always.
---
 >>>> Then also write ban function for admin;
----
-Then implement free trial credits for user_config schemas, adding or subtracting from it.
-
-
-
-
-
-
 
 Admin / Owner Features:
 1. Owner can add new admins or remove admins, and has all the permissions that an admin does. <<- done
 6. Owners can give users premium access <<- done
 2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there. <<- done
 4. Admins can ban users
----
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
 
+
+--
+1. Chat troubleshooting and logging
+2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens.
+2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
+
+
+
+
+Then implement free trial credits for user_config schemas, adding or subtracting from it.
 
 5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
 5.5. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
