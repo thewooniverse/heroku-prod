@@ -1667,7 +1667,7 @@ def got_payment(message):
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
 # ban user; function
-@bot.message_handler(commands=['ban_user'])
+@bot.message_handler(commands=['ban'])
 @is_bot_active
 @is_admin
 @is_in_reply
@@ -1683,6 +1683,31 @@ def ban_user(message):
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+# unban user
+@bot.message_handler(commands=['unban'])
+@is_bot_active
+@is_admin
+@is_in_reply
+def ban_user(message):
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        user_id_banned = message.reply_to_message.from_user.id
+        
+        if user_id_banned in system_config['banned_users']:
+            system_config['banned_users'].remove(user_id_banned)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User {user_id_banned} has been successfully unbanned.")
+        else:
+            bot.reply_to(message, f"User is not in banned user list!")
+            
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
 
 
 
