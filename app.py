@@ -1678,7 +1678,7 @@ def ban_user(message):
         if user_id_banned not in system_config['banned_users']:
             system_config['banned_users'].append(user_id_banned)
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User {user_id_banned} has been successfully banned.")
+        bot.reply_to(message, f"User has been successfully banned.")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
@@ -1697,7 +1697,7 @@ def ban_user(message):
         if user_id_banned in system_config['banned_users']:
             system_config['banned_users'].remove(user_id_banned)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            bot.reply_to(message, f"User {user_id_banned} has been successfully unbanned.")
+            bot.reply_to(message, f"User has been successfully unbanned.")
         else:
             bot.reply_to(message, f"User is not in banned user list!")
             
