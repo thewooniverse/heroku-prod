@@ -80,7 +80,7 @@ Admin / Owner Features:
 
 --
 1. Chat troubleshooting and logging
-2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens.
+2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
 2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
 
 
@@ -398,7 +398,7 @@ def handle_chat(message):
 
 
     except Exception as e:
-        bot.reply_to(message, "/chat command request could not be completed, please contact admin.")
+        bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
