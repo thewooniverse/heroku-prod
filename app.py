@@ -358,7 +358,7 @@ def handle_chat(message):
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         body_text = helper_functions.extract_body(message.text)
 
-        # handle API Keys, the usage of the group's API key is prioritized over individual.
+        # handle API Keys, the usage of the group's API key is prioritized over individual to save credits.
         api_keys = config_db_helper.get_apikey_list(message)
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
@@ -370,31 +370,34 @@ def handle_chat(message):
         else:
             chat_history = ""
         
+        # persistence if the user is premium and the user has switched persistence on
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
             history_similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_keys[0], PINECONE_KEY)
             # print(history_similarity_search_result_string)
             chat_history += history_similarity_search_result_string
 
-        if api_keys:
-            try:
-                context = chat_config['contexts'][str(message.from_user.id)]
-                # print(context)
-            except KeyError:
-                print("No context was set for user")
 
-            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-            bot.reply_to(message, text=response_text, parse_mode='Markdown')
-            logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
+        # if the user has set contexts
+            
+        try:
+            context = chat_config['contexts'][str(message.from_user.id)]
+            # print(context)
+        except KeyError:
+            print("No context was set for user")
 
-            # if the user is a premium user, and is the user wanting to save chat history for this chat group?
-            if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
-                # construct the string to upload;
-                upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
-                openai_api_key = api_keys[0]
+        response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+        bot.reply_to(message, text=response_text, parse_mode='HTML')
+        logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
-                # create and upsert the embeddings into the index
-                ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
-                print("Safely upserted data into pinecone")
+        # if the user is a premium user, and is the user wanting to save chat history for this chat group?
+        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
+            # construct the string to upload;
+            upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
+            openai_api_key = api_keys[0]
+
+            # create and upsert the embeddings into the index
+            ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
+            print("Safely upserted data into pinecone")
 
 
     except Exception as e:
@@ -423,7 +426,7 @@ def handle_translate_1(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            bot.reply_to(message, text=response_text, parse_mode='HTML')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -445,7 +448,7 @@ def handle_translate_2(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            bot.reply_to(message, text=response_text, parse_mode='HTML')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
@@ -470,7 +473,7 @@ def handle_translate_3(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='Markdown')
+            bot.reply_to(message, text=response_text, parse_mode='HTML')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -595,7 +598,7 @@ def handle_stc(message):
                     # use the stt text response to call the chat and send the response
                     context=''
                     response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-                    bot.reply_to(message, text=response_text, parse_mode='Markdown')
+                    bot.reply_to(message, text=response_text, parse_mode='HTML')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
