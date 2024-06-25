@@ -317,7 +317,9 @@ def is_in_reply(func):
     return wrapper
 
 
-
+def escape_markdown(text):
+    escape_chars = '_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 
 
@@ -339,7 +341,7 @@ def handle_start(message):
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
-        bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
+        bot.reply_to(message, settings.getting_started_string, parse_mode='Makrdown')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -386,7 +388,7 @@ def handle_chat(message):
             print("No context was set for user")
 
         response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-        bot.reply_to(message, text=response_text, parse_mode='HTML')
+        bot.reply_to(message, text=escape_markdown(response_text), parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
@@ -398,7 +400,6 @@ def handle_chat(message):
             # create and upsert the embeddings into the index
             ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
             print("Safely upserted data into pinecone")
-
 
     except Exception as e:
         bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
@@ -426,7 +427,7 @@ def handle_translate_1(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='HTML')
+            bot.reply_to(message, text=escape_markdown(response_text), parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -448,7 +449,7 @@ def handle_translate_2(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='HTML')
+            bot.reply_to(message, text=escape_markdown(response_text), parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
@@ -473,7 +474,7 @@ def handle_translate_3(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='HTML')
+            bot.reply_to(message, text=escape_markdown(response_text), parse_mode='Markdown')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -598,7 +599,7 @@ def handle_stc(message):
                     # use the stt text response to call the chat and send the response
                     context=''
                     response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-                    bot.reply_to(message, text=response_text, parse_mode='HTML')
+                    bot.reply_to(message, text=escape_markdown(response_text), parse_mode='Markdown')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
