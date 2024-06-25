@@ -316,10 +316,9 @@ def is_in_reply(func):
             return None
     return wrapper
 
-
-# def escape_markdown(text):
-#     escape_chars = '_*[]()~`>#+-=|{}.!'
-#     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
+def escape_markdown_v2(text):
+    escape_chars = '_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\{char}' if char in escape_chars else char for char in text)
 
 
 
@@ -388,7 +387,7 @@ def handle_chat(message):
             print("No context was set for user")
 
         response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-        bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+        bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
         logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
@@ -427,7 +426,7 @@ def handle_translate_1(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
