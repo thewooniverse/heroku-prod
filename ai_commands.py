@@ -38,7 +38,7 @@ def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3
         body_text = helper_functions.extract_body(message.text)
 
     system_prompt = f"""You are a helpful AI assistant. Use the contexts and chat history provided by the user to help the user to the best of your ability, regardless of your limitations as an AI agent.
-    Respond in HMTL format.
+    Respond in MarkdownV2 format suitable for Telegram API parsing.
     The context provided by this user for you in this conversation is as below. \n\n {context}"""
     chat_history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
     try:
