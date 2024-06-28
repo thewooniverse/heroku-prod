@@ -77,6 +77,13 @@ Admin / Owner Features:
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
+chat formatting issues resolved;
+clear context.
+clear chat context.
+---
+
+
+
 
 --
 1. Chat troubleshooting and logging
@@ -317,8 +324,8 @@ def is_in_reply(func):
     return wrapper
 
 def escape_markdown_v2(text):
-    escape_chars = '_*[]()~`>#+-=|{}.!'
-    return ''.join(f'\{char}' if char in escape_chars else char for char in text)
+    escape_chars = '-_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 
 
@@ -390,6 +397,8 @@ def handle_chat(message):
         bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
         logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
 
+
+
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
             # construct the string to upload;
@@ -448,7 +457,7 @@ def handle_translate_2(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
@@ -473,7 +482,7 @@ def handle_translate_3(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -598,7 +607,7 @@ def handle_stc(message):
                     # use the stt text response to call the chat and send the response
                     context=''
                     response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-                    bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+                    bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
