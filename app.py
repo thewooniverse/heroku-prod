@@ -77,6 +77,13 @@ Admin / Owner Features:
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
+chat formatting issues resolved;
+clear context.
+clear chat context.
+---
+
+
+
 
 --
 1. Chat troubleshooting and logging
