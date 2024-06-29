@@ -81,14 +81,21 @@ chat formatting issues resolved;
 clear context.
 clear chat context.
 ---
-
-
-
-
 --
 1. Chat troubleshooting and logging
 2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
 2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
+
+
+
+
+<<<<<>>>>>
+I need to do restructuring of contexts:
+--> reset user context, reset group context (per user);
+--> then using the contexts properly in the prompts in ai_commands and passing it as variables in calling it
+--> Then, also formatting;
+<<<<<>>>>>
+
 
 
 
