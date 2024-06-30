@@ -1527,10 +1527,45 @@ def handle_set_t2(message):
 
 
 
+
+
+
+
+
+# context setting
+## set group context
 @bot.message_handler(commands=['set_context'])
 @is_bot_active
 @is_valid_user
-def handle_set_context(message):
+def handle_set_context_group(message):
+    """
+    Sets the context for the group, whatever instructions it wants to give.
+    """
+    # Check permissions for group chats if the user is an administrator -> commented out as ANYBODY should be able to set their context within a group
+    # if message.chat.type != 'private' and not helper_functions.user_has_admin_permission(bot, message.chat.id, message.from_user.id):
+    #     bot.reply_to(message, "You do not have permissions to set the temperature for this chat group.")
+    #     return
+    
+    try:
+        new_context = helper_functions.extract_body(message.text)
+        
+        # Retrieve and update the chat configuration
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        chat_config['contexts'][str(message.from_user.id)] = new_context
+        # print(chat_config['contexts'])
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
+        bot.reply_to(message, f"Context has been set.")
+
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+## remove group context
+@bot.message_handler(commands=['reset_context'])
+@is_bot_active
+@is_valid_user
+def handle_reset_context_useringroup(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
     """
@@ -1556,6 +1591,12 @@ def handle_set_context(message):
 
 
 
+# admin set group context
+
+
+
+
+## set user context (spans across groups)
 @bot.message_handler(commands=['set_user_context'])
 @is_bot_active
 @is_valid_user
@@ -1575,6 +1616,14 @@ def handle_set_user_context(message):
         # Generic error handling
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+
+## remove user context (spans across groups)
+        
+
+
 
 
 
