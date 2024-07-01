@@ -1533,11 +1533,11 @@ def handle_set_t2(message):
 
 
 # context setting
-## set group context
+## set and reset group context
 @bot.message_handler(commands=['set_context'])
 @is_bot_active
 @is_valid_user
-def handle_set_context_group(message):
+def handle_set_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
     """
@@ -1561,11 +1561,10 @@ def handle_set_context_group(message):
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
-## remove group context
 @bot.message_handler(commands=['reset_context'])
 @is_bot_active
 @is_valid_user
-def handle_reset_context_useringroup(message):
+def handle_reset_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
     """
@@ -1575,14 +1574,11 @@ def handle_reset_context_useringroup(message):
     #     return
     
     try:
-        new_context = helper_functions.extract_body(message.text)
-        
-        # Retrieve and update the chat configuration
+        # Retrieve and update the chat configuration and the context stored for the user in group with an empty string
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        chat_config['contexts'][str(message.from_user.id)] = new_context
-        # print(chat_config['contexts'])
+        chat_config['contexts'][str(message.from_user.id)] = ""
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config)
-        bot.reply_to(message, f"Context has been set.")
+        bot.reply_to(message, f"Context has been reset.")
 
     except Exception as e:
         # Generic error handling
@@ -1590,13 +1586,7 @@ def handle_reset_context_useringroup(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-
-# admin set group context
-
-
-
-
-## set user context (spans across groups)
+## set and reset user context (spans across groups)
 @bot.message_handler(commands=['set_user_context'])
 @is_bot_active
 @is_valid_user
@@ -1617,13 +1607,28 @@ def handle_set_user_context(message):
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
+@bot.message_handler(commands=['reset_user_context'])
+@is_bot_active
+@is_valid_user
+def handle_reset_user_context(message):
+    """
+    Sets the context for the user, whatever instructions it wants to give.
+    """
+
+    try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        user_config['user_context'] = ""
+
+        config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+        bot.reply_to(message, f"User context across groups has been reset.")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-
-## remove user context (spans across groups)
         
-
-
+# admin set group context
 
 
 
