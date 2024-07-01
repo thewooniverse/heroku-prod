@@ -1627,7 +1627,32 @@ def handle_reset_user_context(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-        
+
+
+# check contexts:
+@bot.message_handler(commands=['check_context'])
+@is_bot_active
+@is_valid_user
+def check_context(message):
+    """
+    Sets the context for the user, whatever instructions it wants to give.
+    """
+
+    try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_context = user_config['user_context']
+        chat_context = chat_config['contexts'][str(message.from_user.id)]
+
+        bot.reply_to(message, f"User Context (all groups): {user_context} \n\n Chat context: {chat_context}")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+
 # admin set group context
 
 
