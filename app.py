@@ -398,7 +398,7 @@ def handle_chat(message):
 
 
         # check and call if the user has set context for this chat group
-        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + chat_config['contexts'][str(message.from_user.id)]
+        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_config['user_context']
         try:
             context += "\n\n\nCHAT CONTEXT (this is context about this user, in this specific conversation that they want you to remember as context.\n)" + chat_config['contexts'][str(message.from_user.id)]
             # print(context)
