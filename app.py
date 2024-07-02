@@ -92,8 +92,10 @@ clear chat context.
 <<<<<>>>>>
 I need to do restructuring of contexts:
 --> reset user context, reset group context (per user);
+
 --> then using the contexts properly in the prompts in ai_commands and passing it as variables in calling it
---> Then, also formatting;
+
+--> Then, also formatting; <- HTML / Markdown V2 etc.. or plaintext.
 <<<<<>>>>>
 
 
@@ -368,7 +370,9 @@ def handle_start(message):
 @is_valid_user
 def handle_chat(message):
     context = ""
+
     try:
+        ### Bring in configs, call and construct all of the contexts parcels ###
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         body_text = helper_functions.extract_body(message.text)
@@ -378,7 +382,7 @@ def handle_chat(message):
         if not api_keys:
             bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
-
+        
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
             chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
@@ -392,20 +396,26 @@ def handle_chat(message):
             chat_history += history_similarity_search_result_string
 
 
-        # if the user has set contexts
-            
+
+        # check and call if the user has set context for this chat group
+        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + chat_config['contexts'][str(message.from_user.id)]
         try:
-            context = chat_config['contexts'][str(message.from_user.id)]
+            context += "\n\n\nCHAT CONTEXT (this is context about this user, in this specific conversation that they want you to remember as context.\n)" + chat_config['contexts'][str(message.from_user.id)]
             # print(context)
         except KeyError:
             print("No context was set for user")
+    
+        
 
-        response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-        bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
-        logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
-
-
-
+        ### calling the chat completion ###
+        try:
+            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+            logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
+        except Exception as e:
+            print(e)
+        
+        ### logging ###
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
             # construct the string to upload;
@@ -1644,7 +1654,7 @@ def check_context(message):
         user_context = user_config['user_context']
         chat_context = chat_config['contexts'][str(message.from_user.id)]
 
-        bot.reply_to(message, f"User Context (all groups): {user_context} \n\n Chat context: {chat_context}")
+        bot.reply_to(message, f"User Context (all groups):\n{user_context} \n\n\n Chat context:\n{chat_context}")
     except Exception as e:
         # Generic error handling
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
