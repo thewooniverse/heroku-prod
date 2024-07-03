@@ -1686,7 +1686,7 @@ def handle_clear_chat_history(message):
     # if so - go to the namespace in pinecone and delete the chat.
 
 
-
+ 
 
 
 
