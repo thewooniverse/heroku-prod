@@ -74,6 +74,11 @@ Admin / Owner Features:
 6. Owners can give users premium access <<- done
 2. Admins can turn the bot on and off (accepting or not accepting features) <<- this needs to have redis and caching in there. <<- done
 4. Admins can ban users
+
+
+--> reset user context, reset group context (per user);
+--> then using the contexts properly in the prompts in ai_commands and passing it as variables in calling it
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
@@ -87,13 +92,9 @@ clear chat context.
 2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
 
 
-
-
 <<<<<>>>>>
 I need to do restructuring of contexts:
---> reset user context, reset group context (per user);
-
---> then using the contexts properly in the prompts in ai_commands and passing it as variables in calling it
+----
 
 --> Then, also formatting; <- HTML / Markdown V2 etc.. or plaintext.
 <<<<<>>>>>
@@ -356,7 +357,7 @@ def handle_start(message):
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
-        bot.reply_to(message, settings.getting_started_string, parse_mode='Makrdown')
+        bot.reply_to(message, settings.getting_started_string, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     except Exception as e:
         bot.reply_to(message, "/start command request could not be completed, please contact admin.")
@@ -410,7 +411,7 @@ def handle_chat(message):
         ### calling the chat completion ###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+            bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
         except Exception as e:
             print(e)
@@ -452,7 +453,7 @@ def handle_translate_1(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
-            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+            bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -474,7 +475,7 @@ def handle_translate_2(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
-            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+            bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
@@ -499,7 +500,7 @@ def handle_translate_3(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
-            bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+            bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -624,7 +625,7 @@ def handle_stc(message):
                     # use the stt text response to call the chat and send the response
                     context=''
                     response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-                    bot.reply_to(message, text=escape_markdown_v2(response_text), parse_mode='MarkdownV2')
+                    bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
@@ -1617,6 +1618,7 @@ def handle_set_user_context(message):
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
+
 @bot.message_handler(commands=['reset_user_context'])
 @is_bot_active
 @is_valid_user
@@ -1663,7 +1665,9 @@ def check_context(message):
 
 
 
-# admin set group context
+# admin set group context - 
+
+
 
 
 
