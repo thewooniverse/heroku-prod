@@ -78,40 +78,28 @@ Admin / Owner Features:
 
 --> reset user context, reset group context (per user);
 --> then using the contexts properly in the prompts in ai_commands and passing it as variables in calling it
+--> Then, also formatting; <- HTML / Markdown V2 etc.. or plaintext.
+
+1. Chat troubleshooting and logging
+chat formatting issues resolved;
+clear context.
+clear chat context.
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
-chat formatting issues resolved;
-clear context.
-clear chat context.
----
 --
-1. Chat troubleshooting and logging
-2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
-2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
-
-
-<<<<<>>>>>
-I need to do restructuring of contexts:
-----
-
---> Then, also formatting; <- HTML / Markdown V2 etc.. or plaintext.
-<<<<<>>>>>
-
-
-
-
+Free trial credits using redis;
 
 Then implement free trial credits for user_config schemas, adding or subtracting from it.
+2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
+2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
 
 5. Admins can add more "free trial" credits for users; free trial credits need to be updated for users and checked / subtracted.
 5.5. All users have a "free trial" state where they can query commands using the default key --> I need to ask GPT here how to change code in multiple places, tedious.
 ---> this means, that per request if the thing is not set -> then a default chat request is sent.
 --------> it feels like an overhaul in general of the chatting request is required; to handle errors more effectively, as well as to accommodate logic for free trial credits.
 I need to specify exactly what users can do on a free trial credit before implementing this logic.
-
-
 
 ---
 Messages serviced and users interacted -> useful data to host on the webpage;
