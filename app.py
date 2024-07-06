@@ -248,8 +248,6 @@ def receive_update():
 """
 Permission handlers and wrapper functions
 """
-
-
 @bot.message_handler(commands=['start_bot'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
@@ -333,7 +331,9 @@ def escape_markdown_v2(text):
 
 
 
-
+"""
+Core bot functionalities;
+"""
 
 @bot.message_handler(commands=['start'])
 @is_bot_active
@@ -384,19 +384,22 @@ def handle_chat(message):
             # print(history_similarity_search_result_string)
             chat_history += history_similarity_search_result_string
 
-
-
         # check and call if the user has set context for this chat group
-        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_config['user_context']
+        ## if the user config is empty
+        if user_config['user_context'] == "":
+            user_context = "empty"
+        else:
+            user_context = user_config['user_context']
+        
+        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
         try:
             context += "\n\n\nCHAT CONTEXT (this is context about this user, in this specific conversation that they want you to remember as context.\n)" + chat_config['contexts'][str(message.from_user.id)]
             # print(context)
         except KeyError:
             print("No context was set for user")
-    
         
 
-        ### calling the chat completion ###
+        ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text)
