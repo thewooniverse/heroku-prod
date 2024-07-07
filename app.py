@@ -91,6 +91,8 @@ clear chat context.
 --
 Free trial credits using redis;
 
+
+
 Then implement free trial credits for user_config schemas, adding or subtracting from it.
 2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
 2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
@@ -101,7 +103,15 @@ Then implement free trial credits for user_config schemas, adding or subtracting
 --------> it feels like an overhaul in general of the chatting request is required; to handle errors more effectively, as well as to accommodate logic for free trial credits.
 I need to specify exactly what users can do on a free trial credit before implementing this logic.
 
+
+--> user calls chat;
+--> if there is no API key, then check whether they have free trial credits remaining;
+--> if there is an API key, then try using the key, if the api key returns failed response / wrong key -> use the trial credit key.
+--> if no trial credit key left, then we handle it in another way;
+--> all functionality should be nested within.
+
 ---
+Metadata:
 Messages serviced and users interacted -> useful data to host on the webpage;
 ---
 
