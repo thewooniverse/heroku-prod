@@ -113,9 +113,7 @@ I need to specify exactly what users can do on a free trial credit before implem
 ---
 Metadata:
 Messages serviced and users interacted -> useful data to host on the webpage;
----
-
-
+--- 
 
 
 
