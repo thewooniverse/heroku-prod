@@ -76,11 +76,11 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.1.1", # the version determines the current version of the configs
+    "version": "0.1.2", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
-    "free_credits": 10, # for users that do not have an openAI API key
+    "free_credits": 5, # for users that do not have an openAI API key
     "is_premium": False, # determines whether the user is a premium user and has access to premium features.
     "persistent_chats": [], # list of chat groups that a user is persistent in.
     # "language_model": "gpt-3.5-turbo", # determines the default language model used by the user
@@ -355,6 +355,7 @@ def get_apikey_list(message):
             decrypted_key = decrypt(key)
             if decrypted_key:
                 decrypted_keys.append(decrypted_key)
+    decrypted_keys.append(OPENAI_FREE_KEY)
     return decrypted_keys
 
 

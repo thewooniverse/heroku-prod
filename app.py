@@ -196,6 +196,9 @@ pc = Pinecone(api_key=PINECONE_KEY)
 # instantiate the bot and any key helper functions
 bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
+# basic openAI apikey
+OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
+
 
 # redis set up
 ## Get the URL from environment variable
@@ -375,23 +378,41 @@ def handle_start(message):
 @is_bot_active
 @is_valid_user
 def handle_chat(message):
+    """
+    Refactor the code to: 
+    - 
+    """
     context = ""
 
     try:
         ### Bring in configs, call and construct all of the contexts parcels ###
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
         body_text = helper_functions.extract_body(message.text)
 
         # handle API Keys, the usage of the group's API key is prioritized over individual to save credits.
         api_keys = config_db_helper.get_apikey_list(message)
-        if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
-            return
-        
+        ## this will always return the valid API key, if it should be originally empty, it will have the OPENAI_FREE_KEY as api_keys[0];
+
+        # check if the user has the valid API key, if they do not, api_keys[0] will be the default free openai api key.
+        # if it is not, then this will pass without triggering
+        if api_keys[0] == OPENAI_FREE_KEY:
+            # check whether user has free trial credits remaining
+            ## if they do no not have anything remaining then return
+            if user_config['free_credits'] < 1:
+                bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
+                             please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+                return
+            else:
+                user_config['free_credits'] -= 1
+                bot.reply_to(message, f"Using free trial credits, remaining: {user_config}['free_credits]")
+                config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+
+
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
-            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
+            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
         else:
             chat_history = ""
         
