@@ -402,7 +402,7 @@ def handle_chat(message):
                 return
             else:
                 user_config['free_credits'] -= 1
-                bot.reply_to(message, f"Using free trial credits, remaining: {user_config}['free_credits]")
+                bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
                 config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
 
 
