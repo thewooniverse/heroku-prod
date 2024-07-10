@@ -440,7 +440,7 @@ def handle_chat(message):
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-            bot.reply_to(message, text=response_text, parse_mode='MarkdownV2')
+            bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
         except Exception as e:
             print(e)
