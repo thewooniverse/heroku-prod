@@ -88,8 +88,17 @@ clear chat context.
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
+
+
 --
-Free trial credits using redis;
+Free trial credit spec:
+- Implemented initially without redis (we will implement batch processing and in-memory storage eventually to scale), simply using user_configs as its already necessary. <-- done
+- Add system level OpenAI API key for default usage (create a new key, and set limitations) <-- done
+
+- chat implementation
+-- in the chat response message it will contain that this will run out.
+
+
 
 
 
@@ -409,7 +418,7 @@ def handle_chat(message):
 
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
-            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+            response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], parse_mode='MarkdownV2')
             bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
         except Exception as e:
