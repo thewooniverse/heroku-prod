@@ -85,23 +85,15 @@ chat formatting issues resolved;
 clear context.
 clear chat context.
 
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
-
-
-
 --
 Free trial credit spec:
 - Implemented initially without redis (we will implement batch processing and in-memory storage eventually to scale), simply using user_configs as its already necessary. <-- done
 - Add system level OpenAI API key for default usage (create a new key, and set limitations) <-- done
 
+
+>> FREE TRIAL CREDITS <<
 - chat implementation
 -- in the chat response message it will contain that this will run out.
-
-
-
-
-
 Then implement free trial credits for user_config schemas, adding or subtracting from it.
 2. Implementation of free trial credits and system level API keys -> I think I can afford; also reject any requests with too many tokens. <<- this is important for trials;
 2. a. What this entails is implementing it in /chat first and then implementing it for imagine and other requests;
@@ -118,6 +110,17 @@ I need to specify exactly what users can do on a free trial credit before implem
 --> if there is an API key, then try using the key, if the api key returns failed response / wrong key -> use the trial credit key.
 --> if no trial credit key left, then we handle it in another way;
 --> all functionality should be nested within.
+
+
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+
+
+1. Free trial credits / api key check abstracted out into a checker function (including sending messages); or even a decorator function for checking?
+2. Implemented for all requests;
+3. Slight problem in users being able to reset their settings, this should be stored in system config that is stored in-memory?
+
+
 
 ---
 Metadata:
@@ -387,6 +390,9 @@ def handle_chat(message):
         # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
         body_text = helper_functions.extract_body(message.text)
 
+
+
+        # ABSTRACT OUT ALL OF THIS <<<
         # handle API Keys, the usage of the group's API key is prioritized over individual to save credits.
         api_keys = config_db_helper.get_apikey_list(message)
         ## this will always return the valid API key, if it should be originally empty, it will have the OPENAI_FREE_KEY as api_keys[0];
@@ -398,7 +404,7 @@ def handle_chat(message):
             ## if they do no not have anything remaining then return
             if user_config['free_credits'] < 1:
                 bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
-                             please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
                 return
             else:
                 user_config['free_credits'] -= 1
@@ -436,7 +442,7 @@ def handle_chat(message):
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-            bot.reply_to(message, text=response_text)
+            bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
         except Exception as e:
             print(e)
