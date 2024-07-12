@@ -115,10 +115,13 @@ I need to specify exactly what users can do on a free trial credit before implem
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
+1. Decorator / Wrapper function for API key checking;
+2. Implementation for all /chat and othe rrequests
+3. Escape characters error and exception handling.
 
-1. Free trial credits / api key check abstracted out into a checker function (including sending messages); or even a decorator function for checking?
-2. Implemented for all requests;
-3. Slight problem in users being able to reset their settings, this should be stored in system config that is stored in-memory?
+
+-. Address users being able to reset their settings, this should be stored in system config that is stored in-memory?
+
 
 
 
@@ -150,9 +153,10 @@ Bug Fixes and shipping:
 
 
 Potential future features:
-- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler.
+- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler. This should be in setting.
 - Voice agent / type options for
 - Free users getting up to 10 free requests of any type;
+- Then make it available / tidy everything up, and put up a marketing video that is generated using AI.
 
 --- up to here today ---
 X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
@@ -350,6 +354,11 @@ def escape_markdown_v2(text):
 
 
 
+
+
+
+
+
 """
 Core bot functionalities;
 """
@@ -366,9 +375,19 @@ def handle_start(message):
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
         bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
-    except Exception as e:
-        bot.reply_to(message, "/start command request could not be completed, please contact admin.")
+    
+    except telebot.ApiException as e:
+        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+        print(f"API Exception occurred: {e}")
+    except telebot.NetworkError as e:
+        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+        print(f"Network Error occurred: {e}")
+    except Exception as e:
+        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+        print(f"An unexpected error occurred: {e}")
 
 
 
@@ -444,8 +463,19 @@ please set an OpenAI API Key for the group or the user, or contact admin for mor
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
+        except telebot.ApiException as e:
+            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+            print(f"API Exception occurred: {e}")
+        except telebot.NetworkError as e:
+            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+            print(f"Network Error occurred: {e}")
         except Exception as e:
-            print(e)
+            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+            print(f"An unexpected error occurred: {e}")
+        
         
         ### logging ###
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
