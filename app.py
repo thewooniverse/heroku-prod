@@ -267,6 +267,7 @@ def receive_update():
 """
 Permission handlers and wrapper functions
 """
+# turning bot on and off
 @bot.message_handler(commands=['start_bot'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
@@ -280,6 +281,10 @@ def stop_bot(message):
     # Set the bot state to "off" in Redis
     redis_db.set(BOT_STATE_KEY, 'off')
     bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
+
+
+
+
 
 # decorator / wrapper function to check whether bot is active
 def is_bot_active(func):
@@ -328,6 +333,11 @@ def is_admin(func):
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
+
+
+# develop is owner.
+
+
 
 
 
@@ -490,12 +500,10 @@ def handle_chat(message):
 @is_valid_user
 def handle_translate_1(message):
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -512,12 +520,10 @@ def handle_translate_1(message):
 @is_valid_user
 def handle_translate_2(message):
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -535,14 +541,10 @@ def handle_translate_2(message):
 @is_valid_user
 def handle_translate_3(message):
     try:
-
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -562,12 +564,14 @@ def handle_translate_3(message):
 @is_bot_active
 @is_valid_user
 def handle_tts(message):
+    
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
-
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
 
         if api_keys:
             tts_response = ai_commands.text_to_speech(message, openai_api_key=api_keys[0])
@@ -604,10 +608,12 @@ def handle_stt(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            api_keys = config_db_helper.get_apikey_list(message)
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
             if not api_keys:
-                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                 return
+
 
             if api_keys:
                 stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
@@ -656,9 +662,8 @@ def handle_stc(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            api_keys = config_db_helper.get_apikey_list(message)
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
             if not api_keys:
-                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                 return
 
             if api_keys:
@@ -706,11 +711,12 @@ def handle_imagine(message):
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
-
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
 
         if api_keys:
             image_content = ai_commands.generate_image(message, api_keys[0], system_context)
@@ -757,11 +763,13 @@ def handle_variations(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        api_keys = config_db_helper.get_apikey_list(message)
-                        if not api_keys:
-                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
-                            return
 
+                        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+                        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+                        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+                        if not api_keys:
+                            return
+                        
                         if api_keys:
                             img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
                             if img_var_response:
@@ -818,9 +826,10 @@ def handle_vision(message):
 
                 # encode the image to base64
                 encoded_img = helper_functions.encode_image(temp_img_path)
-                api_keys = config_db_helper.get_apikey_list(message)
+                chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+                user_config = get_or_create_chat_config(message.from_user.id, 'user')
+                api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
                 if not api_keys:
-                    bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                     return
 
                 if api_keys:
@@ -864,7 +873,8 @@ def handle_edit(message):
         original_image = original_message.photo[-1]
         original_image_file_info = bot.get_file(original_image.file_id)
 
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         if user_config['is_premium']:
             user_image_mask_map = user_config['premium_image_mask_map']
         else:
@@ -917,10 +927,9 @@ def handle_edit(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        api_keys = config_db_helper.get_apikey_list(message)
+                        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
                         if not api_keys:
-                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
-                            return  
+                            return
 
                         if api_keys:
                             img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path, openai_api_key=api_keys[0])
