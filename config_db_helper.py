@@ -298,9 +298,9 @@ def check_configval_pattern(configval, config_attr):
     """
     check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
     """
-    config_pattern = re.compile(valid_configval_patterns[config_attr])
-    print(configval)
-    print(config_pattern)
+    # config_pattern = re.compile(valid_configval_patterns[config_attr])
+    # print(configval)
+    # print(config_pattern)
     # return bool(config_pattern.fullmatch(configval))
     return True
 
@@ -344,9 +344,7 @@ def decrypt(token):
         # Handle or log the decryption error appropriately
         return None
 
-def get_apikey_list(message):
-    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+def get_apikey_list(user_config, chat_config):
     openai_api_keys = [user_config['openai_api_key'], chat_config['openai_api_key']]
 
     decrypted_keys = []

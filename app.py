@@ -119,9 +119,7 @@ I need to specify exactly what users can do on a free trial credit before implem
 2. Implementation for all /chat and othe rrequests
 3. Escape characters error and exception handling.
 
-
 -. Address users being able to reset their settings, this should be stored in system config that is stored in-memory?
-
 
 
 
@@ -235,8 +233,6 @@ logger = logging.getLogger(__name__)
 config_db_helper.create_config_table("chat_configs", "chat")
 config_db_helper.create_config_table("user_configs", "user")
 
-
-
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
@@ -271,6 +267,7 @@ def receive_update():
 """
 Permission handlers and wrapper functions
 """
+# turning bot on and off
 @bot.message_handler(commands=['start_bot'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
@@ -284,6 +281,10 @@ def stop_bot(message):
     # Set the bot state to "off" in Redis
     redis_db.set(BOT_STATE_KEY, 'off')
     bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
+
+
+
+
 
 # decorator / wrapper function to check whether bot is active
 def is_bot_active(func):
@@ -334,6 +335,12 @@ def is_admin(func):
     return wrapper
 
 
+# develop is owner.
+
+
+
+
+
 def is_in_reply(func):
     def wrapper(message):
         if message.reply_to_message:
@@ -347,7 +354,29 @@ def escape_markdown_v2(text):
     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 
+def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
+    """
+    
+    """
+    # check for API Keys
+    api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
 
+    # if the first API key returned is a free credit
+    if api_keys[0] == OPENAI_FREE_KEY:
+        # check whether user has free trial credits remaining
+        ## if they do no not have anything remaining then return
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        if user_config['free_credits'] < 1:
+            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
+please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+            return None
+        else:
+            user_config['free_credits'] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+            return api_keys
+    # if it is not, then just simply return the API keys
+    return api_keys
 
 
 
@@ -376,14 +405,6 @@ def handle_start(message):
         bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     
-    except telebot.ApiException as e:
-        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        print(f"API Exception occurred: {e}")
-    except telebot.NetworkError as e:
-        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        print(f"Network Error occurred: {e}")
     except Exception as e:
         bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -409,28 +430,11 @@ def handle_chat(message):
         # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
         body_text = helper_functions.extract_body(message.text)
 
-
-
-        # ABSTRACT OUT ALL OF THIS <<<
-        # handle API Keys, the usage of the group's API key is prioritized over individual to save credits.
-        api_keys = config_db_helper.get_apikey_list(message)
-        ## this will always return the valid API key, if it should be originally empty, it will have the OPENAI_FREE_KEY as api_keys[0];
-
-        # check if the user has the valid API key, if they do not, api_keys[0] will be the default free openai api key.
-        # if it is not, then this will pass without triggering
-        if api_keys[0] == OPENAI_FREE_KEY:
-            # check whether user has free trial credits remaining
-            ## if they do no not have anything remaining then return
-            if user_config['free_credits'] < 1:
-                bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
-please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
-                return
-            else:
-                user_config['free_credits'] -= 1
-                bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
-                config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
-
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+        print(api_keys)
+        if not api_keys:
+            return
+        
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
             chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
@@ -463,20 +467,12 @@ please set an OpenAI API Key for the group or the user, or contact admin for mor
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
-        except telebot.ApiException as e:
-            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-            print(f"API Exception occurred: {e}")
-        except telebot.NetworkError as e:
-            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-            print(f"Network Error occurred: {e}")
         except Exception as e:
             bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
             print(f"An unexpected error occurred: {e}")
         
-        
+
         ### logging ###
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
@@ -504,12 +500,10 @@ please set an OpenAI API Key for the group or the user, or contact admin for mor
 @is_valid_user
 def handle_translate_1(message):
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -526,12 +520,10 @@ def handle_translate_1(message):
 @is_valid_user
 def handle_translate_2(message):
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -549,14 +541,10 @@ def handle_translate_2(message):
 @is_valid_user
 def handle_translate_3(message):
     try:
-
-        api_keys = config_db_helper.get_apikey_list(message)
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
 
         if api_keys:
@@ -576,12 +564,14 @@ def handle_translate_3(message):
 @is_bot_active
 @is_valid_user
 def handle_tts(message):
+    
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
-
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
 
         if api_keys:
             tts_response = ai_commands.text_to_speech(message, openai_api_key=api_keys[0])
@@ -618,10 +608,12 @@ def handle_stt(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            api_keys = config_db_helper.get_apikey_list(message)
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
             if not api_keys:
-                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                 return
+
 
             if api_keys:
                 stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
@@ -670,9 +662,8 @@ def handle_stc(message):
                 temp_voice_file.write(downloaded_voice)
                 temp_voice_file_path = temp_voice_file.name
             
-            api_keys = config_db_helper.get_apikey_list(message)
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
             if not api_keys:
-                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                 return
 
             if api_keys:
@@ -720,11 +711,12 @@ def handle_imagine(message):
     system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
 
     try:
-        api_keys = config_db_helper.get_apikey_list(message)
-
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
             return
+
 
         if api_keys:
             image_content = ai_commands.generate_image(message, api_keys[0], system_context)
@@ -771,11 +763,13 @@ def handle_variations(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        api_keys = config_db_helper.get_apikey_list(message)
-                        if not api_keys:
-                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
-                            return
 
+                        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+                        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+                        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+                        if not api_keys:
+                            return
+                        
                         if api_keys:
                             img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
                             if img_var_response:
@@ -832,9 +826,10 @@ def handle_vision(message):
 
                 # encode the image to base64
                 encoded_img = helper_functions.encode_image(temp_img_path)
-                api_keys = config_db_helper.get_apikey_list(message)
+                chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+                user_config = get_or_create_chat_config(message.from_user.id, 'user')
+                api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
                 if not api_keys:
-                    bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
                     return
 
                 if api_keys:
@@ -878,7 +873,8 @@ def handle_edit(message):
         original_image = original_message.photo[-1]
         original_image_file_info = bot.get_file(original_image.file_id)
 
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')  # Assume this fetches user-specific config
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         if user_config['is_premium']:
             user_image_mask_map = user_config['premium_image_mask_map']
         else:
@@ -931,10 +927,9 @@ def handle_edit(message):
                     with io.BytesIO() as byte_stream:
                         img.save(byte_stream, format='PNG')
                         byte_array = byte_stream.getvalue()
-                        api_keys = config_db_helper.get_apikey_list(message)
+                        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
                         if not api_keys:
-                            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered, please set an OpenAI API Key for the group or the user.")
-                            return  
+                            return
 
                         if api_keys:
                             img_edit_response = ai_commands.edit_image(message, byte_array, temp_mask_file_path, openai_api_key=api_keys[0])
@@ -1364,9 +1359,6 @@ def handle_callback(call):
 
 
 
-
-
-
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['user_set_openai_key'])
 @is_bot_active
@@ -1385,8 +1377,7 @@ def handle_user_set_openai_apikey(message):
             # get the configurations
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
             user_config['openai_api_key'] = new_openai_key
-            new_config = user_config.copy()
-            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
 
             if helper_functions.bot_has_delete_permission(message.chat.id, bot):
                 bot.reply_to(message, f"New API key for user successfully set. Deleting message.")
