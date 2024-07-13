@@ -395,14 +395,6 @@ def handle_start(message):
         bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     
-    except telebot.ApiException as e:
-        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        print(f"API Exception occurred: {e}")
-    except telebot.NetworkError as e:
-        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        print(f"Network Error occurred: {e}")
     except Exception as e:
         bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -430,6 +422,8 @@ def handle_chat(message):
 
         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         print(api_keys)
+        if not api_keys:
+            return
         
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
@@ -463,14 +457,6 @@ def handle_chat(message):
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
             bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
-        except telebot.ApiException as e:
-            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-            print(f"API Exception occurred: {e}")
-        except telebot.NetworkError as e:
-            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
-            logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-            print(f"Network Error occurred: {e}")
         except Exception as e:
             bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
