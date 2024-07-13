@@ -344,9 +344,7 @@ def decrypt(token):
         # Handle or log the decryption error appropriately
         return None
 
-def get_apikey_list(message):
-    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+def get_apikey_list(user_config, chat_config):
     openai_api_keys = [user_config['openai_api_key'], chat_config['openai_api_key']]
 
     decrypted_keys = []

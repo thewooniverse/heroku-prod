@@ -119,9 +119,7 @@ I need to specify exactly what users can do on a free trial credit before implem
 2. Implementation for all /chat and othe rrequests
 3. Escape characters error and exception handling.
 
-
 -. Address users being able to reset their settings, this should be stored in system config that is stored in-memory?
-
 
 
 
@@ -334,6 +332,7 @@ def is_admin(func):
     return wrapper
 
 
+
 def is_in_reply(func):
     def wrapper(message):
         if message.reply_to_message:
@@ -347,7 +346,24 @@ def escape_markdown_v2(text):
     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 
-
+def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
+    """
+    
+    """
+    api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+    if api_keys[0] == OPENAI_FREE_KEY:
+        # check whether user has free trial credits remaining
+        ## if they do no not have anything remaining then return
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        if user_config['free_credits'] < 1:
+            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
+please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+            return None
+        else:
+            user_config['free_credits'] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+            return api_keys
 
 
 
@@ -409,28 +425,11 @@ def handle_chat(message):
         # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
         body_text = helper_functions.extract_body(message.text)
 
-
-
-        # ABSTRACT OUT ALL OF THIS <<<
-        # handle API Keys, the usage of the group's API key is prioritized over individual to save credits.
-        api_keys = config_db_helper.get_apikey_list(message)
-        ## this will always return the valid API key, if it should be originally empty, it will have the OPENAI_FREE_KEY as api_keys[0];
-
-        # check if the user has the valid API key, if they do not, api_keys[0] will be the default free openai api key.
-        # if it is not, then this will pass without triggering
-        if api_keys[0] == OPENAI_FREE_KEY:
-            # check whether user has free trial credits remaining
-            ## if they do no not have anything remaining then return
-            if user_config['free_credits'] < 1:
-                bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
-please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
-                return
-            else:
-                user_config['free_credits'] -= 1
-                bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
-                config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
-
-
+        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+        if not api_keys:
+            return
+        
+        
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
             chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
@@ -476,7 +475,7 @@ please set an OpenAI API Key for the group or the user, or contact admin for mor
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
             print(f"An unexpected error occurred: {e}")
         
-        
+
         ### logging ###
         # if the user is a premium user, and is the user wanting to save chat history for this chat group?
         if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
