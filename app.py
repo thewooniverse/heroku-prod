@@ -233,8 +233,6 @@ logger = logging.getLogger(__name__)
 config_db_helper.create_config_table("chat_configs", "chat")
 config_db_helper.create_config_table("user_configs", "user")
 
-
-
 @app.route('/')
 def hello_world():
     return helper_functions.start_menu()
@@ -350,7 +348,10 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     """
     
     """
+    # check for API Keys
     api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+
+    # if the first API key returned is a free credit
     if api_keys[0] == OPENAI_FREE_KEY:
         # check whether user has free trial credits remaining
         ## if they do no not have anything remaining then return
@@ -364,6 +365,8 @@ please set an OpenAI API Key for the group or the user, or contact admin for mor
             bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
             config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
             return api_keys
+    # if it is not, then just simply return the API keys
+    return api_keys
 
 
 
@@ -426,9 +429,7 @@ def handle_chat(message):
         body_text = helper_functions.extract_body(message.text)
 
         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
-        if not api_keys:
-            return
-        
+        print(api_keys)
         
         # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
         if message.reply_to_message:
@@ -1363,9 +1364,6 @@ def handle_callback(call):
 
 
 
-
-
-
 # Manual configurations of settings that require users to type
 @bot.message_handler(commands=['user_set_openai_key'])
 @is_bot_active
@@ -1384,8 +1382,7 @@ def handle_user_set_openai_apikey(message):
             # get the configurations
             user_config = get_or_create_chat_config(message.from_user.id, 'user')
             user_config['openai_api_key'] = new_openai_key
-            new_config = user_config.copy()
-            config_db_helper.set_new_config(message.from_user.id, 'user', new_config)
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
 
             if helper_functions.bot_has_delete_permission(message.chat.id, bot):
                 bot.reply_to(message, f"New API key for user successfully set. Deleting message.")

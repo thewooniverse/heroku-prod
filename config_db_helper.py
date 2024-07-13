@@ -298,9 +298,9 @@ def check_configval_pattern(configval, config_attr):
     """
     check_api_key(message, config_attr): returns True or False based on whether the entered config value in message is in its valid format
     """
-    config_pattern = re.compile(valid_configval_patterns[config_attr])
-    print(configval)
-    print(config_pattern)
+    # config_pattern = re.compile(valid_configval_patterns[config_attr])
+    # print(configval)
+    # print(config_pattern)
     # return bool(config_pattern.fullmatch(configval))
     return True
 
