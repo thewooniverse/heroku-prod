@@ -58,6 +58,8 @@ Along with context - this is useful for creating different conversation threads 
 Language Models - choose which language model your assistant will use to complete your chat requests.
 Language Presets - choose which languages /t1 /t2 /t3 translate to for each group.
 
+Agent Voice - choose which voice you would like your AI to respond to you in speech requests.
+
 <b>-- Manual Settings --</b>
 /set_context [200 words] - Set the context for yourself in the given chatgroup. You can set things like what you want this conversation to be about, or what you want the bot to call you or remember.
 This is a more lightweight version to pass your bot some persistent context

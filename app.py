@@ -119,11 +119,18 @@ I need to specify exactly what users can do on a free trial credit before implem
 =========================================================================================================
 
 2. Presets / audio agent types in chat settings;
+- create the buttons
+- change config
+- integrate into speechto commands
+-- fix sts
+-- implement sts preset "hey xyz" features for premium
+
+
+
+
+
 3. Escape characters error and exception handling; trying to fix.
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
-stc fix
-sts
-sts preset / prefix "hey xyz"
 
 
 ---
@@ -1309,7 +1316,7 @@ def handle_callback(call):
         # populate and send string
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         current_choice = chat_config['agent_voice']
-        new_string = settings.agent_voice_string + f"\n Current choice: {current_choice}"
+        new_string = settings.agent_voice_string + f"\nCurrent choice: {current_choice}"
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
 
     elif call.data[0:9] == "voiceset_":
@@ -1321,8 +1328,9 @@ def handle_callback(call):
 
         # populate and send string
         current_choice = chat_config['agent_voice']
-        new_string = settings.agent_voice_string + f"\n Current choice: {current_choice}"
+        new_string = settings.agent_voice_string + f"\nCurrent choice: {current_choice}"
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
+
 
 
     elif call.data == "persistence_on":
