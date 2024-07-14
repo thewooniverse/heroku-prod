@@ -1310,7 +1310,7 @@ def handle_callback(call):
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         current_choice = chat_config['agent_voice']
         new_string = settings.agent_voice_string + f"\n Current choice: {current_choice}"
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=langauge_model_settings_markup(), parse_mode="HTML")
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
 
     elif call.data[0:9] == "voiceset_":
         #sample call data = voiceset_alloy, we need to extract alloy
@@ -1322,7 +1322,7 @@ def handle_callback(call):
         # populate and send string
         current_choice = chat_config['agent_voice']
         new_string = settings.agent_voice_string + f"\n Current choice: {current_choice}"
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=langauge_model_settings_markup(), parse_mode="HTML")
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
 
 
     elif call.data == "persistence_on":
