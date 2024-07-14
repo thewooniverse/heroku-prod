@@ -112,15 +112,25 @@ I need to specify exactly what users can do on a free trial credit before implem
 --> all functionality should be nested within.
 
 
+1. Decorator / Wrapper function for API key checking;
+2. Implementation for all /chat and othe rrequests
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
-1. Decorator / Wrapper function for API key checking;
-2. Implementation for all /chat and othe rrequests
-3. Escape characters error and exception handling.
+2. Presets / audio agent types in chat settings;
+- create the buttons
+- change config
+- integrate into speechto commands
+-- fix sts
+-- implement sts preset "hey xyz" features for premium
 
--. Address users being able to reset their settings, this should be stored in system config that is stored in-memory?
 
+
+
+
+3. Escape characters error and exception handling; trying to fix.
+-. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 
 
 ---
@@ -1058,15 +1068,12 @@ def premium_image_mask_options_menu(mask_vector):
 
 
 
-
-
-
-
 # Chat settings
 def group_settings_markup():
     markup = types.InlineKeyboardMarkup()
     markup.row(types.InlineKeyboardButton("🤖 Language Models", callback_data='language_model_menu'))
     markup.row(types.InlineKeyboardButton("🌐 Translation Presets", callback_data='translations_menu'))
+    markup.row(types.InlineKeyboardButton("🎤 Agent Voice", callback_data='agent_voice_menu'))
     markup.row(types.InlineKeyboardButton("🟢 Persistence ON", callback_data='persistence_on'),
         types.InlineKeyboardButton("🔴 Persistence OFF", callback_data='persistence_off'))
     return markup
@@ -1079,6 +1086,20 @@ def langauge_model_settings_markup():
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data='group_settings')) # back to main should point to previous chat setting.)
     return markup
 
+
+# define the agent's voice presets
+def agent_voice_settings_markup():
+    markup = types.InlineKeyboardMarkup()
+    markup.row(types.InlineKeyboardButton("🧑🏻 Alloy", callback_data='voiceset_alloy'), types.InlineKeyboardButton("👨🏻 Echo", callback_data='voiceset_echo'))
+    markup.row(types.InlineKeyboardButton("💂 Fable", callback_data='voiceset_fable'), types.InlineKeyboardButton("🕵🏾‍♂️ Onyx", callback_data='voiceset_onyx'))
+    markup.row(types.InlineKeyboardButton("👩🏻 Nova", callback_data='voiceset_nova'), types.InlineKeyboardButton("👩‍⚖️ Shimmer", callback_data='voiceset_shimmer'))
+    markup.row(types.InlineKeyboardButton("🔙 Back", callback_data='group_settings')) # back to main should point to previous chat setting.)
+    return markup
+
+
+
+
+
 # define the translations option menu
 def translation_options_menu(t1,t2,t3):
     markup = types.InlineKeyboardMarkup()
@@ -1087,6 +1108,7 @@ def translation_options_menu(t1,t2,t3):
                 types.InlineKeyboardButton(f"3:{t3}", callback_data="t3"))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="group_settings"))
     return markup
+
 
 
 
@@ -1104,6 +1126,7 @@ def language_selection_menu(preset_num):
                 types.InlineKeyboardButton(f"🇰🇷", callback_data=f"lset_{preset_num}_kor"))
     markup.row(types.InlineKeyboardButton("🔙 Back", callback_data="translations_menu"))
     return markup
+
 
 
 
@@ -1241,9 +1264,10 @@ def handle_callback(call):
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
     
     elif call.data == "language_model_menu":
-        # User pressed the "Back" button, return to main settings screen
-        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=langauge_model_settings_markup(), parse_mode="HTML")
+
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.lm_settings_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
     
+
     # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt3.5":
         # check that the clicker is an administrator
@@ -1264,7 +1288,6 @@ def handle_callback(call):
             bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
             logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
 
-
     # Handle callback data for changing language model in group;
     elif call.data == "set_lm_gpt4":
         # check that the clicker is an administrator
@@ -1284,6 +1307,30 @@ def handle_callback(call):
         except Exception as e:
             bot.send_message(call.message.chat.id, "Configuration could not be completed, please check logs")
             logger.error(helper_functions.construct_logs(call.message, f"Error: {e}")) # traceback?
+
+
+
+
+    # handle voice 
+    elif call.data == "agent_voice_menu":
+        # populate and send string
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        current_choice = chat_config['agent_voice']
+        new_string = settings.agent_voice_string + f"\nCurrent choice: {current_choice}"
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
+
+    elif call.data[0:9] == "voiceset_":
+        #sample call data = voiceset_alloy, we need to extract alloy
+        voice_selection = call.data.split('_')[1]
+        chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
+        chat_config['agent_voice'] = voice_selection
+        config_db_helper.set_new_config(call.message.chat.id, 'chat', chat_config)
+
+        # populate and send string
+        current_choice = chat_config['agent_voice']
+        new_string = settings.agent_voice_string + f"\nCurrent choice: {current_choice}"
+        bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=new_string, reply_markup=agent_voice_settings_markup(), parse_mode="HTML")
+
 
 
     elif call.data == "persistence_on":
@@ -1333,6 +1380,7 @@ def handle_callback(call):
     elif call.data in ['t1', 't2', 't3']:
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=settings.construct_translation_preset_string(call.data), reply_markup=language_selection_menu(call.data), parse_mode="HTML")
     
+
     elif call.data[0:4] == "lset":
         chat_config = get_or_create_chat_config(call.message.chat.id, 'chat')
         preset_nubmer = call.data.split('_')[1]

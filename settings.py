@@ -58,6 +58,8 @@ Along with context - this is useful for creating different conversation threads 
 Language Models - choose which language model your assistant will use to complete your chat requests.
 Language Presets - choose which languages /t1 /t2 /t3 translate to for each group.
 
+Agent Voice - choose which voice you would like your AI to respond to you in speech requests.
+
 <b>-- Manual Settings --</b>
 /set_context [200 words] - Set the context for yourself in the given chatgroup. You can set things like what you want this conversation to be about, or what you want the bot to call you or remember.
 This is a more lightweight version to pass your bot some persistent context
@@ -93,6 +95,15 @@ lm_settings_string = """💬Language Model Settings💬
 GPT 3.5 turbo - Baseline model for OpenAI's ChatGPT. Fast and cheaper.
 GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capabilities.
 """
+
+agent_voice_string = """🎤Agent Voice Menu🎤
+Experiment with different voices (alloy, echo, fable, onyx, nova, and shimmer) to find one that matches your desired tone and audience. 
+The current voices are optimized for English.
+"""
+
+
+
+
 
 
 translation_presets_string = """🌐Language Presets🌐
