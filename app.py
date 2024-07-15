@@ -113,20 +113,19 @@ I need to specify exactly what users can do on a free trial credit before implem
 
 
 1. Decorator / Wrapper function for API key checking;
-2. Implementation for all /chat and othe rrequests
-
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
+2. Implementation for all /chat and other requests
 
 2. Presets / audio agent types in chat settings;
 - create the buttons
 - change config
-- integrate into speechto commands
--- fix sts
--- implement sts preset "hey xyz" features for premium
+- integrate into speechto commands << --
 
 
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
 
+-- fix stc requests
+-- implement sts preset "hey xyz" features for premium users
 
 
 3. Escape characters error and exception handling; trying to fix.
@@ -690,7 +689,7 @@ def handle_stc(message):
 
                     # use the stt text response to call the chat and send the response
                     context=''
-                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
+                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
                     bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
