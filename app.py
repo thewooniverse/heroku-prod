@@ -689,7 +689,7 @@ def handle_stc(message):
 
                     # use the stt text response to call the chat and send the response
                     context=''
-                    response_text = ai_commands.chat_completion(message, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
                     bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
@@ -712,7 +712,14 @@ def handle_stc(message):
 
 
 # speech to speech requests
-
+@bot.message_handler(commands=['stsc'])
+@is_bot_active
+@is_valid_user
+def handle_stsc(message):
+    """
+    speech to speechchat
+    """
+    pass
 
 
 
