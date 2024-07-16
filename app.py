@@ -118,17 +118,16 @@ I need to specify exactly what users can do on a free trial credit before implem
 2. Presets / audio agent types in chat settings;
 - create the buttons
 - change config
-- integrate into speechto commands << --
-
+- integrate into speechto commands
+-- fix stc requests
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
--- fix stc requests
--- implement sts preset "hey xyz" features for premium users
-
 
 3. Escape characters error and exception handling; trying to fix.
+
+-- implement sts preset "hey xyz" features for premium users
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 
 
@@ -338,14 +337,26 @@ def is_admin(func):
             return func(message)
         else:
             # Notify the user they do not have permission if they are not an admin
-            bot.send_message(message.chat.id, "You do not have permission to use this command.")
+            bot.send_message(message.chat.id, "You do not have permission to use this command. This command is onl¥ available to admins.")
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
 
 
 # develop is owner.
+def is_owner(func):
+    def wrapper(message):
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
 
+        # Check if the user is listed as an admin in the system configuration
+        if message.from_user.id == system_config['onwer_id']:
+            return func(message)
+        else:
+            # Notify the user they do not have permission if they are not an admin
+            bot.send_message(message.chat.id, "You do not have permission to use this command. This is only available to the owner of the bot.")
+            return None  # Explicitly return None to indicate no further action should be taken
+    
+    return wrapper
 
 
 

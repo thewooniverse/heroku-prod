@@ -52,7 +52,7 @@ default_system_config = {
     "version": "0.0.3", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
-
+    "onwer_id": OWNER_USER_ID,
     "admins": [OWNER_USER_ID], # list of administrators of the bot
     "system_oai_key": OPENAI_FREE_KEY,
     "banned_users": [], # list of user_ids that are banned from using the service.
