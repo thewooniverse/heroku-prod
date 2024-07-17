@@ -52,7 +52,7 @@ default_system_config = {
     "version": "0.0.3", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
-
+    "onwer_id": OWNER_USER_ID,
     "admins": [OWNER_USER_ID], # list of administrators of the bot
     "system_oai_key": OPENAI_FREE_KEY,
     "banned_users": [], # list of user_ids that are banned from using the service.
@@ -77,7 +77,7 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.1.2", # the version determines the current version of the configs
+    "version": "0.1.3", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
@@ -92,6 +92,8 @@ default_user_config = {
           [1, 1, 1]
         ],
     "user_context": "", # user context allows user to have context about themselves that persist between chat groups.
+    "speech_chat": False, # whether the user wants the bot
+    "speech_assistant_name": "ChatGPT",
 
     "premium_image_mask_map": [ # determines how each user wants to edit the images
           [0, 0, 0, 0, 0],
