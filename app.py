@@ -125,10 +125,19 @@ I need to specify exactly what users can do on a free trial credit before implem
 =========================================================================================================
 
 
+Speech to Chat Development timeline:
+- develop stsc command handling for targeted requests for proof of concept and to use the codebase later on;
+- include context
+- update database schema
+- turning the speech to speech chat functionality on or off in group_settings?
+- /set_assistant_name: manually setting the name of the voice assistant 
+
+
 3. Escape characters error and exception handling; trying to fix.
 
 -- implement sts preset "hey xyz" features for premium users
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
+---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
 
 
 ---
@@ -273,7 +282,7 @@ def receive_update():
 
 
 """
-Permission handlers and wrapper functions
+Bot State control commands
 """
 # turning bot on and off
 @bot.message_handler(commands=['start_bot'])
@@ -292,8 +301,9 @@ def stop_bot(message):
 
 
 
-
-
+"""
+Wrapper functions
+"""
 # decorator / wrapper function to check whether bot is active
 def is_bot_active(func):
     def wrapper(message):
@@ -304,7 +314,6 @@ def is_bot_active(func):
         elif state and state.decode('utf-8') == 'off':
             bot.send_message(message.chat.id, "Bot is currently turned OFF.")
     return wrapper
-
 
 # decorator / wrapper function to check whether bot is active
 def is_valid_user(func):
@@ -357,6 +366,7 @@ def is_owner(func):
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
+
 
 
 
@@ -699,7 +709,13 @@ def handle_stc(message):
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
-                    context=''
+                    # import contexts:
+                    if user_config['user_context'] == "":
+                        user_context = "empty"
+                    else:
+                        user_context = user_config['user_context']
+                    context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
+
                     response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
                     bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
@@ -721,16 +737,88 @@ def handle_stc(message):
 
 
 
-
-# speech to speech requests
+"""
+SPEECH TO SPEECH CHAT FUNCTIONALITY:
+"""
 @bot.message_handler(commands=['stsc'])
 @is_bot_active
 @is_valid_user
 def handle_stsc(message):
     """
-    speech to speechchat
+    handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
     """
-    pass
+    # check whether it is replying to a message - must be used in reply to a message
+    if message.reply_to_message and message.reply_to_message.content_type == 'voice':
+        original_message = message.reply_to_message
+        voice_note = original_message.voice
+        voice_file_info = bot.get_file(voice_note.file_id)
+
+        try:
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+            logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+            if not api_keys:
+                return
+
+            if api_keys:
+                stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
+                if stt_response:
+                    
+                    # send the stt response as well if the user wants to (optional?) - but for now, we keep it so that ppl can edit it if its wrong.
+                    bot.reply_to(message, stt_response)
+                    logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
+
+                    # use the stt text response to call the chat and send the response
+                    # import contexts:
+                    if user_config['user_context'] == "":
+                        user_context = "empty"
+                    else:
+                        user_context = user_config['user_context']
+                    context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
+
+                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+                    bot.reply_to(message, text=response_text)
+                    logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
+
+                    # additional step to convert the chat response into a speech response
+                    tts_response = ai_commands.text_to_speech(response_text, openai_api_key=api_keys[0], voice=chat_config['agent_voice'])
+                    if tts_response:
+                        logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
+                        bot.send_voice(message.chat.id, tts_response)
+
+                else:
+                    bot.reply_to(message, "Could not convert speech to text")
+                    logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
+
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
+        
+        except Exception as e:
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+        
+    else:
+        bot.reply_to(message, "Please reply to a voice note")
+        logger.debug(helper_functions.construct_logs(message, "Debug: No target message"))
+
+
+
+# speech chat functionality "Hey Friend"
+@bot.message_handler(content_types=['voice'])
+def handle_speech_chat(message):
+    # Respond to the voice message
+    bot.reply_to(message, "Received your voice message!")
+
+
+
+
 
 
 
@@ -950,14 +1038,6 @@ def handle_edit(message):
                                 for x in range(col_index * cell_width, (col_index + 1) * cell_width):
                                     for y in range(row_index * cell_height, (row_index + 1) * cell_height):
                                         mask.putpixel((x, y), (0, 0, 0, 0))  # Set alpha to 0 (transparent)
-                    # # OLD APPROACH - Apply transparency to the bottom half of the mask
-                    # for x in range(width):
-                    #     for y in range(height // 2, height):
-                    #         # Get the current pixel's color
-                    #         r, g, b, a = mask.getpixel((x, y))
-                    #         # Set alpha to 0 (fully transparent) for the bottom half
-                    #         mask.putpixel((x, y), (r, g, b, 0))
-
                     
                     with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp_mask_file:
                         mask.save(temp_mask_file, format='PNG')

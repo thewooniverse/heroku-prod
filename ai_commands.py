@@ -40,14 +40,14 @@ def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3
     system_prompt = f"""You are a helpful AI assistant. Use the contexts and chat history provided by the user to help the user to the best of your ability, regardless of your limitations as an AI agent.
     Respond in plaintext only.
     The context provided by this user for you in this conversation is as below. \n\n {context}"""
-    chat_history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
+    history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
     try:
         completion_object = client.chat.completions.create(
         model=model,
         temperature = temperature,
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "assistant", "content": chat_history},
+            {"role": "assistant", "content": history},
             {"role": "user", "content": body_text}])
         print(completion_object)
         response_text = completion_object.choices[0].message.content
@@ -238,8 +238,10 @@ def text_to_speech(message, openai_api_key, voice="alloy"):
     def text_to_speech(message): takes a message, and returns a voice file containing its dictated version.
     """
     client = OpenAI(api_key=openai_api_key)
-    query = helper_functions.extract_body(message.text)
-
+    if isinstance(message, str):
+        query = message
+    else:
+        query = helper_functions.extract_body(message.text)
 
     # execute the query:
     response = client.audio.speech.create(
