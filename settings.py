@@ -167,7 +167,13 @@ Premium features give you additional granular targeting for image edits.
 
 
 voice_activation_settings_string = """👤<b>Voice Activated Agent Settings</b>👤
-Customize how 
+Here you may turn the voice activated agent on or off. Below are the current settings, the agent name is what you need to say in the beginning three words of your voice activated request.
+For example, if the agent name is Jack, this would be:
+- "Hey Jack, [request]"
+- "Jack, [request]"
+- "Good Morning Jack, [request]"
+
+Voice Agent name can be set manually by using the /set_name [name] command, please make it unique and easily and clearly pronouncable!
 """
 
 

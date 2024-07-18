@@ -1390,7 +1390,7 @@ def handle_callback(call):
 
     elif call.data == "voice_assistant_settings":
         user_config = get_or_create_chat_config(call.from_user.id, 'user')
-        current_status = f"\n\nVoice Activation:{user_config['speech_chat']}\nVoice Assistant Name{user_config['speech_assistant_name']}"
+        current_status = f"\n\nVoice Activation: {user_config['speech_chat']}\nVoice Assistant Name: {user_config['speech_assistant_name']}"
         status_aware_settings = settings.voice_activation_settings_string + current_status
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=status_aware_settings, reply_markup=voice_assistant_settings_markup(), parse_mode="HTML")
 
@@ -1399,7 +1399,7 @@ def handle_callback(call):
         user_config['speech_chat'] = True
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
 
-        current_status = f"\n\nVoice Activation:{user_config['speech_chat']}\nVoice Assistant Name{user_config['speech_assistant_name']}"
+        current_status = f"\n\nVoice Activation: {user_config['speech_chat']}\nVoice Assistant Name: {user_config['speech_assistant_name']}"
         status_aware_settings = settings.voice_activation_settings_string + current_status
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=status_aware_settings, reply_markup=voice_assistant_settings_markup(), parse_mode="HTML")
 
@@ -1408,7 +1408,7 @@ def handle_callback(call):
         user_config['speech_chat'] = False
         config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
 
-        current_status = f"\n\nVoice Activation:{user_config['speech_chat']}\nVoice Assistant Name{user_config['speech_assistant_name']}"
+        current_status = f"\n\nVoice Activation: {user_config['speech_chat']}\nVoice Assistant Name: {user_config['speech_assistant_name']}"
         status_aware_settings = settings.voice_activation_settings_string + current_status
         bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text=status_aware_settings, reply_markup=voice_assistant_settings_markup(), parse_mode="HTML")
 
@@ -1556,6 +1556,28 @@ def handle_callback(call):
 
 
 
+
+@bot.message_handler(commands=['set_name'])
+@is_bot_active
+@is_valid_user
+def handle_agent_name_setting(message):
+    """
+    sets the agent's name
+    """
+    
+    try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        new_agent_name = helper_functions.extract_body(message.text)
+        if new_agent_name.isalpha():
+            user_config['speech_assistant_name'] = new_agent_name
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+            bot.reply_to(message, f"Agent name has been set to: {new_agent_name}")
+        else:
+            bot.reply_to(message, f"Please try again without any special characters.")
+    except Exception as e:
+        # Generic error handling
+        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 
@@ -1828,6 +1850,7 @@ def handle_set_context_in_group(message):
         # Generic error handling
         bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
 
 @bot.message_handler(commands=['reset_context'])
 @is_bot_active
