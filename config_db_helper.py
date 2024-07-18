@@ -60,8 +60,6 @@ default_system_config = {
 
 default_chat_config = {
     "version": "0.1.1", # the version determines the current version of the configs
-    # "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on. A chat cannot be premium.
-
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     # "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
@@ -77,7 +75,7 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.1.3", # the version determines the current version of the configs
+    "version": "0.1.4", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
@@ -93,8 +91,7 @@ default_user_config = {
         ],
     "user_context": "", # user context allows user to have context about themselves that persist between chat groups.
     "speech_chat": False, # whether the user wants the bot
-    "speech_assistant_name": "ChatGPT",
-
+    "speech_assistant_name": "GPT",
     "premium_image_mask_map": [ # determines how each user wants to edit the images
           [0, 0, 0, 0, 0],
           [0, 0, 0, 0, 0],
