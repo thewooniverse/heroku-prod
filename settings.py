@@ -89,7 +89,6 @@ Below is the current image mask settings; 1 is the section of the image where yo
 
 
 
-
 lm_settings_string = """💬Language Model Settings💬
 
 GPT 3.5 turbo - Baseline model for OpenAI's ChatGPT. Fast and cheaper.
@@ -121,6 +120,8 @@ Find your lannguage's code on: https://www.loc.gov/standards/iso639-2/php/code_l
 /t3_set xxx
 """
 
+
+
 def construct_translation_preset_string(preset_num):
     return f"""🌐{preset_num}: Language Options🌐
 Press the desired language option, press back to see current configuration:
@@ -141,7 +142,7 @@ Press the desired language option, press back to see current configuration:
 premium_subscription_string = """🌟Premium Features🌟
 
 1. Context Awareness and Persistence 🧠
-Bot can now remember what
+Bot can now remember what you have said in the past without needing to reply to anything. The context window can now be expanded into everything you've asked of the bot, and its response.
 
 2. Ads-Free 💨
 Poof, your ads gone.
@@ -154,8 +155,8 @@ premium_user_settings_string = """🌟Premium User Settings🌟
 Customize how your bot responds to your requests (applies to all interactions in any group):
 
 <b>-- Button Settings --</b>
-Context Awareness ON or OFF - control whether your bot uses conversation history from the group to search for relevant conversation threads.
 Granual Image Mask Settings - Image Mask, but with more granular targeting of image sections.
+Voice Assistant
 """
 
 
@@ -163,4 +164,10 @@ premium_image_mask_settings_string = """🌌Granual Image Mask Settings🌌
 Below is the current image mask settings; 1 is the section of the image where you want to create a mask over to instruct the image model where to edit the image.
 Premium features give you additional granular targeting for image edits.
 """
+
+
+voice_activation_settings_string = """👤<b>Voice Activated Agent Settings</b>👤
+Customize how 
+"""
+
 

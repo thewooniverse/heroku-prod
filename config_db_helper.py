@@ -60,8 +60,6 @@ default_system_config = {
 
 default_chat_config = {
     "version": "0.1.1", # the version determines the current version of the configs
-    # "is_premium": False, # determines whether a group is a premium group; if it is not, then it cannot have persistence on. A chat cannot be premium.
-
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     # "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
