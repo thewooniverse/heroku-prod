@@ -121,29 +121,41 @@ I need to specify exactly what users can do on a free trial credit before implem
 - integrate into speechto commands
 -- fix stc requests
 
+1. Button settings for turning on speech to speech for premium users
+2. Setting agent voice
+- develop stsc command handling for targeted requests for proof of concept and to use the codebase later on;
+- include context
+- /set_assistant_name: manually setting the name of the voice assistant 
+
+1. Refactoring speech to speech configurations. - turning the speech to speech chat functionality on or off in group_settings? <- this should be in group settings tbqh; refactor.
+^ deprecated because I don't think it should be in group settings actually.
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
 
-1. Button settings for turning on speech to speech for premium users
-2. Setting agent voice
-3. Then developing the STS functionality.
-
-
 
 Speech to Chat Development timeline:
-- develop stsc command handling for targeted requests for proof of concept and to use the codebase later on;
-- include context
-- update database schema
-- turning the speech to speech chat functionality on or off in group_settings?
-- /set_assistant_name: manually setting the name of the voice assistant 
+2. Develop the STS feature
+2.a. Detect all speech, if the user is premium and they have it turned on in the group, then process the thing.
+2.b. Convert all the incoming requests into stt
+2.c. Check the first 3 characters of the string to see whether there is a match for the given name;
+2.d. return the response
 
 
-3. Escape characters error and exception handling; trying to fix.
 
--- implement sts preset "hey xyz" features for premium users
+
+
+
+
+
+
+---
+Escape characters error and exception handling; trying to fix.
+
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 ---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
+
 
 
 SCALABILITY IMPROVEMENT:
@@ -749,6 +761,7 @@ def handle_stc(message):
 
 
 
+
 """
 SPEECH TO SPEECH CHAT FUNCTIONALITY:
 """
@@ -824,9 +837,69 @@ def handle_stsc(message):
 
 # speech chat functionality "Hey Friend"
 @bot.message_handler(content_types=['voice'])
+@is_bot_active
+@is_valid_user
 def handle_speech_chat(message):
-    # Respond to the voice message
-    bot.reply_to(message, "Received your voice message!")
+    # import configs
+    user_config = get_or_create_chat_config(message.from_user.id, 'user')
+    chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+
+    # check whether the user is a premium user AND whether they have turned both of these features
+    if user_config['speech_chat'] and user_config['is_premium']:
+        try:
+
+            ### code section on downloading the original voice note ###
+            voice_note = message.voice
+            voice_file_info = bot.get_file(voice_note.file_id)
+            downloaded_voice = bot.download_file(voice_file_info.file_path)
+            logger.debug(helper_functions.construct_logs(message, "Check: voice note downloaded"))
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.ogg') as temp_voice_file:
+                temp_voice_file.write(downloaded_voice)
+                temp_voice_file_path = temp_voice_file.name
+            
+            chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+            user_config = get_or_create_chat_config(message.from_user.id, 'user')
+            api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+            if not api_keys:
+                bot.reply_to(message, "API key is not set!")
+                return
+            
+            stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
+            if stt_response:
+                bot.reply_to(message, stt_response)
+                logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
+            else:
+                bot.reply_to(message, "Could not convert speech to text")
+                logger.warning(helper_functions.construct_logs(message, "Warning: Voice note downloaded, but stt translation could not be completed"))
+
+            ### code section on checking the downloaded voice note for the keywords ###
+            agent_name = user_config["speech_assistant_name"].lower()
+            # get the chunk of the first 5 words, clean them such that they do not include any special characters, and join them into a sentence
+            first_five_words = " ".join([helper_functions.strip_non_alphabet_chars(item) for item in stt_response.split(" ")[0:5]]).lower()
+            
+            # if the agent name is not found in the sentence
+            if not helper_functions.find_full_word(stt_response, agent_name):
+                return
+            
+            # if the agent name is found, then continue
+            bot.reply_to(message, "Agent name is found!!")
+
+
+
+
+
+
+        except Exception as e:
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
+            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+    
+    else:
+        # no message is sent to user as it is not an explicit request or command, it is simply ignored
+        return
+    
+
+
 
 
 
