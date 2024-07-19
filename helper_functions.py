@@ -1,4 +1,5 @@
 import templates
+import re
 import os
 import base64
 import settings
@@ -97,6 +98,29 @@ def user_has_admin_permission(bot, chat_id, user_id):
         print(f"Failed to check admin status: {e}")
         return False
 
+
+def find_full_word(text, word):
+    # Create a regex pattern with word boundaries
+    pattern = r'\b' + re.escape(word) + r'\b'
+    # Search for the pattern in the text
+    if re.search(pattern, text, re.IGNORECASE):
+        return True
+    else:
+        return False
+# Example usage
+# sentence = "Hello, my name is Jack and I am learning Python."
+# word = "jack"
+# match_found = find_full_word(sentence, word)
+# print("Word found:", match_found)
+
+
+
+def strip_non_alphabet_chars(s):
+    # This regex pattern matches any character that is NOT a lowercase or uppercase letter
+    pattern = '[^a-zA-Z]'
+    # Replace these characters with an empty string
+    cleaned_string = re.sub(pattern, '', s)
+    return cleaned_string
 
 
 
