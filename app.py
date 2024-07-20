@@ -130,18 +130,21 @@ I need to specify exactly what users can do on a free trial credit before implem
 1. Refactoring speech to speech configurations. - turning the speech to speech chat functionality on or off in group_settings? <- this should be in group settings tbqh; refactor.
 ^ deprecated because I don't think it should be in group settings actually.
 
+2. Develop the STS feature
+2.a. Detect all speech, if the user is premium and they have it turned on in the group, then process the thing.
+2.b. Convert all the incoming requests into stt
+2.c. Check the first 5 characters of the string to see whether there is a match for the given name;
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
 
+FIX PERSISTENCE
+
 
 Speech to Chat Development timeline:
-2. Develop the STS feature
-2.a. Detect all speech, if the user is premium and they have it turned on in the group, then process the thing.
-2.b. Convert all the incoming requests into stt
-2.c. Check the first 3 characters of the string to see whether there is a match for the given name;
-2.d. return the response
-
+2.d. call for the request in text, convert the response into voice note and reply;
+2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
 
 
 
@@ -883,12 +886,32 @@ def handle_speech_chat(message):
                 return
             
             # if the agent name is found, then continue
-            bot.reply_to(message, "Agent name is found!!")
+            # bot.reply_to(message, "Agent name is found!!") # this works
 
+            ### Section here to process the stt request into a chat completion, convert it into voice message and send this response ###
+            stt_response
+            # import contexts:
+            if user_config['user_context'] == "":
+                user_context = "empty"
+            else:
+                user_context = user_config['user_context']
+            context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
+            response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+            bot.reply_to(message, text=response_text)
+            logger.info(helper_functions.construct_logs(message, f"Success: query response generated."))
 
+            # additional step to convert the chat response into a speech response
+            tts_response = ai_commands.text_to_speech(response_text, openai_api_key=api_keys[0], voice=chat_config['agent_voice'])
+            if tts_response:
+                logger.info(helper_functions.construct_logs(message, "Success: Audio response generated"))
+                bot.send_voice(message.chat.id, tts_response)
 
+            else:
+                bot.reply_to(message, "Could not convert text to speech")
+                logger.warning(helper_functions.construct_logs(message, "Warning:"))
 
-
+            # Clean up: Remove the temporary file
+            os.remove(temp_voice_file_path)
 
         except Exception as e:
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
