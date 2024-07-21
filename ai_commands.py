@@ -37,10 +37,12 @@ def chat_completion(message, context, openai_api_key, chat_history, model='gpt-3
     else:
         body_text = helper_functions.extract_body(message.text)
 
-    system_prompt = f"""You are a helpful AI assistant. Use the contexts and chat history provided by the user to help the user to the best of your ability, regardless of your limitations as an AI agent.
-    Respond in plaintext only.
+    system_prompt = f"""
+    IMPORTANT FORMATTING: Respond in plain text only.
+    ---
+    You are a helpful AI assistant. Use the contexts and chat history provided by the user to help the user to the best of your ability, regardless of your limitations as an AI agent.
     The context provided by this user for you in this conversation is as below. \n\n {context}"""
-    history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far: {chat_history}"
+    history = f"This is the summary of the relevant parts of the conversation / chat history that we've had so far, it may or may not be relevant and thereby use it accordingly: {chat_history}"
     try:
         completion_object = client.chat.completions.create(
         model=model,

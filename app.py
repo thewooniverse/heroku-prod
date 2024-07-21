@@ -134,6 +134,7 @@ I need to specify exactly what users can do on a free trial credit before implem
 2.a. Detect all speech, if the user is premium and they have it turned on in the group, then process the thing.
 2.b. Convert all the incoming requests into stt
 2.c. Check the first 5 characters of the string to see whether there is a match for the given name;
+2.d. call for the request in text, convert the response into voice note and reply;
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
@@ -143,12 +144,16 @@ FIX PERSISTENCE
 
 
 Speech to Chat Development timeline:
-2.d. call for the request in text, convert the response into voice note and reply;
 2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
 
+3. Brings me to fixing how contexts and history works in general need to be imrpoved
+3.a. Fix contexts and how they are stored and used
+3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
 
 
+X. Overhaul on how configs are called and stored; they should be called for users and stored in redis / in-memory and functions around how to handle this
+X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
 
 
 
@@ -468,7 +473,6 @@ def handle_start(message):
         print(f"An unexpected error occurred: {e}")
 
 
-
 # text handlers
 @bot.message_handler(commands=['chat'])
 @is_bot_active
@@ -504,21 +508,12 @@ def handle_chat(message):
             # print(history_similarity_search_result_string)
             chat_history += history_similarity_search_result_string
 
+
+
         # check and call if the user has set context for this chat group
         ## if the user config is empty
-        if user_config['user_context'] == "":
-            user_context = "empty"
-        else:
-            user_context = user_config['user_context']
+        context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
         
-        context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
-        try:
-            context += "\n\n\nCHAT CONTEXT (this is context about this user, in this specific conversation that they want you to remember as context.\n)" + chat_config['contexts'][str(message.from_user.id)]
-            # print(context)
-        except KeyError:
-            print("No context was set for user")
-        
-
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
@@ -893,10 +888,8 @@ def handle_speech_chat(message):
 
             ### Section here to process the stt request into a chat completion, convert it into voice message and send this response ###
             # import contexts:
-            if user_config['user_context'] == "":
-                user_context = "empty"
-            else:
-                user_context = user_config['user_context']
+            
+            user_context = user_config['user_context']
             context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
             response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
             bot.reply_to(message, text=response_text)
@@ -923,6 +916,10 @@ def handle_speech_chat(message):
         # no message is sent to user as it is not an explicit request or command, it is simply ignored
         return
     
+
+
+
+
 
 
 
