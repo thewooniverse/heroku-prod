@@ -838,6 +838,9 @@ def handle_stsc(message):
 
 
 
+
+
+
 # speech chat functionality "Hey Friend"
 @bot.message_handler(content_types=['voice'])
 @is_bot_active
@@ -882,14 +885,13 @@ def handle_speech_chat(message):
             first_five_words = " ".join([helper_functions.strip_non_alphabet_chars(item) for item in stt_response.split(" ")[0:5]]).lower()
             
             # if the agent name is not found in the sentence
-            if not helper_functions.find_full_word(stt_response, agent_name):
+            if not helper_functions.find_full_word(first_five_words, agent_name):
                 return
             
             # if the agent name is found, then continue
             # bot.reply_to(message, "Agent name is found!!") # this works
 
             ### Section here to process the stt request into a chat completion, convert it into voice message and send this response ###
-            stt_response
             # import contexts:
             if user_config['user_context'] == "":
                 user_context = "empty"
