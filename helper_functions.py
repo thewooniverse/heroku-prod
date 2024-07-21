@@ -123,6 +123,37 @@ def strip_non_alphabet_chars(s):
     return cleaned_string
 
 
+def construct_context(user_config, chat_config, message):
+    # basic imports and string construction
+    returned_context = ""
+    divider = "\n" + ("-----" * 3) + '\n'
+    user_set_context = user_config['user_context']
+    chat_context = ""
+    user_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent, use it as the most important / highest priority context in your interaction:\n"
+    chat_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
+
+    # establishing the user context
+    if user_set_context == "":
+        # if the  context is NOT set, then the whole import context string is NOT used to simplify things
+        pass
+    else:
+        returned_context = user_context_string + user_set_context + divider
+    
+    # establish the chat context
+    try:
+        chat_context = chat_config['contexts'][str(message.from_user.id)]
+    except KeyError:
+        print("No context was set for user")
+    
+    if chat_context == "":
+        # if the  context is NOT set, then the whole import context string is NOT used to simplify things
+        pass
+    else:
+        returned_context += chat_context_string + chat_context + divider
+    
+    # if neither user or chat context is set, then the returned string is an empty string
+    print(returned_context)
+    return returned_context
 
 
 # def delete_temp(path):
