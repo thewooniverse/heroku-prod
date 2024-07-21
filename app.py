@@ -140,14 +140,14 @@ I need to specify exactly what users can do on a free trial credit before implem
 =========================================================================================================
 
 
-FIX PERSISTENCE
+FIX PERSISTENCE <<<<<<
 
 
 Speech to Chat Development timeline:
 2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
 
 3. Brings me to fixing how contexts and history works in general need to be imrpoved
-3.a. Fix contexts and how they are stored and used
+3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
 

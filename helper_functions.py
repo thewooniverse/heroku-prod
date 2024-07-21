@@ -130,7 +130,7 @@ def construct_context(user_config, chat_config, message):
     user_set_context = user_config['user_context']
     chat_context = ""
     user_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent, use it as the most important / highest priority context in your interaction:\n"
-    chat_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
+    chat_context_string = "CHAT CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
 
     # establishing the user context
     if user_set_context == "":
