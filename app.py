@@ -136,11 +136,15 @@ I need to specify exactly what users can do on a free trial credit before implem
 2.c. Check the first 5 characters of the string to see whether there is a match for the given name;
 2.d. call for the request in text, convert the response into voice note and reply;
 
+FIX PERSISTENCE <<<<<<
+
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
+>>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
 
-FIX PERSISTENCE <<<<<<
+
 
 
 Speech to Chat Development timeline:
@@ -500,7 +504,6 @@ def handle_chat(message):
         # check for persistence and chat history
         chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
-
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
@@ -511,17 +514,8 @@ def handle_chat(message):
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
             print(f"An unexpected error occurred: {e}")
         
-
-        ### logging ###
-        # if the user is a premium user, and is the user wanting to save chat history for this chat group?
-        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
-            # construct the string to upload;
-            upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
-            openai_api_key = api_keys[0]
-
-            # create and upsert the embeddings into the index
-            ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
-            print("Safely upserted data into pinecone")
+        # logging
+        helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
     except Exception as e:
         bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
@@ -1587,14 +1581,12 @@ def handle_callback(call):
                 current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
                 user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
                 config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-                bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this chat. Please note that in a public group with more users, your converesation in this group may be saved and used as context in prompts by other users.")
+                bot.answer_callback_query(call.id, "Persistence on. NOTE: chat requests may become more expensive.")
                 print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
             except Exception as e:
                 print(e)
         else:
             bot.answer_callback_query(call.id, "Persistence is already on for this group.")
-
-
 
 
     elif call.data == "persistence_off":
