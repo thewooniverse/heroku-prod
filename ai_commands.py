@@ -365,6 +365,7 @@ def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
     query_vector = query_vector_embeddings.data[0].embedding
     return query_vector
 
+
 def similarity_search_on_index(message, openai_api_key, pinecone_api_key, index_name="telegpt-staging", model="text-embedding-ada-002"):
     """
     returns a string summary of relevant pieces of texts:

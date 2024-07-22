@@ -180,3 +180,7 @@ IMPORTANT NOTE: turning this feature on will increase the frequency of API calls
 """
 
 
+
+user_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent, use it as the most important / highest priority context in your interaction:\n"
+chat_context_string = "CHAT CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
+

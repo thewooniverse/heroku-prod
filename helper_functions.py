@@ -3,7 +3,7 @@ import re
 import os
 import base64
 import settings
-
+import ai_commands
 
 
 
@@ -55,17 +55,6 @@ def construct_logs(message, result_message):
         return log_string
     except Exception as e:
         return f"Error occured in: {e}"
-
-
-
-
-
-
-
-
-
-
-
 
 
 def bot_has_delete_permission(chat_id, bot):
@@ -129,8 +118,8 @@ def construct_context(user_config, chat_config, message):
     divider = "\n" + ("-----" * 3) + '\n'
     user_set_context = user_config['user_context']
     chat_context = ""
-    user_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent, use it as the most important / highest priority context in your interaction:\n"
-    chat_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
+    user_context_string = settings.user_context_string
+    chat_context_string = settings.chat_context_string
 
     # establishing the user context
     if user_set_context == "":
@@ -154,6 +143,38 @@ def construct_context(user_config, chat_config, message):
     # if neither user or chat context is set, then the returned string is an empty string
     print(returned_context)
     return returned_context
+
+
+
+
+
+def construct_chat_history(user_config, message, api_key, pinecone_key):
+    returned_history = ""
+
+    # check if the message is in direct reply to it
+    if message.reply_to_message:
+        returned_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
+    else:
+        pass # returned history is kept at ""
+
+    # check if the user is a premium user that has persistence on:
+        
+    if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
+        similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_key, pinecone_key)
+        returned_history += similarity_search_result_string
+    return returned_history    
+
+
+
+def upsert_chat_history(user_config, message, uploaded_string):
+
+    pass
+
+
+
+
+
+
 
 
 # def delete_temp(path):

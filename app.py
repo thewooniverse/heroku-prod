@@ -140,14 +140,14 @@ I need to specify exactly what users can do on a free trial credit before implem
 =========================================================================================================
 
 
-FIX PERSISTENCE
+FIX PERSISTENCE <<<<<<
 
 
 Speech to Chat Development timeline:
 2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
 
 3. Brings me to fixing how contexts and history works in general need to be imrpoved
-3.a. Fix contexts and how they are stored and used
+3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
 
@@ -427,15 +427,15 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     if api_keys[0] == OPENAI_FREE_KEY:
         # check whether user has free trial credits remaining
         ## if they do no not have anything remaining then return
-        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        if user_config['free_credits'] < 1:
+        # user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        if user_cfg['free_credits'] < 1:
             bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
 please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
             return None
         else:
-            user_config['free_credits'] -= 1
-            bot.reply_to(message, f"Using free trial credits, remaining: {user_config['free_credits']}")
-            config_db_helper.set_new_config(message.from_user.id, 'user', user_config)
+            user_cfg['free_credits'] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {user_cfg['free_credits']}")
+            config_db_helper.set_new_config(message.from_user.id, 'user', user_cfg)
             return api_keys
     # if it is not, then just simply return the API keys
     return api_keys
@@ -490,30 +490,17 @@ def handle_chat(message):
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
         body_text = helper_functions.extract_body(message.text)
-
         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
-        print(api_keys)
         if not api_keys:
+            # no message is printed or replied here because the function above to check and get valid API keys already sends a status message
             return
         
-        # Construct the chat histories based on whether the user is replying, and whether the user has premium + persistence on;
-        if message.reply_to_message:
-            chat_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
-        else:
-            chat_history = ""
-        
-        # persistence if the user is premium and the user has switched persistence on
-        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
-            history_similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_keys[0], PINECONE_KEY)
-            # print(history_similarity_search_result_string)
-            chat_history += history_similarity_search_result_string
-
-
-
-        # check and call if the user has set context for this chat group
-        ## if the user config is empty
+        # check for both user configs (all threads) or chat configs has been set
         context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
-        
+        # check for persistence and chat history
+        chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
+
+
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
@@ -1595,11 +1582,19 @@ def handle_callback(call):
         
         # if they are, then you are free to add this group to the list of persistent chats for that given user.
         current_persistent_chat_groups = user_config['persistent_chats']
-        current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
-        user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
-        config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-        bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this chat. Please note that in a public group with more users, your converesation in this group may be saved and used as context in prompts by other users.")
-        print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
+        if call.message.chat.id not in current_persistent_chat_groups:
+            try:
+                current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
+                user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
+                config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
+                bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this chat. Please note that in a public group with more users, your converesation in this group may be saved and used as context in prompts by other users.")
+                print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
+            except Exception as e:
+                print(e)
+        else:
+            bot.answer_callback_query(call.id, "Persistence is already on for this group.")
+
+
 
 
     elif call.data == "persistence_off":
