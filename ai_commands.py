@@ -346,7 +346,7 @@ def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_
             text = document.page_content
             res = client.embeddings.create(input=[text], model=model).data[0].embedding
             to_upsert = {"id": f"{msg_id}---c{str(count)}", "values":res, "metadata": {"sender_id": user_id, "chat_id": chatid_namespace,'text': text}}
-            print(to_upsert)
+            # print(to_upsert)
             index.upsert(vectors=[to_upsert], namespace=chatid_namespace)
     except Exception as e:
         print(e)

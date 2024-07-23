@@ -136,51 +136,63 @@ I need to specify exactly what users can do on a free trial credit before implem
 2.c. Check the first 5 characters of the string to see whether there is a match for the given name;
 2.d. call for the request in text, convert the response into voice note and reply;
 
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
-
-
 FIX PERSISTENCE <<<<<<
-
 
 Speech to Chat Development timeline:
 2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
-
 3. Brings me to fixing how contexts and history works in general need to be imrpoved
 3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
 
 
+>> SCALABILITY REFACTORING - Redis and caching for configurations: <<
+
+1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
+
+2. Decide on the architecture and caching strategy:
+2. a. What to cache, what is being used frequently (reading and writing)
+2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
+2. c. Cache Invalidation: Update the cache when user configurations are updated or deleted.
+3. Fallback policites (interacting with the database directly)
+- I think it will be like this:
+-- Get and set config should be abstracted to a functionality (it already is, thankfully)
+-- This will now include some degree of redis logic;
+---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
+---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
+
+4. Decide on cache eviction policies
+
+
+
+
+
+
+
+
+SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
+- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
+every now and then.
+>>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
 X. Overhaul on how configs are called and stored; they should be called for users and stored in redis / in-memory and functions around how to handle this
 X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
-
-
-
-
----
-Escape characters error and exception handling; trying to fix.
-
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 ---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
 
 
+Final touch up. Setting strings tidy up, and correct env variables used, redploy on production.
+Escape characters error and exception handling; trying to fix.
 
-SCALABILITY IMPROVEMENT:
-- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
-every now and then.
 
+Error logs right into Telegram; into certain conversations they will send all of the bugs.
 
 
 ---
 Metadata:
 Messages serviced and users interacted -> useful data to host on the webpage;
---- 
-
-
-
-
-
+---
 
 
 
@@ -500,7 +512,6 @@ def handle_chat(message):
         # check for persistence and chat history
         chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
-
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
@@ -511,23 +522,12 @@ def handle_chat(message):
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
             print(f"An unexpected error occurred: {e}")
         
-
-        ### logging ###
-        # if the user is a premium user, and is the user wanting to save chat history for this chat group?
-        if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
-            # construct the string to upload;
-            upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
-            openai_api_key = api_keys[0]
-
-            # create and upsert the embeddings into the index
-            ai_commands.create_and_upsert_embeddings(message, upload_string, openai_api_key, PINECONE_KEY)
-            print("Safely upserted data into pinecone")
+        # logging
+        helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
     except Exception as e:
         bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
@@ -600,9 +600,6 @@ def handle_translate_3(message):
 
 
 
-
-
-
 # voice based handlers
 @bot.message_handler(commands=['tts'])
 @is_bot_active
@@ -628,7 +625,6 @@ def handle_tts(message):
     except Exception as e:
         bot.reply_to(message, "/tts command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
 
 
 
@@ -718,14 +714,14 @@ def handle_stc(message):
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
 
                     # use the stt text response to call the chat and send the response
-                    # import contexts:
-                    if user_config['user_context'] == "":
-                        user_context = "empty"
-                    else:
-                        user_context = user_config['user_context']
-                    context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
+                    # check for both user configs (all threads) or chat configs has been set
+                    context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
+                    # check for persistence and chat history
+                    chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
+                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history=chat_history)
+                    helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
-                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+
                     bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
@@ -787,13 +783,11 @@ def handle_stsc(message):
 
                     # use the stt text response to call the chat and send the response
                     # import contexts:
-                    if user_config['user_context'] == "":
-                        user_context = "empty"
-                    else:
-                        user_context = user_config['user_context']
-                    context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
-
-                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+                    context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
+                    # check for persistence and chat history
+                    chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
+                    response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history=chat_history)
+                    helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
                     bot.reply_to(message, text=response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
 
@@ -875,10 +869,13 @@ def handle_speech_chat(message):
 
             ### Section here to process the stt request into a chat completion, convert it into voice message and send this response ###
             # import contexts:
-            
-            user_context = user_config['user_context']
-            context = "USER CONTEXT (this is context about this user that they want you to remember as context):\n" + user_context
-            response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history="")
+    
+            # import contexts:
+            context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
+            # check for persistence and chat history
+            chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
+            response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history=chat_history)
+            helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
             bot.reply_to(message, text=response_text)
             logger.info(helper_functions.construct_logs(message, f"Success: query response generated."))
 
@@ -1587,14 +1584,12 @@ def handle_callback(call):
                 current_persistent_chat_groups.append(call.message.chat.id) # adds the chat id, which essentially turns the persistence "on" for this chat group.
                 user_config['persistent_chats'] = current_persistent_chat_groups # set it to the newly appended list
                 config_db_helper.set_new_config(call.from_user.id, 'user', user_config)
-                bot.answer_callback_query(call.id, "Persistence has been turned on for your chats within this chat. Please note that in a public group with more users, your converesation in this group may be saved and used as context in prompts by other users.")
+                bot.answer_callback_query(call.id, "Persistence on. NOTE: chat requests may become more expensive.")
                 print(f"persistence on for this user {call.from_user.id} in group {call.message.chat.id}")
             except Exception as e:
                 print(e)
         else:
             bot.answer_callback_query(call.id, "Persistence is already on for this group.")
-
-
 
 
     elif call.data == "persistence_off":

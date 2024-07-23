@@ -166,9 +166,17 @@ def construct_chat_history(user_config, message, api_key, pinecone_key):
 
 
 
-def upsert_chat_history(user_config, message, uploaded_string):
+def upsert_chat_history(user_config, message, response_text, api_key, pinecone_key):
+    body_text = extract_body(message.text)
+    if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
+        upload_string = f"""USER QUERY/PROMPT:\n{body_text}\n\n\n{'---' * 5}\n\n\nAI RESPONSE:\n{response_text}"""
+        ai_commands.create_and_upsert_embeddings(message, upload_string, api_key, pinecone_key)
+        print("Safely upserted data into pinecone")
+    
+    else:
+        # print("User does not have this feature turned on.")
+        return
 
-    pass
 
 
 
