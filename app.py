@@ -138,53 +138,61 @@ I need to specify exactly what users can do on a free trial credit before implem
 
 FIX PERSISTENCE <<<<<<
 
-
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
-
->>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
-
-
-
-
 Speech to Chat Development timeline:
 2.e. implement context awareness / chat history involvement (probably want to abstract this out as a function as well)
-
 3. Brings me to fixing how contexts and history works in general need to be imrpoved
 3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
 
 
+>> SCALABILITY REFACTORING - Redis and caching for configurations: <<
+
+1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
+
+2. Decide on the architecture and caching strategy:
+2. a. What to cache, what is being used frequently (reading and writing)
+2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
+2. c. Cache Invalidation: Update the cache when user configurations are updated or deleted.
+3. Fallback policites (interacting with the database directly)
+- I think it will be like this:
+-- Get and set config should be abstracted to a functionality (it already is, thankfully)
+-- This will now include some degree of redis logic;
+---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
+---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
+
+4. Decide on cache eviction policies
+
+
+
+
+
+
+
+
+SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
+- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
+every now and then.
+>>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
 X. Overhaul on how configs are called and stored; they should be called for users and stored in redis / in-memory and functions around how to handle this
 X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
-
-
-
-
----
-Escape characters error and exception handling; trying to fix.
-
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 ---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
 
 
+Final touch up. Setting strings tidy up, and correct env variables used, redploy on production.
+Escape characters error and exception handling; trying to fix.
 
-SCALABILITY IMPROVEMENT:
-- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
-every now and then.
 
+Error logs right into Telegram; into certain conversations they will send all of the bugs.
 
 
 ---
 Metadata:
 Messages serviced and users interacted -> useful data to host on the webpage;
---- 
-
-
-
-
-
+---
 
 
 
