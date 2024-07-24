@@ -168,8 +168,12 @@ Speech to Chat Development timeline:
 -- This will now include some degree of redis logic;
 ---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
 ---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
+---- Potentially some kind of policy to 
 
 4. Decide on cache eviction policies
+--- having multiple 
+
+
 
 
 
@@ -444,20 +448,16 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         if message.from_user.id not in system_config['user_credit_dict'].keys():
             # initialize the user and add the free credits if they are not
             system_config['user_credit_dict'][message.from_user.id] = 5
-        
-        current_credits = system_config['user_credit_dict'][message.from_user.id]
-
-        # now check how much credit the user has
+        # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
         if system_config['user_credit_dict'][message.from_user.id] < 1:
             bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
             return None
-
-        else:
-            system_config['user_credit_dict'][message.from_user.id] -= 1
-            bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
-            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            return api_keys
+        # if it looks good, 
+        system_config['user_credit_dict'][message.from_user.id] -= 1
+        bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
+    
     # if it is not, then just simply return the API keys
+    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
     return api_keys
 
 
