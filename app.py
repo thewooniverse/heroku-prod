@@ -457,7 +457,7 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
     
     # if it is not, then just simply return the API keys
-    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+    config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
     return api_keys
 
 
