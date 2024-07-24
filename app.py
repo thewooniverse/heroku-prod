@@ -148,6 +148,12 @@ Speech to Chat Development timeline:
 =========================================================================================================
 
 
+++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
+
+
+
+
+
 >> SCALABILITY REFACTORING - Redis and caching for configurations: <<
 
 1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
@@ -164,11 +170,6 @@ Speech to Chat Development timeline:
 ---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
 
 4. Decide on cache eviction policies
-
-
-
-
-
 
 
 
@@ -452,8 +453,8 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
             return None
 
         else:
-            system_config['user_credit_dict'][message.from_user.id]
-            bot.reply_to(message, f"Using free trial credits, remaining: {user_cfg['free_credits']}")
+            system_config['user_credit_dict'][message.from_user.id] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             return api_keys
     # if it is not, then just simply return the API keys
