@@ -144,6 +144,8 @@ Speech to Chat Development timeline:
 3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
+1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 
@@ -151,12 +153,7 @@ Speech to Chat Development timeline:
 ++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
 
 
-
-
-
 >> SCALABILITY REFACTORING - Redis and caching for configurations: <<
-
-1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
 
 2. Decide on the architecture and caching strategy:
 2. a. What to cache, what is being used frequently (reading and writing)
@@ -444,16 +441,17 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
     if api_keys[0] == OPENAI_FREE_KEY:
 
-        # check whether the user is inside the system_config for a free trial credit;
-        if message.from_user.id not in system_config['user_credit_dict'].keys():
-            # initialize the user and add the free credits if they are not
-            system_config['user_credit_dict'][message.from_user.id] = 5
+        # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
+        user_credits = system_config['user_credit_dict'].get(message.from_user.id, 5)
+
         # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
-        if system_config['user_credit_dict'][message.from_user.id] < 1:
-            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+        if user_credits < 1:
+            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered and the user has run out of free credits.")
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             return None
-        # if it looks good, 
-        system_config['user_credit_dict'][message.from_user.id] -= 1
+        
+        # use the system config
+        system_config['user_credit_dict'][message.from_user.id] = user_credits - 1
         bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
     
     # if it is not, then just simply return the API keys
