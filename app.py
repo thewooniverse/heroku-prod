@@ -438,6 +438,7 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
     api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
     user_id = str(message.from_user.id)
+    print(user_id)
 
     # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
     if api_keys[0] == OPENAI_FREE_KEY:
@@ -455,10 +456,10 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         
         # use the system config
         system_config['user_credit_dict'][user_id] -= 1
-        bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][message.from_user.id]}")
+        bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][user_id]}")
     
     # if it is not, then just simply return the API keys
-    print(system_config['user_credit_dict'][message.from_user.id])
+    print(system_config['user_credit_dict'][user_id])
     config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
     return api_keys
 
@@ -536,6 +537,7 @@ def handle_chat(message):
         helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
     except Exception as e:
+        print(e)
         bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
