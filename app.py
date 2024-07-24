@@ -433,21 +433,28 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     
     """
     # check for API Keys
+    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
     api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
 
-    # if the first API key returned is a free credit
+    # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
     if api_keys[0] == OPENAI_FREE_KEY:
-        # check whether user has free trial credits remaining
-        ## if they do no not have anything remaining then return
-        # user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        if user_cfg['free_credits'] < 1:
-            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, 
-please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
+
+        # check whether the user is inside the system_config for a free trial credit;
+        if message.from_user.id not in system_config['user_credit_dict'].keys():
+            # initialize the user and add the free credits if they are not
+            system_config['user_credit_dict'][message.from_user.id] = 5
+        
+        current_credits = system_config['user_credit_dict'][message.from_user.id]
+
+        # now check how much credit the user has
+        if system_config['user_credit_dict'][message.from_user.id] < 1:
+            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
             return None
+
         else:
-            user_cfg['free_credits'] -= 1
+            system_config['user_credit_dict'][message.from_user.id]
             bot.reply_to(message, f"Using free trial credits, remaining: {user_cfg['free_credits']}")
-            config_db_helper.set_new_config(message.from_user.id, 'user', user_cfg)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             return api_keys
     # if it is not, then just simply return the API keys
     return api_keys
