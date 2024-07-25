@@ -443,14 +443,15 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
         user_id = message.from_user.id
-        print(f"converted to string {user_id}")
 
         # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
         if api_keys[0] == OPENAI_FREE_KEY:
-
+            print(f"{user_id} is a free user without a key")
             # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
             # convert the retrieved dictionary back into integer keys for processing
             intkey_dict = {int(k): v for k, v in system_config['user_credit_dict'].items()}
+            print("Converted to integer keys")
+            print(intkey_dict)
 
             if user_id not in intkey_dict:
                 print("user is not in the config!")
@@ -468,7 +469,9 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         
         # if it is not, then just simply return the API keys
         # convert back to string keys
+        print(intkey_dict)
         system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
+        print(system_config['user_credit_dict'])
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         return api_keys
     except Exception as e:
