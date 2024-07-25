@@ -442,6 +442,7 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         # check for API Keys
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+        print(api_keys)
         user_id = message.from_user.id
 
         # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
