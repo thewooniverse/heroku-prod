@@ -449,22 +449,26 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         if api_keys[0] == OPENAI_FREE_KEY:
 
             # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
-            if user_id not in system_config['user_credit_dict']:
+            # convert the retrieved dictionary back into integer keys for processing
+            intkey_dict = {int(k): v for k, v in system_config['user_credit_dict'].items()}
+
+            if user_id not in intkey_dict:
                 print("user is not in the config!")
-                system_config['user_credit_dict'][user_id] = 5
+                intkey_dict[user_id] = 5
 
             # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
-            if system_config['user_credit_dict'][user_id] < 1:
+            if intkey_dict[user_id] < 1:
                 bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered and the user has run out of free credits.")
-                config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+                # config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config) < a save is not necessary here
                 return None
             
             # use the system config
-            system_config['user_credit_dict'][user_id] -= 1
-            bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][user_id]}")
+            intkey_dict[user_id] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {intkey_dict[user_id]}")
         
         # if it is not, then just simply return the API keys
-        # print(system_config['user_credit_dict'][user_id])
+        # convert back to string keys
+        system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         return api_keys
     except Exception as e:
