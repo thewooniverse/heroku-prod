@@ -151,6 +151,10 @@ Speech to Chat Development timeline:
 
 
 ++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
+++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+
+
+
 
 
 >> SCALABILITY REFACTORING - Redis and caching for configurations: <<
@@ -404,7 +408,7 @@ def is_owner(func):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
 
         # Check if the user is listed as an admin in the system configuration
-        if message.from_user.id == system_config['onwer_id']:
+        if message.from_user.id == system_config['owner_id']:
             return func(message)
         else:
             # Notify the user they do not have permission if they are not an admin
@@ -434,34 +438,37 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     """
     
     """
-    # check for API Keys
-    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-    api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
-    user_id = str(message.from_user.id)
-    print(user_id)
+    try:
+        # check for API Keys
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+        user_id = str(message.from_user.id)
+        print(f"converted to string {user_id}")
 
-    # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
-    if api_keys[0] == OPENAI_FREE_KEY:
+        # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
+        if api_keys[0] == OPENAI_FREE_KEY:
 
-        # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
-        if user_id not in system_config['user_credit_dict']:
-            print("user is not in the config!")
-            system_config['user_credit_dict'][user_id] = 5
+            # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
+            if user_id not in system_config['user_credit_dict']:
+                print("user is not in the config!")
+                system_config['user_credit_dict'][user_id] = 5
 
-        # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
-        if system_config['user_credit_dict'][user_id] < 1:
-            bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered and the user has run out of free credits.")
-            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            return None
+            # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
+            if system_config['user_credit_dict'][user_id] < 1:
+                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered and the user has run out of free credits.")
+                config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+                return None
+            
+            # use the system config
+            system_config['user_credit_dict'][user_id] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][user_id]}")
         
-        # use the system config
-        system_config['user_credit_dict'][user_id] -= 1
-        bot.reply_to(message, f"Using free trial credits, remaining: {system_config['user_credit_dict'][user_id]}")
-    
-    # if it is not, then just simply return the API keys
-    print(system_config['user_credit_dict'][user_id])
-    config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-    return api_keys
+        # if it is not, then just simply return the API keys
+        # print(system_config['user_credit_dict'][user_id])
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        return api_keys
+    except Exception as e:
+        print("Error occured in checking and getting valid API key")
 
 
 
