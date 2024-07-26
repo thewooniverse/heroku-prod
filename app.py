@@ -148,17 +148,97 @@ Speech to Chat Development timeline:
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
-
-
+Feature Icebox:
+--
 ++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
 ++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+++ Redeploy to production stack / correct bot handle
+++ System config metadata tracking; (ask GPT how to best implement something like this)
+---------------------------------------------------------------------------------------------------------
 
-
-
-
+Current Focus:
 
 >> SCALABILITY REFACTORING - Redis and caching for configurations: <<
+--- Caching Implementation V2 ---
+What will be cached?
+- All configurations (system config, chat configs and user configs)
 
+0. Connection / Load Policies:
+- Connection pooling introduced and used (this needs to be used in both database and redis in-memory access)
+
+1. On Reads:
+- Read-Through Caching: Optionally, you can implement a more automated form of caching where your caching layer 
+  directly handles fetching from the database if the data is not available in the cache.
+
+2. On Writes / Updates:
+- Write-Through Strategy: When updates or new data are written, they should be written to both the database and the cache simultaneously to keep them in sync.
+
+3. Cache Invalidation strategy for updating and invalidating old cache
+- Use explicit invalidation for scenarios where data must be accurate immediately after updates, such as user permissions or critical configuration changes.
+- Use TTL for general cache expiration to handle data that is not ultra-sensitive to being slightly outdated. 
+  This reduces the frequency of database accesses and simplifies cache management.
+
+4. Fallback Policies
+- Handling Cache Failures: Ensure that your system can gracefully handle failures of the caching layer by falling back to database reads.
+- Consistency: Consider eventual consistency issues where the cache might temporarily hold outdated data. 
+  Ensure that your application's functionality can tolerate this.
+
+5. Cache Eviction Policies
+- LRU (Least Recently Used): Evict data that hasn't been accessed for the longest time first.
+- Size-based Eviction: If you are limited by memory, you might choose to evict larger items first or simply evict items to maintain a certain cache size.
+
+Refactoring the read_or_create configs:
+- Current config get_or_create (they are the same for all, and creates a new config in db before retrieving if it doesn't exist)
+-> Picks up db connection
+-> Checks DB if config exist in table, creates one if not
+-> then returns it for usage
+-> put down db connection
+
+This needs to be changed to:
+-> pick up redis connection
+-> check the config is in redis
+-> if it is not in redis, check the database, pick up db connection
+-> if it is not in database, create the entry for the config in the relevant table (system, user or chat)
+-> put down db connection
+-> write this new config into the redis in-memory configs
+-> put down the redis connection
+-> returns the config for usage
+
+Refactoring updates / writes to the config:
+-> pick up db connection
+-> write new config
+-> put down connection
+
+This needs to be:
+-> pick up db and redis conn
+-> update db
+-> update redis
+-> put down db and redis conn
+
+-------
+Next steps:
+I will need to implement the refactoring as strategized above, then introduce fallback and eviction policies, and fallbacks.
+1. Develop the redis connection picking up and putting down
+2. Look through how it is currently being used for system configuration checks
+--> think here on TTL strategies.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--- Notes V1 ---
 2. Decide on the architecture and caching strategy:
 2. a. What to cache, what is being used frequently (reading and writing)
 2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
@@ -169,15 +249,7 @@ Speech to Chat Development timeline:
 -- This will now include some degree of redis logic;
 ---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
 ---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
----- Potentially some kind of policy to 
-
 4. Decide on cache eviction policies
---- having multiple 
-
-
-
-
-
 SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
 - Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
 every now and then.
@@ -186,20 +258,7 @@ X. Overhaul on how configs are called and stored; they should be called for user
 X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 ---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
-
-
-Final touch up. Setting strings tidy up, and correct env variables used, redploy on production.
-Escape characters error and exception handling; trying to fix.
-
-
-Error logs right into Telegram; into certain conversations they will send all of the bugs.
-
-
----
-Metadata:
-Messages serviced and users interacted -> useful data to host on the webpage;
----
-
+-------
 
 
 

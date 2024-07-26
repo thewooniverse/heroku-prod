@@ -106,7 +106,6 @@ valid_configval_patterns = {
     # valid_formats contain the syntaxes in regex that are accepted by a configuration that is typed / entered by the user.
     "openai_api_key": r'^sk-[A-Za-z0-9]{45,60}$' # regex
 }
-
 valid_configval_options = {
     "language_model": ['gpt-4', 'gpt-3.5-turbo'],
 }
