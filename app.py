@@ -144,14 +144,101 @@ Speech to Chat Development timeline:
 3.a. Fix contexts and how they are stored and used <- done
 3.b. Fix and abstract out how chat history is handled and used: construct chat history, and save chat history
 
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
-
-
->> SCALABILITY REFACTORING - Redis and caching for configurations: <<
-
 1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
 
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+Feature Icebox:
+--
+++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
+++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+++ Redeploy to production stack / correct bot handle
+++ System config metadata tracking; (ask GPT how to best implement something like this)
+---------------------------------------------------------------------------------------------------------
+
+Current Focus:
+
+>> SCALABILITY REFACTORING - Redis and caching for configurations: <<
+--- Caching Implementation V2 ---
+What will be cached?
+- All configurations (system config, chat configs and user configs)
+
+0. Connection / Load Policies:
+- Connection pooling introduced and used (this needs to be used in both database and redis in-memory access)
+
+1. On Reads:
+- Read-Through Caching: Optionally, you can implement a more automated form of caching where your caching layer 
+  directly handles fetching from the database if the data is not available in the cache.
+
+2. On Writes / Updates:
+- Write-Through Strategy: When updates or new data are written, they should be written to both the database and the cache simultaneously to keep them in sync.
+
+3. Cache Invalidation strategy for updating and invalidating old cache
+- Use explicit invalidation for scenarios where data must be accurate immediately after updates, such as user permissions or critical configuration changes.
+- Use TTL for general cache expiration to handle data that is not ultra-sensitive to being slightly outdated. 
+  This reduces the frequency of database accesses and simplifies cache management.
+
+4. Fallback Policies
+- Handling Cache Failures: Ensure that your system can gracefully handle failures of the caching layer by falling back to database reads.
+- Consistency: Consider eventual consistency issues where the cache might temporarily hold outdated data. 
+  Ensure that your application's functionality can tolerate this.
+
+5. Cache Eviction Policies
+- LRU (Least Recently Used): Evict data that hasn't been accessed for the longest time first.
+- Size-based Eviction: If you are limited by memory, you might choose to evict larger items first or simply evict items to maintain a certain cache size.
+
+Refactoring the read_or_create configs:
+- Current config get_or_create (they are the same for all, and creates a new config in db before retrieving if it doesn't exist)
+-> Picks up db connection
+-> Checks DB if config exist in table, creates one if not
+-> then returns it for usage
+-> put down db connection
+
+This needs to be changed to:
+-> pick up redis connection
+-> check the config is in redis
+-> if it is not in redis, check the database, pick up db connection
+-> if it is not in database, create the entry for the config in the relevant table (system, user or chat)
+-> put down db connection
+-> write this new config into the redis in-memory configs
+-> put down the redis connection
+-> returns the config for usage
+
+Refactoring updates / writes to the config:
+-> pick up db connection
+-> write new config
+-> put down connection
+
+This needs to be:
+-> pick up db and redis conn
+-> update db
+-> update redis
+-> put down db and redis conn
+
+-------
+Next steps:
+I will need to implement the refactoring as strategized above, then introduce fallback and eviction policies, and fallbacks.
+1. Develop the redis connection picking up and putting down
+2. Look through how it is currently being used for system configuration checks
+--> think here on TTL strategies.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+--- Notes V1 ---
 2. Decide on the architecture and caching strategy:
 2. a. What to cache, what is being used frequently (reading and writing)
 2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
@@ -162,16 +249,7 @@ Speech to Chat Development timeline:
 -- This will now include some degree of redis logic;
 ---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
 ---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
-
 4. Decide on cache eviction policies
-
-
-
-
-
-
-
-
 SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
 - Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
 every now and then.
@@ -180,20 +258,7 @@ X. Overhaul on how configs are called and stored; they should be called for user
 X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
 -. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
 ---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
-
-
-Final touch up. Setting strings tidy up, and correct env variables used, redploy on production.
-Escape characters error and exception handling; trying to fix.
-
-
-Error logs right into Telegram; into certain conversations they will send all of the bugs.
-
-
----
-Metadata:
-Messages serviced and users interacted -> useful data to host on the webpage;
----
-
+-------
 
 
 
@@ -402,7 +467,7 @@ def is_owner(func):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
 
         # Check if the user is listed as an admin in the system configuration
-        if message.from_user.id == system_config['onwer_id']:
+        if message.from_user.id == system_config['owner_id']:
             return func(message)
         else:
             # Notify the user they do not have permission if they are not an admin
@@ -432,32 +497,45 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
     """
     
     """
-    # check for API Keys
-    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-    api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+    try:
+        # check for API Keys
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
+        print(api_keys)
+        user_id = message.from_user.id
+        print(user_id)
+        intkey_dict = {int(k): v for k, v in system_config['user_credit_dict'].items()}
 
-    # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
-    if api_keys[0] == OPENAI_FREE_KEY:
+        # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
+        if api_keys[0] == OPENAI_FREE_KEY:
+            print(f"{user_id} is a free user without a key")
+            # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
+            # convert the retrieved dictionary back into integer keys for processing
+            print("Converted to integer keys")
 
-        # check whether the user is inside the system_config for a free trial credit;
-        if message.from_user.id not in system_config['user_credit_dict'].keys():
-            # initialize the user and add the free credits if they are not
-            system_config['user_credit_dict'][message.from_user.id] = 5
+            if user_id not in intkey_dict:
+                print("user is not in the config!")
+                intkey_dict[user_id] = 5
+
+            # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
+            if intkey_dict[user_id] < 1:
+                bot.reply_to(message, "OpenAI API could not be called as there is no API Key entered and the user has run out of free credits.")
+                # config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config) < a save is not necessary here
+                return None
+            
+            # use the system config
+            intkey_dict[user_id] -= 1
+            bot.reply_to(message, f"Using free trial credits, remaining: {intkey_dict[user_id]}")
         
-        current_credits = system_config['user_credit_dict'][message.from_user.id]
-
-        # now check how much credit the user has
-        if system_config['user_credit_dict'][message.from_user.id] < 1:
-            bot.reply_to(message, """OpenAI API could not be called as there is no API Key entered and the user has run out of free credits, please set an OpenAI API Key for the group or the user, or contact admin for more credits.""")
-            return None
-
-        else:
-            system_config['user_credit_dict'][message.from_user.id]
-            bot.reply_to(message, f"Using free trial credits, remaining: {user_cfg['free_credits']}")
-            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            return api_keys
-    # if it is not, then just simply return the API keys
-    return api_keys
+        # if it is not, then just simply return the API keys
+        # convert back to string keys
+        print(intkey_dict)
+        system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
+        print(system_config['user_credit_dict'])
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        return api_keys
+    except Exception as e:
+        print("Error occured in checking and getting valid API key")
 
 
 
@@ -533,6 +611,7 @@ def handle_chat(message):
         helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
     except Exception as e:
+        print(e)
         bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 

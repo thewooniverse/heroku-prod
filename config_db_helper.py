@@ -49,10 +49,10 @@ valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 #####
 
 default_system_config = {
-    "version": "0.0.4", # version of the config schema
+    "version": "0.0.5", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
-    "onwer_id": OWNER_USER_ID,
+    "owner_id": OWNER_USER_ID,
     "admins": [OWNER_USER_ID], # list of administrators of the bot
     "system_oai_key": OPENAI_FREE_KEY,
     "banned_users": [], # list of user_ids that are banned from using the service.
@@ -106,7 +106,6 @@ valid_configval_patterns = {
     # valid_formats contain the syntaxes in regex that are accepted by a configuration that is typed / entered by the user.
     "openai_api_key": r'^sk-[A-Za-z0-9]{45,60}$' # regex
 }
-
 valid_configval_options = {
     "language_model": ['gpt-4', 'gpt-3.5-turbo'],
 }
