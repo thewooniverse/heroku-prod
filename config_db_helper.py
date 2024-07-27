@@ -8,7 +8,7 @@ import json
 from psycopg2 import pool
 import helper_functions
 import re
-
+import redis
 
 # encryption module
 from cryptography.fernet import Fernet
@@ -16,10 +16,27 @@ from cryptography.fernet import Fernet
 
 
 
-### Setup the connection pool ###
+### Setup the connection pools ###
+# database connection pools
 DATABASE_URL = os.environ.get('DATABASE_URL')
 connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=DATABASE_URL)
 # print(f"DATABASE URL ESTABLISHED {DATABASE_URL}")
+
+
+# redis set up
+## Get the URL from environment variable
+redis_url = os.getenv('REDIS_URL')
+## Create a Redis connection
+redis_client = redis.Redis.from_url(redis_url)
+## Key for storing bot state
+BOT_STATE_KEY = 'telegram_bot_state'
+# redis_pool = redis.ConnectionPool(host='localhost', port=6379, db=0, max_connections=10) # no need to explicity pick up and put down connections, handled internally.
+# redis_client = redis.Redis(connection_pool=redis_pool) # in fact, no need to even define connection pooling as it is handled directly.
+
+
+
+
+
 
 
 
@@ -27,17 +44,32 @@ connection_pool = psycopg2.pool.SimpleConnectionPool(minconn=1, maxconn=10, dsn=
 fernet_key = os.getenv('FERNET_KEY')
 cipher_suite = Fernet(fernet_key)
 
-
 # Get environment variables
 OWNER_USER_ID = os.environ.get('OWNER_UID', "7032361920")
 OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
-
-
 
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO').upper()
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
 # logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### variables and templates ###
@@ -49,7 +81,7 @@ valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 #####
 
 default_system_config = {
-    "version": "0.0.5", # version of the config schema
+    "version": "0.0.6", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
     "owner_id": OWNER_USER_ID,
@@ -57,6 +89,7 @@ default_system_config = {
     "system_oai_key": OPENAI_FREE_KEY,
     "banned_users": [], # list of user_ids that are banned from using the service.
     "user_credit_dict" : {}, # dict pair of free trial credits
+    "is_on": True # is the bot on or off, default is on
 }
 
 default_chat_config = {
@@ -116,19 +149,21 @@ valid_configval_options = {
 # database connection helpers
 def get_conn_from_pool():
     """Get a connection from the pool with logging."""
-    logger.info("Attempting to fetch a connection from the pool.")
+    logger.info("Attempting to fetch a database connection from the pool.")
     conn = connection_pool.getconn()
     if conn:
         logger.info("Connection fetched successfully.")
     else:
-        logger.warning("Failed to fetch a connection from the pool.")
+        logger.warning("Failed to fetch a database connection from the pool.")
     return conn
 
 def put_conn_back_in_pool(conn):
     """Return a connection to the pool with logging."""
-    logger.info("Returning a connection to the pool.")
+    logger.info("Returning a database connection to the pool.")
     connection_pool.putconn(conn)
-    logger.info("Connection returned successfully.")
+    logger.info("Connection database returned successfully.")
+
+
 
 
 ### Define and create the necessary tables if they are not already created ###
@@ -168,6 +203,7 @@ def get_or_create_chat_config(id, config_type):
     new record is created for that given user or chat group in the relevant tables: chat_configs or user_configs.
     """
     conn = connection_pool.getconn()
+    # check if the config type is in the list of supported types of configurations
     if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
 
@@ -182,6 +218,19 @@ def get_or_create_chat_config(id, config_type):
         default_config = default_system_config
         config_table = "system_configs"
     
+
+    # parse the params into a redis key
+    redis_config_key = f"{config_type}_configs:{id}" # this is the key that will be accessed, pseudo-tables are implemented through key naming conventions
+    # try to get the configuration right from Redis
+    retrieved_config = redis_client.get(redis_config_key)
+    # if the config is retrieved, then simply return the retrieved config
+    if retrieved_config:
+        print(f"Found {redis_config_key} in redis!!")
+        print(retrieved_config)
+        return retrieved_config
+
+
+    # if it is not present in redis, then we will check the database
     try:
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT config FROM {config_table} WHERE {config_type}_id = %s;", (id,))
@@ -230,15 +279,19 @@ def get_or_create_chat_config(id, config_type):
 
                     # overwrite the config variable to the modified / combined default config from above so that it can be returned and used in the command handlers.
                     config = updated_config
+            
 
-            return config
+            # before returning the config, put save the config into redis
+            print(config)
+            redis_client.set(redis_config_key, json.dumps(config))
+            return config # return the config for usage
+        
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         print(f"Database error: {e} \n\n {tb_str}")
         raise
     finally:
         connection_pool.putconn(conn)
-
 
 
 
@@ -282,6 +335,12 @@ def set_new_config(id, config_type, new_config):
             query = f"UPDATE {config_table} SET config = %s WHERE {config_type}_id = %s"
             cursor.execute(query, (json.dumps(new_config), id))
             conn.commit()
+
+        # after the update is committed to the database, we update and write the same config in redis
+        redis_config_key = f"{config_type}_configs:{id}" # this is the key that will be accessed, pseudo-tables are implemented through key naming conventions
+        redis_client.set(redis_config_key, json.dumps(new_config))
+        print(f"Redis config updated for {redis_config_key}")
+
     except Exception as e:
         tb_str = traceback.format_exception(etype=type(e), value=e, tb=e.__traceback__)
         print(f"Database error: {e} \n\n {tb_str}")
@@ -289,6 +348,18 @@ def set_new_config(id, config_type, new_config):
 
     finally:
         connection_pool.putconn(conn)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
