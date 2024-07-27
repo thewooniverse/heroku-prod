@@ -227,8 +227,10 @@ def get_or_create_chat_config(id, config_type):
     if retrieved_config:
         print(f"Found {redis_config_key} in redis!!")
         print(retrieved_config)
-        return retrieved_config
-
+        decoded_config = helper_functions.decode_bytestring(retrieved_config)
+        print(decoded_config)
+        return decoded_config
+    
 
     # if it is not present in redis, then we will check the database
     try:
