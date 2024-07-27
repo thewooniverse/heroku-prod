@@ -81,7 +81,7 @@ valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 #####
 
 default_system_config = {
-    "version": "0.0.5", # version of the config schema
+    "version": "0.0.6", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
     "owner_id": OWNER_USER_ID,

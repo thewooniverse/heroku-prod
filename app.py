@@ -398,10 +398,10 @@ Wrapper functions
 def is_bot_active(func):
     def wrapper(message):
         # Check the bot state
-        state = redis_db.get(BOT_STATE_KEY)
-        if state and state.decode('utf-8') == 'on':
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        if system_config['is_on']:
             return func(message)
-        elif state and state.decode('utf-8') == 'off':
+        else:
             bot.send_message(message.chat.id, "Bot is currently turned OFF.")
     return wrapper
 
@@ -2361,8 +2361,9 @@ Bot State control commands
 @bot.message_handler(commands=['start_bot'])
 # @wrapper function to check whether the sender is an admin or owner
 def start_bot(message):
-    # Set the bot state to "on" in Redis
-    redis_db.set(BOT_STATE_KEY, 'on')
+    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+    system_config['is_on'] = True
+    config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
     bot.reply_to(message, "Bot is now ON and will respond to commands.")
 
 @is_admin
@@ -2370,7 +2371,9 @@ def start_bot(message):
 # @wrapper function to check whether the sender is an admin or owner
 def stop_bot(message):
     # Set the bot state to "off" in Redis
-    redis_db.set(BOT_STATE_KEY, 'off')
+    system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+    system_config['is_on'] = False
+    config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
     bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
 
 
