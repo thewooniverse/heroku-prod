@@ -283,7 +283,7 @@ def get_or_create_chat_config(id, config_type):
 
             # before returning the config, put save the config into redis
             print(config)
-            redis_client.set(redis_config_key, config)
+            redis_client.set(redis_config_key, json.dumps(config))
             return config # return the config for usage
         
     except Exception as e:
