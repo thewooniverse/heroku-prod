@@ -221,6 +221,14 @@ I will need to implement the refactoring as strategized above, then introduce fa
 1. Develop the redis connection picking up and putting down
 2. Look through how it is currently being used for system configuration checks
 --> think here on TTL strategies.
++++ currently, how it works is that there is a redis dict of the bot being on or off (this does not interact at all with the database)
++++ this is used by isboton checks for all commands
++++++ I think this is good overall, however, need to rethink on how it fits into the whole picture;
+I think that the bot state should exist in the system config overall, and it should be handled in the same way as all of the others.
+
+So I can first just straight up implement connection pooling, then implement the read-through and write-through functionalities.
+- connection pools implemented;
+- implement read-through and write-through functionalities.
 
 
 
@@ -327,13 +335,6 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
 
 
-# redis set up
-## Get the URL from environment variable
-redis_url = os.getenv('REDIS_URL')
-## Create a Redis connection
-redis_db = redis.Redis.from_url(redis_url)
-## Key for storing bot state
-BOT_STATE_KEY = 'telegram_bot_state'
 
  
 
@@ -391,26 +392,6 @@ def receive_update():
 
 
 """
-Bot State control commands
-"""
-# turning bot on and off
-@bot.message_handler(commands=['start_bot'])
-# @wrapper function to check whether the sender is an admin or owner
-def start_bot(message):
-    # Set the bot state to "on" in Redis
-    redis_db.set(BOT_STATE_KEY, 'on')
-    bot.reply_to(message, "Bot is now ON and will respond to commands.")
-
-@bot.message_handler(commands=['stop_bot'])
-# @wrapper function to check whether the sender is an admin or owner
-def stop_bot(message):
-    # Set the bot state to "off" in Redis
-    redis_db.set(BOT_STATE_KEY, 'off')
-    bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
-
-
-
-"""
 Wrapper functions
 """
 # decorator / wrapper function to check whether bot is active
@@ -423,6 +404,11 @@ def is_bot_active(func):
         elif state and state.decode('utf-8') == 'off':
             bot.send_message(message.chat.id, "Bot is currently turned OFF.")
     return wrapper
+
+
+
+
+
 
 # decorator / wrapper function to check whether bot is active
 def is_valid_user(func):
@@ -2364,6 +2350,28 @@ def owner_give_premium(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
+
+
+
+"""
+Bot State control commands
+"""
+# turning bot on and off
+@is_admin
+@bot.message_handler(commands=['start_bot'])
+# @wrapper function to check whether the sender is an admin or owner
+def start_bot(message):
+    # Set the bot state to "on" in Redis
+    redis_db.set(BOT_STATE_KEY, 'on')
+    bot.reply_to(message, "Bot is now ON and will respond to commands.")
+
+@is_admin
+@bot.message_handler(commands=['stop_bot'])
+# @wrapper function to check whether the sender is an admin or owner
+def stop_bot(message):
+    # Set the bot state to "off" in Redis
+    redis_db.set(BOT_STATE_KEY, 'off')
+    bot.reply_to(message, "Bot is now OFF and will not respond to other commands.")
 
 
 
