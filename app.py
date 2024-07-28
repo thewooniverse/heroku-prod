@@ -231,6 +231,11 @@ So I can first just straight up implement connection pooling, then implement the
 - implement read-through and write-through functionalities.
 
 
+So connection pooling and read through / write through seems to be implemented,
+> carry out basic testing for changing / seeing how things are handled in terms of config saves and changes.
+Then implement eviction / handling for crashes and regular checks
+
+
 
 
 
