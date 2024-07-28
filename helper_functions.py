@@ -1,4 +1,5 @@
 import templates
+import json
 import re
 import os
 import base64
@@ -178,7 +179,13 @@ def upsert_chat_history(user_config, message, response_text, api_key, pinecone_k
         return
 
 
+def decode_bytestring(byte_string):
+    # Decode the byte string to a normal string
+    decoded_string = byte_string.decode('utf-8')
 
+    # Convert the JSON string to a Python dictionary
+    data_dict = json.loads(decoded_string)
+    return data_dict
 
 
 
