@@ -202,7 +202,6 @@ def get_or_create_chat_config(id, config_type):
     def get_or_create_chat_config(id): takes an id, and the configuration type (either chat, or user). Returns a configuration. If None exist for the given ID, a 
     new record is created for that given user or chat group in the relevant tables: chat_configs or user_configs.
     """
-    conn = connection_pool.getconn()
     # check if the config type is in the list of supported types of configurations
     if config_type not in ['chat', 'user', 'owner']:
         raise ValueError("Invalid config type")
@@ -234,6 +233,7 @@ def get_or_create_chat_config(id, config_type):
 
     # if it is not present in redis, then we will check the database
     try:
+        conn = connection_pool.getconn()
         with conn.cursor() as cursor:
             cursor.execute(f"SELECT config FROM {config_table} WHERE {config_type}_id = %s;", (id,))
             config_row = cursor.fetchone()
