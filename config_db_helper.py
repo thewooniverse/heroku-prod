@@ -225,10 +225,10 @@ def get_or_create_chat_config(id, config_type):
     retrieved_config = redis_client.get(redis_config_key)
     # if the config is retrieved, then simply return the retrieved config
     if retrieved_config:
-        print(f"Found {redis_config_key} in redis!!")
-        print(retrieved_config)
+        # print(f"Found {redis_config_key} in redis!!")
+        # print(retrieved_config)
         decoded_config = helper_functions.decode_bytestring(retrieved_config)
-        print(decoded_config)
+        # print(decoded_config) <<< working fine up to here;
         return decoded_config
     
 
@@ -284,8 +284,8 @@ def get_or_create_chat_config(id, config_type):
             
 
             # before returning the config, put save the config into redis
-            print(config)
-            redis_client.set(redis_config_key, json.dumps(config))
+            # print(config)
+            redis_client.setex(redis_config_key, 3600, json.dumps(config))
             return config # return the config for usage
         
     except Exception as e:
@@ -340,7 +340,7 @@ def set_new_config(id, config_type, new_config):
 
         # after the update is committed to the database, we update and write the same config in redis
         redis_config_key = f"{config_type}_configs:{id}" # this is the key that will be accessed, pseudo-tables are implemented through key naming conventions
-        redis_client.set(redis_config_key, json.dumps(new_config))
+        redis_client.setex(redis_config_key, 3600, json.dumps(new_config))
         print(f"Redis config updated for {redis_config_key}")
 
     except Exception as e:
