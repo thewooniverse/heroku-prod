@@ -178,7 +178,7 @@ What will be cached?
 - Use TTL for general cache expiration to handle data that is not ultra-sensitive to being slightly outdated. 
   This reduces the frequency of database accesses and simplifies cache management.
 
-4. Fallback Policies
+4. Fallback Policies << this is implemented already
 - Handling Cache Failures: Ensure that your system can gracefully handle failures of the caching layer by falling back to database reads.
 - Consistency: Consider eventual consistency issues where the cache might temporarily hold outdated data. 
   Ensure that your application's functionality can tolerate this.
@@ -492,9 +492,9 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         # check for API Keys
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         api_keys = config_db_helper.get_apikey_list(user_cfg, chat_cfg)
-        print(api_keys)
+        # print(api_keys)
         user_id = message.from_user.id
-        print(user_id)
+        # print(user_id)
         intkey_dict = {int(k): v for k, v in system_config['user_credit_dict'].items()}
 
         # if the first API key returned is a free credit (meaning the user did not set any of their own keys)
@@ -502,10 +502,10 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
             print(f"{user_id} is a free user without a key")
             # check whether the user is inside the system_config for a free trial credit, add a fallback value if it is not
             # convert the retrieved dictionary back into integer keys for processing
-            print("Converted to integer keys")
+            # print("Converted to integer keys")
 
             if user_id not in intkey_dict:
-                print("user is not in the config!")
+                # print("user is not in the config!")
                 intkey_dict[user_id] = 5
 
             # now check how much credit the user has, if its 0, it is returned out and the function is NOT called
@@ -520,9 +520,9 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         
         # if it is not, then just simply return the API keys
         # convert back to string keys
-        print(intkey_dict)
+        # print(intkey_dict)
         system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
-        print(system_config['user_credit_dict'])
+        # print(system_config['user_credit_dict'])
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         return api_keys
     except Exception as e:
