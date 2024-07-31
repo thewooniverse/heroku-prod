@@ -190,7 +190,7 @@ def decode_bytestring(byte_string):
 
 
 
-def chunk_text_spacy(text, max_words=200):
+def chunk_text_spacy(text, max_words=350):
     nlp = spacy.load('en_core_web_sm')
     doc = nlp(text)
     chunks = []
