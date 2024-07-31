@@ -639,7 +639,7 @@ def handle_translate_1(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t1'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text)
+            helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -659,7 +659,7 @@ def handle_translate_2(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t2'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text)
+            helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
@@ -680,7 +680,7 @@ def handle_translate_3(message):
 
         if api_keys:
             response_text = ai_commands.translate(message, openai_api_key=api_keys[0], target_language=chat_config['t3'], model=chat_config['language_model'])
-            bot.reply_to(message, text=response_text)
+            helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
         bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
@@ -749,7 +749,7 @@ def handle_stt(message):
             if api_keys:
                 stt_response = ai_commands.speech_to_text(temp_voice_file_path, openai_api_key=api_keys[0]) # receives a transcribed text
                 if stt_response:
-                    bot.reply_to(message, stt_response)
+                    helper_functions.safe_send(message, bot, stt_response)
                     logger.info(helper_functions.construct_logs(message, "Success: text to speech sent"))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
@@ -814,7 +814,7 @@ def handle_stc(message):
                     helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
 
-                    bot.reply_to(message, text=response_text)
+                    helper_functions.safe_send(message, bot, response_text)
                     logger.info(helper_functions.construct_logs(message, f"Success: query response generated and sent."))
                 else:
                     bot.reply_to(message, "Could not convert speech to text")
@@ -1147,7 +1147,7 @@ def handle_vision(message):
 
                 if api_keys:
                     text_response = ai_commands.image_vision(message, encoded_img, openai_api_key=api_keys[0])
-                    bot.reply_to(message, text_response)
+                    helper_functions.safe_send(message, bot, text_response)
                     logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
         
         except Exception as e:
