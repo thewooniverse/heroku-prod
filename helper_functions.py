@@ -5,7 +5,7 @@ import os
 import base64
 import settings
 import ai_commands
-
+import spacy
 
 
 
@@ -190,18 +190,66 @@ def decode_bytestring(byte_string):
 
 
 
+def chunk_text_spacy(text, max_words=200):
+    nlp = spacy.load('en_core_web_sm')
+    doc = nlp(text)
+    chunks = []
+    current_chunk = []
+    current_count = 0
+
+    for sent in doc.sents:
+        sentence_words = sent.text.split()
+        if current_count + len(sentence_words) > max_words:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+            current_count = 0
+        current_chunk.append(sent.text)
+        current_count += len(sentence_words)
+
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+
+    return chunks
+# Example usage
+# text = "Your very large text. It should be more than 4000 words for meaningful chunking. Each sentence is considered for intelligent splitting."
+# chunks = chunk_text_spacy(text)
+# for i, chunk in enumerate(chunks):
+#     print(f"Chunk {i+1}: {chunk[:100]}...")  # Displaying first 100 characters of each chunk for brevity
+
+def safe_send(message, bot, text):
+    """
+    Sends the text in manageable chunks if it exceeds a certain length limit (3500 characters),
+    attempting to use Markdown formatting. If Markdown formatting fails (typically due to incorrect
+    Markdown syntax or Telegram API formatting restrictions), the text is sent as plain text.
+
+    Args:
+        message: The Telegram message context used for replying.
+        bot: The Telegram bot instance.
+        text: The text string that needs to be sent.
+
+    This function first checks if the text length exceeds 3500 characters and splits it into
+    chunks if necessary. Each chunk is then sent as a reply to the original message. If a Markdown
+    formatting error occurs, it falls back to sending the chunk as plain text.
+    """
+    chunks = []
+    if len(text) > 3500:
+        # Assuming chunk_text_spacy is a function that splits text while respecting
+        # sentence boundaries and does not break words inappropriately.
+        chunks = chunk_text_spacy(text)  # Splitting text into smaller parts
+    else:
+        chunks.append(text)
+    
+    for chunk in chunks:
+        try:
+            bot.reply_to(message, text=chunk, parse_mode='Markdown')
+        except Exception as e:
+            # Assuming the exception 'e' is due to Markdown parse errors,
+            # logs the error and falls back to plain text sending
+            print(f"Failed to send markdown message: {e}. Sending as plain text.")
+            bot.reply_to(message, text=chunk)
 
 
-# def delete_temp(path):
-#     """
-#     def delete_temp(path): Takes a temporary file at Pathlib Path and tries to delete it, returns deleted or not.
-#     """
-#     if os.path.isfile(path):
-#         print("Removed file")
-#         os.remove(path)
-#     else:
-#         print("Failed to remove file, file does not exist")
-#         return None
+
 
 
 

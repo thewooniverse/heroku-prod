@@ -146,17 +146,6 @@ Speech to Chat Development timeline:
 
 1. Reconfigure free trial credits and credit checks to be stored in the system config instead of user settings (this is crucial for not letting users reset)
 
------ done above ---------- done above ---------- done above ---------- done above ---------- done above -----
-=========================================================================================================
-Feature Icebox:
---
-++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
-++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
-++ Redeploy to production stack / correct bot handle
-++ System config metadata tracking; (ask GPT how to best implement something like this)
----------------------------------------------------------------------------------------------------------
-
-Current Focus:
 
 >> SCALABILITY REFACTORING - Redis and caching for configurations: <<
 --- Caching Implementation V2 ---
@@ -235,6 +224,31 @@ So connection pooling and read through / write through seems to be implemented,
 > carry out basic testing for changing / seeing how things are handled in terms of config saves and changes.
 Then implement eviction / handling for crashes and regular checks
 
+------
+Bugfix completed, and connection pooling to database logic is re-handled (much less access now!)
+Mostly working... now:
+- Cache invalidation policy << this is good enough for now;
+- Cache eviction policy << implement this;
+
+Then pretty much refactoring for caching is complete!
+heroku redis:maxmemory --app telebot-staging --policy volatile-lru
+
+
+
+
+
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+Feature Icebox:
+--
+++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
+++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+++ Redeploy to production stack / correct bot handle
+++ System config metadata tracking; (ask GPT how to best implement something like this)
+---------------------------------------------------------------------------------------------------------
+
+Current Focus:
+1. Safe send -> check and catch formatting issues, and check and catch word / character limit in the response / divide into two if needed.
 
 
 
@@ -591,7 +605,8 @@ def handle_chat(message):
         ### calling the chat completion with the relevant context and chat history provided and with the right configs for the user###
         try:
             response_text = ai_commands.chat_completion(message, context, chat_history = chat_history, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'])
-            bot.reply_to(message, text=response_text, parse_mode="Markdown")
+            helper_functions.safe_send(message, bot, response_text)
+            # bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
         except Exception as e:
             bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
