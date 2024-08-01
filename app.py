@@ -233,7 +233,9 @@ Mostly working... now:
 Then pretty much refactoring for caching is complete!
 heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 
-
+--------
+++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
+1. Safe send -> check and catch formatting issues, and check and catch word / character limit in the response / divide into two if needed.
 
 
 
@@ -241,15 +243,13 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 =========================================================================================================
 Feature Icebox:
 --
-++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
-++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+++ command suggestions tidy up to include all of the newer features like set temperature, set name
 ++ Redeploy to production stack / correct bot handle
 ++ System config metadata tracking; (ask GPT how to best implement something like this)
 ---------------------------------------------------------------------------------------------------------
 
 Current Focus:
-1. Safe send -> check and catch formatting issues, and check and catch word / character limit in the response / divide into two if needed.
-
+++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
 
 
 
@@ -352,9 +352,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 
 # basic openAI apikey
 OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
-
-
-
+LOG_CHAT = os.environ.get('LOG_CHAT_ID')
  
 
 
@@ -423,10 +421,6 @@ def is_bot_active(func):
         else:
             bot.send_message(message.chat.id, "Bot is currently turned OFF.")
     return wrapper
-
-
-
-
 
 
 # decorator / wrapper function to check whether bot is active
@@ -961,11 +955,12 @@ def handle_speech_chat(message):
 
             ### Section here to process the stt request into a chat completion, convert it into voice message and send this response ###
             # import contexts:
-    
-            # import contexts:
             context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
             # check for persistence and chat history
             chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
+            # remove the agent name from the response, or give it the necessary context:
+            stt_response = "Please ignore any names I am referring directly to you and get right to the question / request at hand:\n" + stt_response
+
             response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history=chat_history)
             helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
             bot.reply_to(message, text=response_text)

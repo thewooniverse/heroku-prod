@@ -7,8 +7,6 @@ import settings
 import ai_commands
 import spacy
 
-
-
 # handler helper functions
 def extract_body(message_text):
     """
@@ -252,5 +250,16 @@ def safe_send(message, bot, text):
 
 
 
+
+
+
+
+
+######################
+### ERROR HANDLING ###
+######################
+            
+def handle_error(message):
+    return
 
 
