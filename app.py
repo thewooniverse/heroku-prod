@@ -959,7 +959,7 @@ def handle_speech_chat(message):
             # check for persistence and chat history
             chat_history = helper_functions.construct_chat_history(user_config=user_config, message=message, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
             # remove the agent name from the response, or give it the necessary context:
-            stt_response = "Please ignore any names I am referring directly to you and get right to the question / request at hand:\n" + stt_response
+            stt_response = "Please ignore any names I am referring directly to you by as it may be incorrect and get right to the question / request at hand:\n" + stt_response
 
             response_text = ai_commands.chat_completion(stt_response, context, openai_api_key=api_keys[0], model=chat_config['language_model'], temperature=chat_config['lm_temp'], chat_history=chat_history)
             helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
