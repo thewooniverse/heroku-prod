@@ -7,6 +7,12 @@ import settings
 import ai_commands
 import spacy
 
+
+LOG_CHAT = os.environ.get('LOG_CHAT_ID')
+
+
+
+
 # handler helper functions
 def extract_body(message_text):
     """
@@ -38,22 +44,6 @@ def start_menu():
     return settings.getting_started_string
 
 
-
-
-
-# logging helpers
-def construct_logs(message, result_message):
-    """
-    def construct_logs(message): takes a message object and returns a string of all the necessary and important metadata / information.
-    """
-    command = extract_command(message.text)
-    username = getattr(message.from_user, 'username', 'N/A')
-    try:
-        log_string = f"COMMAND: {command} | USER_ID: {message.from_user.id} | USERNAME: {username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE_ID: {message.message_id} | CONTENT_TYPE: {message.content_type} | RESULT: {result_message}"
-        # print(log_string) < unclog stdout
-        return log_string
-    except Exception as e:
-        return f"Error occured in: {e}"
 
 
 def bot_has_delete_permission(chat_id, bot):
@@ -252,14 +242,58 @@ def safe_send(message, bot, text):
 
 
 
+######################################
+###### ERROR HANDLING & LOGGING ######
+######################################
+
+def print_message_attrs(message):
+    # function to print all of the relevant attributes I want to see and returns that metadata as well
+    attributes_pairs = f"""----------------------------
+Message ID: {message.message_id}
+From User: {message.from_user}
+Chat ID: {message.chat.id}
+COMMAND: {extract_command(message.text)}
+Text: {message.text}
+"""
+    print(attributes_pairs)
+    return attributes_pairs # returns as well for log construction
+
+def handle_error_output(bot, message, exception, notify_user=False, notify_admin=False):
+    """
+    logging hierarchy:
+    - PRINT statement to the non-persistent heroku logs log all things.
+    - Two different levels: is it important to notify the user, is it important to notify the admin on top of all of this.
+    """
+    # 1. print the statements into the non-persistent heroku logs, as much detail as possible
+    message_attributes = print_message_attrs(message) # calling the function also prints it, achieving the same effect for level 1
+    print(f"EXCPETION: {exception}")
+    print("\n\n---\n\n")
+
+    # 2. notify issue to the user?
+    if notify_user:
+        bot.reply_to(message, f"You have encountered an error, please reach out to the admin if this issue persists. {exception}")
+        # callbacks to button pressing is handled a little differently
+
+    # 3. log critical errors to the bot and notify admin
+    if notify_admin:
+        bot.send_message(LOG_CHAT, message_attributes + f"\n\n---\n\n{exception}")
+
+
+# logging helpers
+def construct_logs(message, result_message):
+    """
+    def construct_logs(message): takes a message object and returns a string of all the necessary and important metadata / information.
+    """
+    command = extract_command(message.text)
+    username = getattr(message.from_user, 'username', 'N/A')
+    try:
+        log_string = f"COMMAND: {command} | USER_ID: {message.from_user.id} | USERNAME: {username}| CHAT_ID: {message.chat.id} | CHAT_TYPE: {message.chat.type} | MESSAGE_ID: {message.message_id} | CONTENT_TYPE: {message.content_type} | RESULT: {result_message}"
+        # print(log_string) < unclog stdout
+        return log_string
+    except Exception as e:
+        return f"Error occured in: {e}"
 
 
 
-######################
-### ERROR HANDLING ###
-######################
-            
-def handle_error(message):
-    return
 
 

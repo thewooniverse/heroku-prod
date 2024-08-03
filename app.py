@@ -250,6 +250,9 @@ Feature Icebox:
 
 Current Focus:
 ++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+--> next up is to implement all of the functionalities of the log output handlers into all of the different chat requests;
+
+
 
 
 
@@ -353,7 +356,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # basic openAI apikey
 OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
 LOG_CHAT = os.environ.get('LOG_CHAT_ID')
- 
+
 
 
 
@@ -370,8 +373,16 @@ LOG_CHAT = os.environ.get('LOG_CHAT_ID')
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'ERROR').upper()
 print(f"Logging started with {LOG_LEVEL}")
 logging.basicConfig(stream=sys.stdout, level=getattr(logging, LOG_LEVEL, logging.INFO), format='%(asctime)s - %(name)s - %(levelname)s - %(module)s - %(message)s')
-# logger = helper_classes.CustomLoggerAdapter(logging.getLogger(__name__), {'dyno_name': DYNO_NAME}) # < creates an custom logger adapter
 logger = logging.getLogger(__name__)
+"""
+logger.debug('This is a debug message')
+logger.info('This is an info message')
+logger.warning('This is a warning message')
+logger.error('This is an error message')
+logger.critical('This is a critical message')
+"""
+
+
 
 # create necessary tables
 config_db_helper.create_config_table("chat_configs", "chat")
@@ -534,7 +545,8 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         return api_keys
     except Exception as e:
-        print("Error occured in checking and getting valid API key")
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
 
 
 
