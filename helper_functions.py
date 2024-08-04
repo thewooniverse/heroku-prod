@@ -278,7 +278,6 @@ def handle_error_output(bot, message, exception, notify_user=False, notify_admin
     if notify_admin:
         bot.send_message(LOG_CHAT, message_attributes + f"\n\n---\n\n{exception}")
 
-
 # logging helpers
 def construct_logs(message, result_message):
     """
