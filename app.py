@@ -576,9 +576,9 @@ def handle_start(message):
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     
     except Exception as e:
-        bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        print(f"An unexpected error occurred: {e}")
+        
 
 
 # text handlers
@@ -614,18 +614,16 @@ def handle_chat(message):
             helper_functions.safe_send(message, bot, response_text)
             # bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
-            helper_functions.handle_error_output(bot, message, exception="Test test", notify_admin=True, notify_user=True)
+            # helper_functions.handle_error_output(bot, message, exception="Test test", notify_admin=True, notify_user=True)
         except Exception as e:
-            bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-            print(f"An unexpected error occurred: {e}")
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         
         # logging
         helper_functions.upsert_chat_history(user_config=user_config, message=message, response_text=response_text, api_key=api_keys[0], pinecone_key=PINECONE_KEY)
 
     except Exception as e:
-        print(e)
-        bot.reply_to(message, f"/chat command request could not be completed, please contact admin. \n Error {e}")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
@@ -649,7 +647,7 @@ def handle_translate_1(message):
             helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
-        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
@@ -670,7 +668,7 @@ def handle_translate_2(message):
             logger.info(helper_functions.construct_logs(message, "Success"))
         
     except Exception as e:
-        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
     
@@ -690,7 +688,7 @@ def handle_translate_3(message):
             helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
-        bot.reply_to(message, "/translate command request could not be completed, please contact admin.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)leted, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
@@ -722,7 +720,7 @@ def handle_tts(message):
             logger.warning(helper_functions.construct_logs(message, "Warning: tts response could not be generated")) 
 
     except Exception as e:
-        bot.reply_to(message, "/tts command request could not be completed, please contact admin.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
@@ -766,7 +764,7 @@ def handle_stt(message):
             os.remove(temp_voice_file_path)
         
         except Exception as e:
-            logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
             bot.reply_to(message, "Failed to process the voice note, please check logs.")
         
     else:
@@ -832,7 +830,7 @@ def handle_stc(message):
         
         except Exception as e:
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
-            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         
     else:
         bot.reply_to(message, "Please reply to a voice note")
@@ -905,7 +903,7 @@ def handle_stsc(message):
         
         except Exception as e:
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
-            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         
     else:
         bot.reply_to(message, "Please reply to a voice note")
@@ -994,7 +992,7 @@ def handle_speech_chat(message):
 
         except Exception as e:
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured {e}"))
-            bot.reply_to(message, "Failed to process the voice note, please check logs.")
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
     
     else:
         # no message is sent to user as it is not an explicit request or command, it is simply ignored
@@ -1045,7 +1043,7 @@ def handle_imagine(message):
             logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
 
     except Exception as e:
-        bot.reply_to(message, "Failed to fetch or generate image")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: Could not complete image generation, error: {e}"))
 
 
@@ -1103,11 +1101,13 @@ def handle_variations(message):
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
             if isinstance(e, IOError):
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
             elif isinstance(e, PIL.UnidentifiedImageError):
-                print(f"Error: error occured during Image Conversion to PNG")
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
             else:
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
             return
     # if the base condition is not met where the reply message is not an image; then we exit the function early
@@ -1161,7 +1161,7 @@ def handle_vision(message):
         except Exception as e:
             # handle various exceptions
             logger.error(helper_functions.construct_logs(message, f"Error: Error occured at {e}"))
-            bot.reply_to(message, "Unable to analyze image")
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         finally:
             # handle file cleanup
             os.remove(temp_img_path)
@@ -1257,10 +1257,13 @@ def handle_edit(message):
         # if the image could not be converted, then we print the error and return the handler and exit early
         except Exception as e:
             if isinstance(e, IOError):
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
             elif isinstance(e, PIL.UnidentifiedImageError):
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
             else:
+                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
                 logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
             return
         
