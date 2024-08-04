@@ -614,6 +614,7 @@ def handle_chat(message):
             helper_functions.safe_send(message, bot, response_text)
             # bot.reply_to(message, text=response_text, parse_mode="Markdown")
             logger.info(helper_functions.construct_logs(message, f"Success: response generated and sent."))
+            helper_functions.handle_error_output(bot, message, exception="Test test", notify_admin=True, notify_user=True)
         except Exception as e:
             bot.reply_to(message, f"Command request could not be completed, please contact admin. Error: {e}")
             logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
