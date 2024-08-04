@@ -578,7 +578,7 @@ def handle_start(message):
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-        
+
 
 
 # text handlers
@@ -688,7 +688,7 @@ def handle_translate_3(message):
             helper_functions.safe_send(message, bot, response_text)
             logger.info(helper_functions.construct_logs(message, "Success"))
     except Exception as e:
-        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)leted, please contact admin.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
