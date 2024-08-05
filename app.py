@@ -237,22 +237,34 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 ++ Safe send feature (clearing syntatcical issues with markup, and retrying in plaintext, along with max word count for telegram API limits and chopping words)
 1. Safe send -> check and catch formatting issues, and check and catch word / character limit in the response / divide into two if needed.
 
+++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
+--> next up is to implement all of the functionalities of the log output handlers into all of the different chat requests;
+
 
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 Feature Icebox:
 --
-++ command suggestions tidy up to include all of the newer features like set temperature, set name
-++ Redeploy to production stack / correct bot handle
-++ System config metadata tracking; (ask GPT how to best implement something like this)
+1. Command suggestions + settings screen tidy up + write up the gitbook
+1.a. Why its different, why its useful.
+
+2. Redeploy to production stack / correct bot handle / features and separate the repository from staging (a single build is enough)
+3. Deploy simple webpage for TS Systems
+
 ---------------------------------------------------------------------------------------------------------
 
 Current Focus:
-++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
---> next up is to implement all of the functionalities of the log output handlers into all of the different chat requests;
-
-
+Command Suggestions < done
+Setting string tidy up / reformatting 
+Gitbook write up with feature examples: why its useful etc... and exampels
+----
+Develop the clear history functionality
+Develop testing
+----
+Check all functionality on production build with config vals
+redeploy the production build with new bot name and new ownership
+Link the gitbook to the website + deploy a simple app
 
 
 
@@ -572,7 +584,7 @@ def handle_start(message):
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
-        bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
+        bot.reply_to(message, settings.getting_started_string, parse_mode='Markdown')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     
     except Exception as e:
