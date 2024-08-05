@@ -1,38 +1,80 @@
 # settings button mapping;
+"""
+Command Descriptions
+- sample syntax
+command1 - Description
+command2 - Another description
+-
+start - welcome message
+settings - settings overview
+group_settings - for this conversation
+user_settings - for all conversations
+chat - [prompt] chat completion
+t1 - [prompt] translate to preset 1
+t2 - [prompt] translate to preset 2
+t3 - [prompt] translate to preset 3
+tts - [prompt] text to speech
+stt - [reply_to_voice] speech to text
+stc - [reply_to_voice] speech to chat
+stsc - [reply_to_voice] speech to speech-chat
+imagine - [prompt] image generation
+vision - [reply_to_image, prompt] image recognition
+variate - [reply_to_image] image variation
+edit_img - [reply_to_image, prompt] image editing
+set_name - [text] set agent's name for voice assistant
+user_set_openai_key - [key] set api key for all conversations
+chat_set_openai_key - [key] set api key for this conversation
+set_temperature - [0-2] set agent temperature for this conversation
+set_t1 - [ABC] manually set t1 to iso code
+set_t2 - [ABC] manually set t2 to iso code
+set_t3 - [ABC] manually set t3 to iso code
+set_context - [context] set chat agent's context for conversation
+set_user_context - [context] set chat agent's context all conversations
+reset_context - reset the agent's context for conversation
+reset_user_context - reset the agent's context for all conversations
+check_context - check the current context set for user and group
+clear_history - clear history for this conversation
+subscribe - subscribe to premium features
+"""
 
 
 
-getting_started_string = """
-All new accounts get a free trial of 10 free requests before being required to enter their own OpenAI API Key.
-
-<b>Chat Functionality</b>
-/chat [prompt] - replies with AI response to the prompt, based on several parameters.
-- In-reply context: simplest way to provide context, replying to a text message will provide the message that the /chat request is in reply to as context for the request.
-- User context: set in user_settings, context that user set for all chat requests from the user. Things like "my name is Jon Applepeel".
-- Chat context: set in chat groups, context that the user wants to keep in mind for a specific chat group or thread. Things like "You are an expert fitness chef, for all recipes please answer with exact measurements and estimated calories"
-- Chat history / persistence: premium feature that allows users to have all of their /chat and other conversations within a chat thread / group with the bot and used as context and history for all future chat requests.
-
-/vision [in-reply to image + prompt] - image recognition powered chat completion. Embeddings from provided image as primary context. Useful for things like "What is this menu in English?"
-
-/t1/t2/t3 [prompt] - translates the prompted text into the preset languages. 
-e.g. if /t1 is set to english, any other text in any languages as prompt to /t1 will translate it to English.
-
-<b>Voice Functionality</b>
-/tts [prompt] - text-to-speech, narrate and read out the prompt provided.
-/stt [in reply to a voice note] - speech-to-text, transcribe the voice note into text
-/stc [in reply to a voice note]- speech-to-chat, transcribe the voice note and use it as a prompt for chat completion.
-/sts [in reply to a voice note] - speech-to-speech(chat), transcribe the voice note, use it as a prompt for chat completion, and send the chat completion response in a voice message.
-"Hey Telebot" (in development) - voice activated /stc feature, without needing to type, send a voice note with your prompt starting with the trigger word set to generate a chat completion request.
 
 
-<b>Image Functionality</b>
-/imagine [prompt] - generate image, using image models. Default is Dall-E 3.
-/variate [in-reply-to-image] - generate variations of image that the request is in reply to.
-/edit_img [in-reply-to-image + mask settings + prompt] - generate an edited version of the image, based on the prompt, the image mask area targeting the area of the image that you want to edit.
 
-<b>Configurations:</b>
-/user_settings - configure how your bot behaves with ALL of your interactions over different groups and chat threads.
-/group_settings - configure how your bot behaves to your requests in a given chat group. Useful for creating multiple conversations for different topics with the bot.
+getting_started_string = """🤖 Welcome to TeleGPT! 🤖
+------------------------
+TeleGPT is an AI assistant built into Telegram, interfacing with OpenAI and its many models with additional featuers such as persistence and context awareness.
+
+Core Functionality:
+- Chat completion: chat with GPT 3.5 or 4, use /chat [prompt]
+- Translate: translate between any languages with preset target language, use /t1 [prompt]
+- Image recognition: upload and ask about an image, use /vision [prompt] in reply to an image
+- Image generation: image generation with DALL-E 3, use /imagine [prompt]
+- *Text to Speech:* generate narrations of entered text, use /tts [prompt]
+- Speech to Text: transcribe a voice note, use /stt in reply to a voice message
+- Image variations: make variations of an image, use /variate in reply to an image
+- Image editing: make edits to a masked area (in settings) of an image, /edit_img [prompt] in reply to an image
+
+
+Additional Functionality:
+- Context Setting: give specific instructions and context to the bot about the conversation, or about yourself. Use /set_context or /set_user_context [context], for example /set_user_context "my name is William" so that the bot remembers your name across conversations and /set_context "My dietary requirements are ..." to set specific contexts in a conversation like a recipe / home chef assistant.
+
+- Persistence: (premium) TeleGPT can now remember the conversation in a given chat thread and use it as additional context to the conversation.
+
+- Voice Activated Assistant: (premium) chat with the bot using your voice, set the agent name using /set_name and record and send a message to the bot starting with its name in the first 5 words. E.g. "Hey Steve, who discovered america?"
+
+- Configurations: configure your bot in various ways, use /user_settings for configs across all conversation and /group_settings for configurations for a given conversation. Configure via buttons or manual settings.
+
+----
+
+
+user settings, group settings, manual and button that is not available directly in the UI.
+
+Getting Started:
+All users have 10 free API calls until they are required to set their own OpenAI API Key, if this is too d
+Premium users have 1000 free API calls per month, and more on request (ask admin)
+Unlock premium features (subscription, $3 per month)
 """
 
 
