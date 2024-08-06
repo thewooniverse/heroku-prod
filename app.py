@@ -252,6 +252,8 @@ Feature Icebox:
 2. Redeploy to production stack / correct bot handle / features and separate the repository from staging (a single build is enough)
 3. Deploy simple webpage for TS Systems
 
+4. Ads
+5. 1000 free calls for premium users
 ---------------------------------------------------------------------------------------------------------
 
 Current Focus:
@@ -260,11 +262,15 @@ Setting string tidy up / reformatting
 Gitbook write up with feature examples: why its useful etc... and exampels
 ----
 Develop the clear history functionality
-Develop testing
+Develop testing modules
+Callback limitations
 ----
 Check all functionality on production build with config vals
 redeploy the production build with new bot name and new ownership
 Link the gitbook to the website + deploy a simple app
+
+
+
 
 
 
@@ -584,7 +590,7 @@ def handle_start(message):
         # chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # user_config = get_or_create_chat_config(message.from_user.id, 'user')
         # bot.reply_to(message, f"Chat language model: {chat_config['language_model']}, user language model: {user_config['language_model']}")
-        bot.reply_to(message, settings.getting_started_string, parse_mode='Markdown')
+        bot.reply_to(message, settings.getting_started_string, parse_mode='HTML')
         logger.info(helper_functions.construct_logs(message, "Success: command successfully executed"))
     
     except Exception as e:
