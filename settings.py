@@ -44,49 +44,9 @@ subscribe - subscribe to premium features
 
 getting_started_string = """<b>🤖 Welcome to TeleGPT! 🤖 </b>
 -------------------------------------------
-TeleGPT is an AI assistant built on Telegram as a convenient interface to use OpenAI and its many models.
-In addition to the core features such as text completion, image and voice generation, TeleGPT has additional unique features such as persistence, context setting and awreness and configurability that make it more useful than simply using OpenAI.
+Get started by simply typing / and explore the various commands with TeleGPT.
+For a more detailed guide on using TeleGPT, visit https://technosocial-systems.gitbook.io/telegpt
 
-<b>Core Functionality:</b>
-- Chat completion: chat with GPT 3.5 or 4, use /chat [prompt]
-
-- Translate: translate between any languages with preset target language, use /t1 [prompt]
-
-- Image recognition: upload and ask about an image, use /vision [prompt] in reply to an image
-
-- Image generation: image generation with DALL-E 3, use /imagine [prompt]
-
-- Text to Speech: generate narrations of entered text, use /tts [prompt]
-
-- Speech to Text: transcribe a voice note, use /stt in reply to a voice message
-
-- Image variations: make variations of an image, use /variate in reply to an image
-
-- Image editing: make edits to a masked area (in settings) of an image, /edit_img [prompt] in reply to an image
-
-<b>Additional Functionality:</b>
-- Context Setting: give specific instructions and context to the bot about the conversation, or about yourself. Use /set_context or /set_user_context [context], for example /set_user_context "my name is William" so that the bot remembers your name across conversations and /set_context "My dietary requirements are ..." to set specific contexts in a conversation like a recipe / home chef assistant.
-
-- Persistence: (premium) TeleGPT can now remember the conversation in a given chat thread and use it as additional context to the conversation. For example, your preference towards certain dishes or spices in for a home chef agent / conversation.
-
-- Voice Activated Assistant: (premium) chat with the bot using your voice, set the agent name using /set_name and record and send a message to the bot starting with its name in the first 5 words. E.g. "Hey Steve, who discovered america?"
-
-- Configurations: configure your bot in various ways, use /user_settings for configs across all conversation and /group_settings for configurations for a given conversation. Configure things like temperature, translation presets and others via buttons or manual settings commands.
-----
-<b>Getting Started:</b>
-
-1. Simply start with a /chat [prompt] with whatever you want to say to or ask the agent
-
-2. Generate an image with /imagine [prompt]
-
-3. Tell the bot your name with /set_user_context [your_name], it will remember your name in all future requests.
-
-4. Set your OpenAI API Key with /user_set_openai_key [your_key] for future usage
-
-<b>Note</b>
-- All users have 10 free API calls until they are required to either set their own API key, or purchase a premium subscription.
-- Premium users have 1000 free API calls per month and more on request (ask an admin)
-- For more information and usage visit our documentations at https://telegpt.bot
 """
 
 
