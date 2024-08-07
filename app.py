@@ -258,7 +258,7 @@ Feature Icebox:
 
 Current Focus:
 Command Suggestions < done
-Setting string tidy up / reformatting 
+Setting string tidy up / reformatting  <--- string is fine, but need to do in hand with gitbook. Keep messages as short as possible, messy / hard to read.
 Gitbook write up with feature examples: why its useful etc... and exampels
 ----
 Develop the clear history functionality
