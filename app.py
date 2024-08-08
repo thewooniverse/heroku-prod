@@ -1827,12 +1827,12 @@ def handle_user_set_openai_apikey(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
 
 
-@bot.message_handler(commands=['chat_set_openai_key'])
+@bot.message_handler(commands=['group_set_openai_key'])
 @is_bot_active
 @is_valid_user
-def handle_chat_set_openai_apikey(message):
+def handle_group_set_openai_apikey(message):
     """
-    handle_chat_set_openai_apikey(message): sets openAI key for the user
+    handle_group_set_openai_apikey(message): sets openAI key for the user
     """
 
     # Check permissions for group chats
@@ -1859,13 +1859,13 @@ def handle_chat_set_openai_apikey(message):
                 bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
 
             else:
-                bot.reply_to(message, f"New API key for user successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
+                bot.reply_to(message, f"New API key for group successfully set. Message could not be deleted due to insufficient permissions, please delete this message to keep your API Key private.")
         
         else:
             bot.reply_to(message, f"Entered API Key is not in the correct format, please check again and try again.")
     
     except Exception as e:
-        bot.reply_to(message, "/user_set_openai_key command request could not be completed, please contact admin.")
+        bot.reply_to(message, "/group_set_openai_key command request could not be completed, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {e}")) # traceback?
 
 
