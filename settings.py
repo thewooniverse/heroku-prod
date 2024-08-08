@@ -23,7 +23,7 @@ variate - [reply_to_image] image variation
 edit_img - [reply_to_image, prompt] image editing
 set_name - [text] set agent's name for voice assistant
 user_set_openai_key - [key] set api key for all conversations
-chat_set_openai_key - [key] set api key for this conversation
+group_set_openai_key - [key] set api key for this conversation
 set_temperature - [0-2] set agent temperature for this conversation
 set_t1 - [ABC] manually set t1 to iso code
 set_t2 - [ABC] manually set t2 to iso code
@@ -43,10 +43,11 @@ subscribe - subscribe to premium features
 
 
 getting_started_string = """<b>🤖 Welcome to TeleGPT! 🤖 </b>
--------------------------------------------
-Get started by simply typing / and explore the various commands with TeleGPT.
-For a more detailed guide on using TeleGPT, visit https://technosocial-systems.gitbook.io/telegpt
 
+TeleGPT is an AI assistant built right into telegram, use the various AI Models from OpenAI with additional features in the comfort of a messaging app!
+
+Get started by simply typing / and explore the various commands with TeleGPT.
+For detailed guides, visit https://technosocial-systems.gitbook.io/telegpt
 """
 
 
@@ -61,7 +62,7 @@ Button Settings:
 Manual Settings:
 /set_name - [text] set agent's name for voice assistant
 /user_set_openai_key - [key] set api key for all conversations
-/chat_set_openai_key - [key] set api key for this conversation
+/group_set_openai_key - [key] set api key for this conversation
 /set_temperature - [0-2] set agent temperature for this conversation
 /set_t1 - [ABC] manually set t1 to iso code in this conversation
 /set_t2 - [ABC] manually set t2 to iso code in this conversation
