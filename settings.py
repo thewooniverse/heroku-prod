@@ -52,27 +52,11 @@ For detailed guides, visit https://technosocial-systems.gitbook.io/telegpt
 
 
 settings_string = """⚙️<b>TeleGPT Settings</b>⚙️
-
 <b>Customize telebot with the following options:</b>
+/group_settings - set the behaviour of the bot in this current group / conversation
+/user_settings - set the behaviour of the bot towards all requests coming from you, in all conversations.
 
-Button Settings:
-/group_settings - Only available to administrators of groups. Customize how the bot functions within a group setting. 
-/user_settings - Only available by DM-ing the bot. Customize and personalize how the bot functions or responds to your requests across all interactions with the bot.
-
-Manual Settings:
-/set_name - [text] set agent's name for voice assistant
-/user_set_openai_key - [key] set api key for all conversations
-/group_set_openai_key - [key] set api key for this conversation
-/set_temperature - [0-2] set agent temperature for this conversation
-/set_t1 - [ABC] manually set t1 to iso code in this conversation
-/set_t2 - [ABC] manually set t2 to iso code in this conversation
-/set_t3 - [ABC] manually set t3 to iso code in this conversation
-/set_context - [context] set chat agent's context for conversation
-/set_user_context - [context] set chat agent's context all conversations
-/reset_context - reset the agent's context for conversation
-/reset_user_context - reset the agent's context for all conversations
-/check_context - check the current context set for user and group
-/clear_history - clear history for this conversation
+For more information on manual settings options, visit: https://technosocial-systems.gitbook.io/telegpt/features/configurations/manual-settings
 """
 
 group_settings_string = """👥<b>Chat Group Settings</b>👥
