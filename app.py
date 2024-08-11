@@ -240,7 +240,7 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 ++ bug log chat and sending specific bug logging messages to a telegram thread with the owner for critical bugs
 --> next up is to implement all of the functionalities of the log output handlers into all of the different chat requests;
 
-
+Command Suggestions < done
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
@@ -257,9 +257,11 @@ Feature Icebox:
 ---------------------------------------------------------------------------------------------------------
 
 Current Focus:
-Command Suggestions < done
+1. Gitbook write up with feature examples: why its useful etc... and examples
+
+
 Setting string tidy up / reformatting  <--- string is fine, but need to do in hand with gitbook. Keep messages as short as possible, messy / hard to read.
-Gitbook write up with feature examples: why its useful etc... and exampels
+
 ----
 Develop the clear history functionality
 Develop testing modules
