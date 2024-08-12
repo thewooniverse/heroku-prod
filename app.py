@@ -258,7 +258,7 @@ Feature Icebox:
 
 Current Focus:
 1. Gitbook write up with feature examples: why its useful etc... and examples
-
+2. Settings string reformatting.
 
 Setting string tidy up / reformatting  <--- string is fine, but need to do in hand with gitbook. Keep messages as short as possible, messy / hard to read.
 
