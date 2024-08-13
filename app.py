@@ -254,11 +254,13 @@ Feature Icebox:
 
 4. Ads
 5. 1000 free calls for premium users
+
+Context aware voice messages;
 ---------------------------------------------------------------------------------------------------------
 
 Current Focus:
 1. Gitbook write up with feature examples: why its useful etc... and examples
-
+2. Settings string reformatting.
 
 Setting string tidy up / reformatting  <--- string is fine, but need to do in hand with gitbook. Keep messages as short as possible, messy / hard to read.
 
@@ -601,6 +603,10 @@ def handle_start(message):
 
 
 
+
+
+
+
 # text handlers
 @bot.message_handler(commands=['chat'])
 @is_bot_active
@@ -617,12 +623,12 @@ def handle_chat(message):
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
         # system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner') 
-        body_text = helper_functions.extract_body(message.text)
+        # body_text = helper_functions.extract_body(message.text) 
         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
         if not api_keys:
             # no message is printed or replied here because the function above to check and get valid API keys already sends a status message
             return
-        
+
         # check for both user configs (all threads) or chat configs has been set
         context = helper_functions.construct_context(user_config=user_config, chat_config=chat_config, message=message)
         # check for persistence and chat history

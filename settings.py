@@ -159,6 +159,11 @@ Voice Agent name can be set manually by using the /set_name [name] command, plea
 IMPORTANT NOTE: turning this feature on will increase the frequency of API calls.
 """
 
+
+
+
+
+
 user_context_string = "USER CONTEXT: The following is the user's instructions for you on how you should behave as an agent, use it as the most important / highest priority context in your interaction:\n"
-chat_context_string = "CHAT CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this chat:\n"
+chat_context_string = "CHAT CONTEXT: The following is the user's instructions for you on how you should behave as an agent WITHIN this conversation:\n"
 

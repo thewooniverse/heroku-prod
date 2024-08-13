@@ -129,8 +129,6 @@ def construct_context(user_config, chat_config, message):
     else:
         returned_context += chat_context_string + chat_context + divider
     
-    # if neither user or chat context is set, then the returned string is an empty string
-    print(returned_context)
     return returned_context
 
 
@@ -139,7 +137,6 @@ def construct_context(user_config, chat_config, message):
 
 def construct_chat_history(user_config, message, api_key, pinecone_key):
     returned_history = ""
-
     # check if the message is in direct reply to it
     if message.reply_to_message:
         returned_history = f"THIS MESSAGE iS IN DIRECT REPLY TO THIS MESSAGE, USE IT AS A HIGH PRIORITY CONTEXT:\n{message.reply_to_message.text}\n\n\n{'---'*3}"
@@ -151,7 +148,10 @@ def construct_chat_history(user_config, message, api_key, pinecone_key):
     if user_config['is_premium'] and (message.chat.id in user_config['persistent_chats']):
         similarity_search_result_string = ai_commands.similarity_search_on_index(message, api_key, pinecone_key)
         returned_history += similarity_search_result_string
-    return returned_history    
+    return returned_history
+
+
+
 
 
 
