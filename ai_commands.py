@@ -94,12 +94,15 @@ def translate(message, openai_api_key, target_language="eng" ,model='gpt-3.5-tur
 
 
 ## Image Handling Commands ##
-def generate_image(message, openai_api_key, context):
+def generate_image(message_text, openai_api_key, context):
     """
     Takes a message object, unpacks and returns a response.
     """
     client = OpenAI(api_key=openai_api_key)
-    body_text = f"{context}\n"+ helper_functions.extract_body(message.text)
+    if context:
+        body_text = context + message_text
+    else:
+        body_text = message_text
 
     ImagesResponse = client.images.generate(
         model='dall-e-3',
@@ -131,12 +134,13 @@ url='https://EXAMPLEIURL.com')])
 """
 
 
-def image_vision(message, base64_image, openai_api_key):
+def image_vision(message_text, base64_image, openai_api_key):
     """
     def image_vision(message, encoded_image):
     """
     client = OpenAI(api_key=openai_api_key)
-    query = helper_functions.extract_body(message.text)
+    query = message_text
+    # query = helper_functions.extract_body(message.text)
 
     # construct the message payload
     input_messages = [{"role": "user",
