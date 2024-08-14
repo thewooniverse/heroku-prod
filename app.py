@@ -1122,7 +1122,7 @@ def handle_variate_v2(message):
 
 
 
-                helper_functions.safe_send(message, bot, text_response)
+                # helper_functions.safe_send(message, bot, text_response) # sending of the prompt itself is disabled
                 logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
     
         except Exception as e:
