@@ -1117,7 +1117,7 @@ def handle_variate_v2(message):
 
                 # generate images using the text response
                 context = ""
-                image_content = ai_commands.generate_image(message, api_keys[0], "")
+                image_content = ai_commands.generate_image(text_response, api_keys[0], "")
                 bot.send_photo(message.chat.id, photo=image_content)
 
 
