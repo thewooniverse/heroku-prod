@@ -255,6 +255,9 @@ Feature Icebox:
 4. Ads
 5. 1000 free calls for premium users
 
+Variate feature fix -> as it is is not very useful, need to do image recognition, few prompts -> generate a few image calls.
+
+
 Context aware voice messages;
 ---------------------------------------------------------------------------------------------------------
 
@@ -1053,7 +1056,7 @@ def handle_speech_chat(message):
 @is_valid_user
 def handle_imagine(message):
     # query = helper_functions.extract_body(message.text)
-    system_context = "I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS:"
+    system_context = ""
 
     try:
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
@@ -1064,7 +1067,7 @@ def handle_imagine(message):
 
 
         if api_keys:
-            image_content = ai_commands.generate_image(message, api_keys[0], system_context)
+            image_content = ai_commands.generate_image(message.text, api_keys[0], system_context)
             bot.send_photo(message.chat.id, photo=image_content)
             logger.info(helper_functions.construct_logs(message, "Success: Generated and sent image to chat"))
 
@@ -1079,67 +1082,131 @@ def handle_imagine(message):
 @bot.message_handler(commands=['variate'])
 @is_bot_active
 @is_valid_user
-def handle_variations(message):
+def handle_variate_v2(message):
     """
-    Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
+    Queries: Returns a chat completion text response from a image + query
+    - /vision {text}
     """
-    # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
+    # check if we are replying to a message, and that message contains an image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
 
-        # Download & get the original message and the image contained in it
+        # ensure that the file format is in PNG
         original_message = message.reply_to_message
         original_image = original_message.photo[-1]
         original_image_file_info = bot.get_file(original_image.file_id)
 
-        # try and get the original image and process it as a PNG file
         try:
-            # tryt to download the original image and process it as a PNG file
-            downloaded_original_img = bot.download_file(original_image_file_info.file_path)
-            logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully downloaded"))
+            downloaded_img_file = bot.download_file(original_image_file_info.file_path)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.png') as temp:
+                temp.write(downloaded_img_file)
+                temp_img_path = temp.name
+                logger.debug(helper_functions.construct_logs(message, f"Debug: Image successfully donwloaded, converted and resized at {temp.name}"))
 
-            with io.BytesIO(downloaded_original_img) as image_stream:
-                # Open the image using Pillow with another 'with' block
-                with Image.open(image_stream).convert('RGBA') as img:
-                    width, height = 1024, 1024
-                    img = img.resize((width, height)) # resize to standard image, same as the mask image
-                    logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully converted and resized"))
+                # encode the image to base64
+                encoded_img = helper_functions.encode_image(temp_img_path)
+                chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+                user_config = get_or_create_chat_config(message.from_user.id, 'user')
+                api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+                if not api_keys: # if there is no 
+                    return
+                
+                # get the image description through image recognition
+                image_recongition_prompt = "describe this image in detail without mentioning any copyrighted IP or characters, as close as possible to be recreated using AI."
+                text_response = ai_commands.image_vision(image_recongition_prompt, encoded_img, openai_api_key=api_keys[0])
 
-                    # Convert the resized image to a BytesIO object again
-                    with io.BytesIO() as byte_stream:
-                        img.save(byte_stream, format='PNG')
-                        byte_array = byte_stream.getvalue()
+                # generate images using the text response
+                context = ""
+                image_content = ai_commands.generate_image(message, api_keys[0], "")
+                bot.send_photo(message.chat.id, photo=image_content)
 
-                        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-                        user_config = get_or_create_chat_config(message.from_user.id, 'user')
-                        api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
-                        if not api_keys:
-                            return
-                        
-                        if api_keys:
-                            img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
-                            if img_var_response:
-                                logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
-                                bot.send_photo(message.chat.id, photo=img_var_response)
-                            else:
-                                logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
-                                bot.reply_to(message, "Could not generate Variations of the image")
-                            
-        # if the image could not be converted, then we print the error and return the handler and exit early
+
+
+                helper_functions.safe_send(message, bot, text_response)
+                logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
+    
         except Exception as e:
-            if isinstance(e, IOError):
-                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-                logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
-            elif isinstance(e, PIL.UnidentifiedImageError):
-                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-                logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
-            else:
-                helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-                logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
-            return
-    # if the base condition is not met where the reply message is not an image; then we exit the function early
+            # handle various exceptions
+            logger.error(helper_functions.construct_logs(message, f"Error: Error occured at {e}"))
+            helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        finally:
+            # handle file cleanup
+            os.remove(temp_img_path)
+            logger.debug(helper_functions.construct_logs(message, f"Debug: Image file cleanup successful"))
+    
     else:
-        bot.reply_to(message, "Original Message does not include an image")
-        logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
+        print("No reply message or image found")
+        bot.reply_to(message, "Please reply to an image message")
+
+
+
+
+
+
+# @bot.message_handler(commands=['variate'])
+# @is_bot_active
+# @is_valid_user
+# def handle_variations(message):
+#     """
+#     Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
+#     """
+#     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
+#     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
+
+#         # Download & get the original message and the image contained in it
+#         original_message = message.reply_to_message
+#         original_image = original_message.photo[-1]
+#         original_image_file_info = bot.get_file(original_image.file_id)
+
+#         # try and get the original image and process it as a PNG file
+#         try:
+#             # tryt to download the original image and process it as a PNG file
+#             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
+#             logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully downloaded"))
+
+#             with io.BytesIO(downloaded_original_img) as image_stream:
+#                 # Open the image using Pillow with another 'with' block
+#                 with Image.open(image_stream).convert('RGBA') as img:
+#                     width, height = 1024, 1024
+#                     img = img.resize((width, height)) # resize to standard image, same as the mask image
+#                     logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully converted and resized"))
+
+#                     # Convert the resized image to a BytesIO object again
+#                     with io.BytesIO() as byte_stream:
+#                         img.save(byte_stream, format='PNG')
+#                         byte_array = byte_stream.getvalue()
+
+#                         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+#                         user_config = get_or_create_chat_config(message.from_user.id, 'user')
+#                         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
+#                         if not api_keys:
+#                             return
+                        
+#                         if api_keys:
+#                             img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
+#                             if img_var_response:
+#                                 logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
+#                                 bot.send_photo(message.chat.id, photo=img_var_response)
+#                             else:
+#                                 logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
+#                                 bot.reply_to(message, "Could not generate Variations of the image")
+                            
+#         # if the image could not be converted, then we print the error and return the handler and exit early
+#         except Exception as e:
+#             if isinstance(e, IOError):
+#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
+#             elif isinstance(e, PIL.UnidentifiedImageError):
+#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
+#             else:
+#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+#                 logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
+#             return
+#     # if the base condition is not met where the reply message is not an image; then we exit the function early
+#     else:
+#         bot.reply_to(message, "Original Message does not include an image")
+#         logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
 
 
 
@@ -1180,7 +1247,7 @@ def handle_vision(message):
                     return
 
                 if api_keys:
-                    text_response = ai_commands.image_vision(message, encoded_img, openai_api_key=api_keys[0])
+                    text_response = ai_commands.image_vision(message.text, encoded_img, openai_api_key=api_keys[0])
                     helper_functions.safe_send(message, bot, text_response)
                     logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
         
