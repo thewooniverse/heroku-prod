@@ -658,6 +658,7 @@ def handle_start(message):
 @bot.message_handler(commands=['chat'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_chat(message):
     """
     Refactor the code to: 
@@ -707,6 +708,7 @@ def handle_chat(message):
 @bot.message_handler(commands=['t1'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_1(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -727,6 +729,7 @@ def handle_translate_1(message):
 @bot.message_handler(commands=['t2'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_2(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -748,6 +751,7 @@ def handle_translate_2(message):
 @bot.message_handler(commands=['t3'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_3(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -774,6 +778,7 @@ def handle_translate_3(message):
 @bot.message_handler(commands=['tts'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_tts(message):
     
     try:
@@ -802,6 +807,8 @@ def handle_tts(message):
 @bot.message_handler(commands=['stt'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stt(message):
     # check whether it is replying to a message - must be used in reply to a message
     if message.reply_to_message and message.reply_to_message.content_type == 'voice':
@@ -851,6 +858,8 @@ def handle_stt(message):
 @bot.message_handler(commands=['stc'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stc(message):
     """
     handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
@@ -919,6 +928,8 @@ SPEECH TO SPEECH CHAT FUNCTIONALITY:
 @bot.message_handler(commands=['stsc'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stsc(message):
     """
     handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
@@ -991,6 +1002,7 @@ def handle_stsc(message):
 @bot.message_handler(content_types=['voice'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_speech_chat(message):
     # import configs
     user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -1098,6 +1110,7 @@ def handle_speech_chat(message):
 @bot.message_handler(commands=['imagine'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_imagine(message):
     # query = helper_functions.extract_body(message.text)
     system_context = ""
@@ -1126,6 +1139,8 @@ def handle_imagine(message):
 @bot.message_handler(commands=['variate'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_variate_v2(message):
     """
     Queries: Returns a chat completion text response from a image + query
@@ -1187,80 +1202,14 @@ def handle_variate_v2(message):
 
 
 
-# @bot.message_handler(commands=['variate'])
-# @is_bot_active
-# @is_valid_user
-# def handle_variations(message):
-#     """
-#     Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
-#     """
-#     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
-#     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-
-#         # Download & get the original message and the image contained in it
-#         original_message = message.reply_to_message
-#         original_image = original_message.photo[-1]
-#         original_image_file_info = bot.get_file(original_image.file_id)
-
-#         # try and get the original image and process it as a PNG file
-#         try:
-#             # tryt to download the original image and process it as a PNG file
-#             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
-#             logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully downloaded"))
-
-#             with io.BytesIO(downloaded_original_img) as image_stream:
-#                 # Open the image using Pillow with another 'with' block
-#                 with Image.open(image_stream).convert('RGBA') as img:
-#                     width, height = 1024, 1024
-#                     img = img.resize((width, height)) # resize to standard image, same as the mask image
-#                     logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully converted and resized"))
-
-#                     # Convert the resized image to a BytesIO object again
-#                     with io.BytesIO() as byte_stream:
-#                         img.save(byte_stream, format='PNG')
-#                         byte_array = byte_stream.getvalue()
-
-#                         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-#                         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-#                         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
-#                         if not api_keys:
-#                             return
-                        
-#                         if api_keys:
-#                             img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
-#                             if img_var_response:
-#                                 logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
-#                                 bot.send_photo(message.chat.id, photo=img_var_response)
-#                             else:
-#                                 logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
-#                                 bot.reply_to(message, "Could not generate Variations of the image")
-                            
-#         # if the image could not be converted, then we print the error and return the handler and exit early
-#         except Exception as e:
-#             if isinstance(e, IOError):
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
-#             elif isinstance(e, PIL.UnidentifiedImageError):
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
-#             else:
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
-#             return
-#     # if the base condition is not met where the reply message is not an image; then we exit the function early
-#     else:
-#         bot.reply_to(message, "Original Message does not include an image")
-#         logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
-
-
-
-
 
 
 
 @bot.message_handler(commands=['vision'])
 @is_bot_active
 @is_valid_user
+@is_in_reply
+@is_on_watchlist
 def handle_vision(message):
     """
     Queries: Returns a chat completion text response from a image + query
@@ -1322,6 +1271,8 @@ def handle_vision(message):
 @bot.message_handler(commands=['edit_img'])
 @is_bot_active
 @is_valid_user
+@is_in_reply
+@is_on_watchlist
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
@@ -1591,6 +1542,7 @@ def language_selection_menu(preset_num):
 @bot.message_handler(commands=['settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.settings_string, parse_mode="HTML")
 
@@ -1599,12 +1551,14 @@ def handle_settings(message):
 @bot.message_handler(commands=['group_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_group_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
 
 @bot.message_handler(commands=['user_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_settings(message):
     if message.chat.type != 'private':
         bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
@@ -1616,6 +1570,7 @@ def handle_user_settings(message):
 @bot.message_handler(commands=['reset_user_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_settings_reset(message):
     """
     Resets user settings
@@ -1885,6 +1840,7 @@ def handle_callback(call):
 @bot.message_handler(commands=['set_name'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_agent_name_setting(message):
     """
     sets the agent's name
@@ -1915,6 +1871,7 @@ def handle_agent_name_setting(message):
 @bot.message_handler(commands=['user_set_openai_key'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_set_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
@@ -1948,6 +1905,7 @@ def handle_user_set_openai_apikey(message):
 
 @bot.message_handler(commands=['group_set_openai_key'])
 @is_bot_active
+@is_on_watchlist
 @is_valid_user
 def handle_group_set_openai_apikey(message):
     """
@@ -1994,6 +1952,7 @@ def handle_group_set_openai_apikey(message):
 @bot.message_handler(commands=['set_temperature'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_temperature(message):
     """
     Sets the language model temperature for a user or chat. Valid range is between 0 and 2.
@@ -2035,6 +1994,7 @@ def handle_set_temperature(message):
 @bot.message_handler(commands=['set_t1'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t1(message):
     """
     Sets the translation 1 preset of the group.
@@ -2073,6 +2033,7 @@ def handle_set_t1(message):
 @bot.message_handler(commands=['set_t2'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t2(message):
     """
     Sets the translation 2 preset of the group.
@@ -2109,6 +2070,7 @@ def handle_set_t2(message):
 @bot.message_handler(commands=['set_t3'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t2(message):
     """
     Sets the translation 3 preset of the group.
@@ -2152,6 +2114,7 @@ def handle_set_t2(message):
 @bot.message_handler(commands=['set_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
@@ -2180,6 +2143,7 @@ def handle_set_context_in_group(message):
 @bot.message_handler(commands=['reset_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_reset_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
@@ -2206,6 +2170,7 @@ def handle_reset_context_in_group(message):
 @bot.message_handler(commands=['set_user_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_user_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2227,6 +2192,7 @@ def handle_set_user_context(message):
 @bot.message_handler(commands=['reset_user_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_reset_user_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2250,6 +2216,7 @@ def handle_reset_user_context(message):
 @bot.message_handler(commands=['check_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def check_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2329,6 +2296,7 @@ def generate_txid(user_id):
 @bot.message_handler(commands=['subscribe'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def command_pay(message):
     
     title = "🌟OpenAIssistant Premium Subscription🌟"
