@@ -2366,7 +2366,6 @@ def got_payment(message):
 @bot.message_handler(commands=['watchlist'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def watchlist_user(message):
     """
     
@@ -2390,7 +2389,6 @@ def watchlist_user(message):
 @bot.message_handler(commands=['unwatchlist'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def unwatchlist_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
@@ -2417,7 +2415,6 @@ def unwatchlist_user(message):
 @bot.message_handler(commands=['ban'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def ban_user(message):
     """
     
@@ -2442,7 +2439,6 @@ def ban_user(message):
 @bot.message_handler(commands=['unban'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def unban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
