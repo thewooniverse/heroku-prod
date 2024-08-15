@@ -2373,13 +2373,9 @@ def watchlist_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        user_id = helper_functions.extract_body(message)
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
-        elif helper_functions.extract_body(message) != "":
-            user_id = helper_functions.extract_body(message)
-        else:
-            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
-            return
         
         if user_id not in system_config['watchlist']:
             system_config['watchlist'].append(user_id)
@@ -2402,11 +2398,10 @@ def unwatchlist_user(message):
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
 
-
         if user_id in system_config['watchlist']:
             system_config['watchlist'].remove(user_id)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            bot.reply_to(message, f"User has been successfully unbanned.")
+            bot.reply_to(message, f"User has been successfully removed from watchlist.")
         else:
             bot.reply_to(message, f"User is not in banned list")
 
@@ -2429,16 +2424,12 @@ def ban_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        user_id = helper_functions.extract_body(message)
         if message.reply_to_message:
-            user_id_banned = message.reply_to_message.from_user.id
-        elif helper_functions.extract_body(message) != "":
-            user_id_banned = helper_functions.extract_body(message)
-        else:
-            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
-            return
-        
-        if user_id_banned not in system_config['banned_users']:
-            system_config['banned_users'].append(user_id_banned)
+            user_id = message.reply_to_message.from_user.id
+
+        if user_id not in system_config['banned_users']:
+            system_config['banned_users'].append(user_id)
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
         bot.reply_to(message, f"User has been successfully banned.")
 
