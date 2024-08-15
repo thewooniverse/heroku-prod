@@ -259,8 +259,8 @@ Context aware voice messages;
 
 SECURITY:
 - Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
-- Rate limiting: 
-
+- Rate limiting
+- All new users watchlist;
 
 
 
@@ -2390,7 +2390,7 @@ def got_payment(message):
 def ban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
+        target_user_id = helper_functions.extract_body(message.text)
         print("target user ID:" + target_user_id)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
@@ -2427,7 +2427,7 @@ def ban_user(message):
 def unban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
+        target_user_id = helper_functions.extract_body(message.text)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
@@ -2466,7 +2466,7 @@ def watchlist_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message) # extract body, it is "" if it is empty
+        target_user_id = helper_functions.extract_body(message.text) # extract body, it is "" if it is empty
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
@@ -2493,7 +2493,7 @@ def watchlist_user(message):
 def unwatchlist_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
+        target_user_id = helper_functions.extract_body(message.text)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
