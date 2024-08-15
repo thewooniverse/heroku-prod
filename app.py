@@ -241,6 +241,7 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 --> next up is to implement all of the functionalities of the log output handlers into all of the different chat requests;
 
 Command Suggestions < done
+Variate feature fix -> as it is is not very useful, need to do image recognition, few prompts -> generate a few image calls.
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
@@ -254,14 +255,28 @@ Feature Icebox:
 
 4. Ads
 5. 1000 free calls for premium users
-
-Variate feature fix -> as it is is not very useful, need to do image recognition, few prompts -> generate a few image calls.
-
-
 Context aware voice messages;
----------------------------------------------------------------------------------------------------------
 
+SECURITY:
+- Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
+- Rate limiting: 
+
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------
 Current Focus:
+Security features>>
+
+
+
+
+
+
+--------
 1. Gitbook write up with feature examples: why its useful etc... and examples
 2. Settings string reformatting.
 
@@ -1117,12 +1132,12 @@ def handle_variate_v2(message):
 
                 # generate images using the text response
                 context = ""
-                image_content = ai_commands.generate_image(message, api_keys[0], "")
+                image_content = ai_commands.generate_image(text_response, api_keys[0], "")
                 bot.send_photo(message.chat.id, photo=image_content)
 
 
 
-                helper_functions.safe_send(message, bot, text_response)
+                # helper_functions.safe_send(message, bot, text_response) # sending of the prompt itself is disabled
                 logger.info(helper_functions.construct_logs(message, f"Debug: Image successfully analyzed and response and sent"))
     
         except Exception as e:
@@ -2339,15 +2354,56 @@ def got_payment(message):
 # Admin features
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
+
+# watchlist user
+@bot.message_handler(commands=['watchlist'])
+@is_bot_active
+@is_admin
+@is_in_reply
+def watchlist_user(message):
+    """
+    
+    """
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        if message.reply_to_message:
+            user_id_banned = message.reply_to_message.from_user.id
+        elif helper_functions.extract_body(message) != "":
+            user_id_banned = helper_functions.extract_body(message)
+        else:
+            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
+            return
+        
+        if user_id_banned not in system_config['watchlist']:
+            system_config['watchlist'].append(user_id_banned)
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        bot.reply_to(message, f"User has been successfully put on watchlist.")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
 # ban user; function
 @bot.message_handler(commands=['ban'])
 @is_bot_active
 @is_admin
 @is_in_reply
 def ban_user(message):
+    """
+    
+    """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id_banned = message.reply_to_message.from_user.id
+        if message.reply_to_message:
+            user_id_banned = message.reply_to_message.from_user.id
+        elif helper_functions.extract_body(message) != "":
+            user_id_banned = helper_functions.extract_body(message)
+        else:
+            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
+            return
+        
         if user_id_banned not in system_config['banned_users']:
             system_config['banned_users'].append(user_id_banned)
         config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
@@ -2357,7 +2413,41 @@ def ban_user(message):
         bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
+
 # unban user
+        
+@bot.message_handler(commands=['unban'])
+@is_bot_active
+@is_admin
+@is_in_reply
+def unban_user(message):
+    """
+    
+    """
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        if message.reply_to_message:
+            user_id_banned = message.reply_to_message.from_user.id
+        elif helper_functions.extract_body(message) != "":
+            user_id_banned = helper_functions.extract_body(message)
+        else:
+            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
+            return
+        
+        if user_id_banned not in system_config['banned_users']:
+            system_config['banned_users'].remove(user_id_banned)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully unbanned.")
+        else:
+            bot.reply_to(message, f"User is not in bannedl ist")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+
 @bot.message_handler(commands=['unban'])
 @is_bot_active
 @is_admin

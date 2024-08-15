@@ -81,7 +81,7 @@ valid_table_names = ["chat_configs", "user_configs", "system_configs"]
 #####
 
 default_system_config = {
-    "version": "0.0.6", # version of the config schema
+    "version": "0.0.75", # version of the config schema
     # "system_active" : True, # determines whether the bot is active or not, if False, the bot does not respond to any messages. Useful for system maintenance.
     # system_active is sunset to use redis instead.
     "owner_id": OWNER_USER_ID,
@@ -89,7 +89,8 @@ default_system_config = {
     "system_oai_key": OPENAI_FREE_KEY,
     "banned_users": [], # list of user_ids that are banned from using the service.
     "user_credit_dict" : {}, # dict pair of free trial credits
-    "is_on": True # is the bot on or off, default is on
+    "is_on": True, # is the bot on or off, default is on
+    "watchlist": [] # watchlist for naughty users, all conversation is logged
 }
 
 default_chat_config = {
