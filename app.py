@@ -481,6 +481,21 @@ def is_bot_active(func):
     return wrapper
 
 
+def is_on_watchlist(func):
+    def wrapper(message):
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        if message.from_user.id in system_config['banned_users']:
+            # extract the context / summary
+
+
+            return func(message)
+        else:
+            return func(message)
+
+    return wrapper
+
+
+
 # decorator / wrapper function to check whether bot is active
 def is_valid_user(func):
     def wrapper(message):
@@ -532,6 +547,11 @@ def is_owner(func):
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
+
+
+
+
+
 
 
 
@@ -2372,7 +2392,7 @@ def watchlist_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id = helper_functions.extract_body(message)
+        user_id = int(helper_functions.extract_body(message))
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
         
@@ -2392,7 +2412,7 @@ def watchlist_user(message):
 def unwatchlist_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id = helper_functions.extract_body(message)
+        user_id = int(helper_functions.extract_body(message))
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
 
@@ -2421,7 +2441,7 @@ def ban_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id = helper_functions.extract_body(message)
+        user_id = int(helper_functions.extract_body(message))
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
 
@@ -2442,7 +2462,7 @@ def ban_user(message):
 def unban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id = helper_functions.extract_body(message)
+        user_id = int(helper_functions.extract_body(message))
         if message.reply_to_message:
             user_id = message.reply_to_message.from_user.id
 
