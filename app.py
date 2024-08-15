@@ -2381,6 +2381,78 @@ def got_payment(message):
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
 
+
+
+# ban user
+@bot.message_handler(commands=['ban'])
+@is_bot_active
+@is_admin
+def ban_user(message):
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        target_user_id = helper_functions.extract_body(message)
+        # if it is in reply to, the reply to user_id is used
+        if message.reply_to_message:
+            print("in-reply used")
+            target_user_id = message.reply_to_message.from_user.id
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            print("user_id provided")
+            try:
+                target_user_id = int(target_user_id)
+                print(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+        
+        if target_user_id not in system_config['banned_users']:
+            system_config['banned_users'].append(target_user_id)
+            print(system_config)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully banned.")
+        else:
+            print("target id is already in banned list")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+# unban user
+@bot.message_handler(commands=['unban'])
+@is_bot_active
+@is_admin
+def unban_user(message):
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        target_user_id = helper_functions.extract_body(message)
+        # if it is in reply to, the reply to user_id is used
+        if message.reply_to_message:
+            target_user_id = message.reply_to_message.from_user.id
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            try:
+                target_user_id = int(target_user_id)
+                print(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+
+        if target_user_id in system_config['banned_users']:
+            system_config['banned_users'].remove(target_user_id)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully unbanned.")
+        else:
+            bot.reply_to(message, f"User is not in banned list")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+
+
+
+
+
 # watchlist user
 @bot.message_handler(commands=['watchlist'])
 @is_bot_active
@@ -2391,7 +2463,7 @@ def watchlist_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
+        target_user_id = helper_functions.extract_body(message) # extract body, it is "" if it is empty
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
@@ -2404,8 +2476,8 @@ def watchlist_user(message):
         
         if target_user_id not in system_config['watchlist']:
             system_config['watchlist'].append(target_user_id)
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User has been successfully put on watchlist.")
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully put on watchlist.")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
@@ -2439,72 +2511,6 @@ def unwatchlist_user(message):
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
-
-
-
-
-
-# ban user
-@bot.message_handler(commands=['ban'])
-@is_bot_active
-@is_admin
-def ban_user(message):
-    """
-    
-    """
-    try:
-        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
-        # if it is in reply to, the reply to user_id is used
-        if message.reply_to_message:
-            target_user_id = message.reply_to_message.from_user.id
-        elif target_user_id: # this elif code runs only if the if statement above does not run
-            try:
-                target_user_id = int(target_user_id)
-            except ValueError:
-                bot.reply_to(message, "UserIDs can only contain numbers")
-                return
-
-        if target_user_id not in system_config['banned_users']:
-            system_config['banned_users'].append(target_user_id)
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User has been successfully banned.")
-
-    except Exception as e:
-        bot.reply_to(message, "Failed to complete command, please see logs")
-        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
-
-
-# unban user
-@bot.message_handler(commands=['unban'])
-@is_bot_active
-@is_admin
-def unban_user(message):
-    try:
-        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message)
-        # if it is in reply to, the reply to user_id is used
-        if message.reply_to_message:
-            target_user_id = message.reply_to_message.from_user.id
-        elif target_user_id: # this elif code runs only if the if statement above does not run
-            try:
-                target_user_id = int(target_user_id)
-            except ValueError:
-                bot.reply_to(message, "UserIDs can only contain numbers")
-                return
-    
-
-        if target_user_id in system_config['banned_users']:
-            system_config['banned_users'].remove(target_user_id)
-            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            bot.reply_to(message, f"User has been successfully unbanned.")
-        else:
-            bot.reply_to(message, f"User is not in banned list")
-
-    except Exception as e:
-        bot.reply_to(message, "Failed to complete command, please see logs")
-        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
-
 
 
 
