@@ -485,8 +485,8 @@ def is_on_watchlist(func):
     def wrapper(message):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         if message.from_user.id in system_config['watchlist']:
-            # extract the context / summary
             print("USER IS IN WATCHLIST!!")
+            # extract the context / summary
             bot.send_message(WATCHLIST_CHAT, message)
             return func(message)
         else:
@@ -2459,9 +2459,6 @@ def unban_user(message):
 @is_bot_active
 @is_admin
 def watchlist_user(message):
-    """
-    
-    """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         target_user_id = helper_functions.extract_body(message.text)
@@ -2480,6 +2477,9 @@ def watchlist_user(message):
             system_config['watchlist'].append(target_user_id)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             bot.reply_to(message, f"User has been successfully put on watchlist.")
+        else:
+            bot.reply_to(message, f"User is already in watchlist")
+
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
@@ -2509,7 +2509,7 @@ def unwatchlist_user(message):
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             bot.reply_to(message, f"User has been successfully removed from watchlist.")
         else:
-            bot.reply_to(message, f"User is not in banned list")
+            bot.reply_to(message, f"User is not in watchlist")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
