@@ -2391,13 +2391,13 @@ def ban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         target_user_id = helper_functions.extract_body(message)
-        print(target_user_id)
+        print("target user ID:" + target_user_id)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             print("in-reply used")
             target_user_id = message.reply_to_message.from_user.id
         
-        
+
         elif target_user_id: # this elif code runs only if the if statement above does not run
             print("user_id provided")
             try:
