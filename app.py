@@ -484,14 +484,17 @@ def is_bot_active(func):
 def is_on_watchlist(func):
     def wrapper(message):
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        if message.from_user.id in system_config['banned_users']:
+        if message.from_user.id in system_config['watchlist']:
             # extract the context / summary
+            print("USER IS IN WATCHLIST!!")
             bot.send_message(WATCHLIST_CHAT, message)
             return func(message)
         else:
             return func(message)
 
     return wrapper
+
+
 
 
 
@@ -2391,17 +2394,12 @@ def ban_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
         target_user_id = helper_functions.extract_body(message.text)
-        print("target user ID:" + target_user_id)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
-            print("in-reply used")
             target_user_id = message.reply_to_message.from_user.id
         
-
         elif target_user_id: # this elif code runs only if the if statement above does not run
-            print("user_id provided")
             try:
-                print(target_user_id)
                 target_user_id = int(target_user_id)
             except ValueError:
                 bot.reply_to(message, "UserIDs can only contain numbers")
@@ -2431,14 +2429,14 @@ def unban_user(message):
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
+        
         elif target_user_id: # this elif code runs only if the if statement above does not run
             try:
                 target_user_id = int(target_user_id)
-                print(target_user_id)
             except ValueError:
                 bot.reply_to(message, "UserIDs can only contain numbers")
                 return
-
+        
         if target_user_id in system_config['banned_users']:
             system_config['banned_users'].remove(target_user_id)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
@@ -2466,10 +2464,11 @@ def watchlist_user(message):
     """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        target_user_id = helper_functions.extract_body(message.text) # extract body, it is "" if it is empty
+        target_user_id = helper_functions.extract_body(message.text)
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
+        
         elif target_user_id: # this elif code runs only if the if statement above does not run
             try:
                 target_user_id = int(target_user_id)
@@ -2497,6 +2496,7 @@ def unwatchlist_user(message):
         # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
             target_user_id = message.reply_to_message.from_user.id
+        
         elif target_user_id: # this elif code runs only if the if statement above does not run
             try:
                 target_user_id = int(target_user_id)
