@@ -242,9 +242,19 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 
 Command Suggestions < done
 Variate feature fix -> as it is is not very useful, need to do image recognition, few prompts -> generate a few image calls.
+1. Fix admin adding + removal and calling and how the list operates with checking for strings and numbers for userid
+- Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
+2. Do the same for fixing banned users, watchlists etc... how that is handled
+
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+
+
 Feature Icebox:
 --
 1. Command suggestions + settings screen tidy up + write up the gitbook
@@ -258,9 +268,8 @@ Feature Icebox:
 Context aware voice messages;
 
 SECURITY:
-- Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
-- Rate limiting
-- All new users watchlist;
+- Rate limiting + auto putting them on watchlist
+- All new users watchlist pairs? -> well they are all on the stuff so;
 
 
 
@@ -269,12 +278,9 @@ SECURITY:
 
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
-Security features
-1. Fix admin adding + removal and calling and how the list operates with checking for strings and numbers for userid
-1.a. Check whether the admin feature works <- admin stuff works
-1.b. 
+Security features:
+>> back to documentations!
 
-2. Do the same for fixing banned users, watchlists etc... how that is handled
 
 
 
