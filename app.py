@@ -242,9 +242,19 @@ heroku redis:maxmemory --app telebot-staging --policy volatile-lru
 
 Command Suggestions < done
 Variate feature fix -> as it is is not very useful, need to do image recognition, few prompts -> generate a few image calls.
+1. Fix admin adding + removal and calling and how the list operates with checking for strings and numbers for userid
+- Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
+2. Do the same for fixing banned users, watchlists etc... how that is handled
+
 
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
+=========================================================================================================
+
+
 Feature Icebox:
 --
 1. Command suggestions + settings screen tidy up + write up the gitbook
@@ -258,9 +268,8 @@ Feature Icebox:
 Context aware voice messages;
 
 SECURITY:
-- Admin Watchlist: create watchlist group / add it to configval, build the new feature to add people to the watchlist /watchlist [user_id]
-- Rate limiting: 
-
+- Rate limiting + auto putting them on watchlist
+- All new users watchlist pairs? -> well they are all on the stuff so;
 
 
 
@@ -269,7 +278,11 @@ SECURITY:
 
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
-Security features>>
+Security features:
+>> back to documentations!
+After documentations, string formatting once again to link docs.
+
+
 
 
 
@@ -396,7 +409,7 @@ bot = telebot.TeleBot(TELEGRAM_TOKEN)
 # basic openAI apikey
 OPENAI_FREE_KEY = os.environ.get('OPENAI_FREE_KEY', "sk-notvalid")
 LOG_CHAT = os.environ.get('LOG_CHAT_ID')
-
+WATCHLIST_CHAT = os.environ.get('WATCHLIST_CHAT_ID')
 
 
 
@@ -474,6 +487,23 @@ def is_bot_active(func):
     return wrapper
 
 
+def is_on_watchlist(func):
+    def wrapper(message):
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        if message.from_user.id in system_config['watchlist']:
+            print("USER IS IN WATCHLIST!!")
+            # extract the context / summary
+            bot.send_message(WATCHLIST_CHAT, message)
+            return func(message)
+        else:
+            return func(message)
+
+    return wrapper
+
+
+
+
+
 # decorator / wrapper function to check whether bot is active
 def is_valid_user(func):
     def wrapper(message):
@@ -505,7 +535,7 @@ def is_admin(func):
             return func(message)
         else:
             # Notify the user they do not have permission if they are not an admin
-            bot.send_message(message.chat.id, "You do not have permission to use this command. This command is onl¥ available to admins.")
+            bot.send_message(message.chat.id, "You do not have permission to use this command. This command is only available to admins.")
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
@@ -525,6 +555,11 @@ def is_owner(func):
             return None  # Explicitly return None to indicate no further action should be taken
     
     return wrapper
+
+
+
+
+
 
 
 
@@ -629,6 +664,7 @@ def handle_start(message):
 @bot.message_handler(commands=['chat'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_chat(message):
     """
     Refactor the code to: 
@@ -678,6 +714,7 @@ def handle_chat(message):
 @bot.message_handler(commands=['t1'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_1(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -698,6 +735,7 @@ def handle_translate_1(message):
 @bot.message_handler(commands=['t2'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_2(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -719,6 +757,7 @@ def handle_translate_2(message):
 @bot.message_handler(commands=['t3'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_translate_3(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -745,6 +784,7 @@ def handle_translate_3(message):
 @bot.message_handler(commands=['tts'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_tts(message):
     
     try:
@@ -773,6 +813,8 @@ def handle_tts(message):
 @bot.message_handler(commands=['stt'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stt(message):
     # check whether it is replying to a message - must be used in reply to a message
     if message.reply_to_message and message.reply_to_message.content_type == 'voice':
@@ -822,6 +864,8 @@ def handle_stt(message):
 @bot.message_handler(commands=['stc'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stc(message):
     """
     handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
@@ -890,6 +934,8 @@ SPEECH TO SPEECH CHAT FUNCTIONALITY:
 @bot.message_handler(commands=['stsc'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_stsc(message):
     """
     handle_stc(message): handles a speech / voice note, transcribes it to text and prompts the language model with it.
@@ -962,6 +1008,7 @@ def handle_stsc(message):
 @bot.message_handler(content_types=['voice'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_speech_chat(message):
     # import configs
     user_config = get_or_create_chat_config(message.from_user.id, 'user')
@@ -1069,6 +1116,7 @@ def handle_speech_chat(message):
 @bot.message_handler(commands=['imagine'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_imagine(message):
     # query = helper_functions.extract_body(message.text)
     system_context = ""
@@ -1097,6 +1145,8 @@ def handle_imagine(message):
 @bot.message_handler(commands=['variate'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
+@is_in_reply
 def handle_variate_v2(message):
     """
     Queries: Returns a chat completion text response from a image + query
@@ -1158,80 +1208,14 @@ def handle_variate_v2(message):
 
 
 
-# @bot.message_handler(commands=['variate'])
-# @is_bot_active
-# @is_valid_user
-# def handle_variations(message):
-#     """
-#     Should eventually also support multiple n, but TBD; n shoudl be from config so after config is created I can handle this.
-#     """
-#     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
-#     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
-
-#         # Download & get the original message and the image contained in it
-#         original_message = message.reply_to_message
-#         original_image = original_message.photo[-1]
-#         original_image_file_info = bot.get_file(original_image.file_id)
-
-#         # try and get the original image and process it as a PNG file
-#         try:
-#             # tryt to download the original image and process it as a PNG file
-#             downloaded_original_img = bot.download_file(original_image_file_info.file_path)
-#             logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully downloaded"))
-
-#             with io.BytesIO(downloaded_original_img) as image_stream:
-#                 # Open the image using Pillow with another 'with' block
-#                 with Image.open(image_stream).convert('RGBA') as img:
-#                     width, height = 1024, 1024
-#                     img = img.resize((width, height)) # resize to standard image, same as the mask image
-#                     logger.debug(helper_functions.construct_logs(message, "Debug: Image successfully converted and resized"))
-
-#                     # Convert the resized image to a BytesIO object again
-#                     with io.BytesIO() as byte_stream:
-#                         img.save(byte_stream, format='PNG')
-#                         byte_array = byte_stream.getvalue()
-
-#                         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-#                         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-#                         api_keys = check_and_get_valid_apikeys(message, user_cfg=user_config, chat_cfg=chat_config)
-#                         if not api_keys:
-#                             return
-                        
-#                         if api_keys:
-#                             img_var_response = ai_commands.variate_image(message, byte_array, openai_api_key=api_keys[0])
-#                             if img_var_response:
-#                                 logger.info(helper_functions.construct_logs(message, "Info: Image variation successfully generated"))
-#                                 bot.send_photo(message.chat.id, photo=img_var_response)
-#                             else:
-#                                 logger.warning(helper_functions.construct_logs(message, "Info: Original image received and converted, however image failed to generate"))
-#                                 bot.reply_to(message, "Could not generate Variations of the image")
-                            
-#         # if the image could not be converted, then we print the error and return the handler and exit early
-#         except Exception as e:
-#             if isinstance(e, IOError):
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during file operations: {e}"))
-#             elif isinstance(e, PIL.UnidentifiedImageError):
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: error occured during Image Conversion to PNG: {e}"))
-#             else:
-#                 helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
-#                 logger.error(helper_functions.construct_logs(message, f"Error: unidentified error, please check logs. Details {str(e)}"))
-#             return
-#     # if the base condition is not met where the reply message is not an image; then we exit the function early
-#     else:
-#         bot.reply_to(message, "Original Message does not include an image")
-#         logger.warning(helper_functions.construct_logs(message, f"Warning: Original message did not include an image"))
-
-
-
-
 
 
 
 @bot.message_handler(commands=['vision'])
 @is_bot_active
 @is_valid_user
+@is_in_reply
+@is_on_watchlist
 def handle_vision(message):
     """
     Queries: Returns a chat completion text response from a image + query
@@ -1293,6 +1277,8 @@ def handle_vision(message):
 @bot.message_handler(commands=['edit_img'])
 @is_bot_active
 @is_valid_user
+@is_in_reply
+@is_on_watchlist
 def handle_edit(message):
     # base condition is that we are replying to an image with the /edit command with some query / requests, with an optional mask image.
     if message.reply_to_message and message.reply_to_message.content_type == 'photo':
@@ -1562,6 +1548,7 @@ def language_selection_menu(preset_num):
 @bot.message_handler(commands=['settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.settings_string, parse_mode="HTML")
 
@@ -1570,12 +1557,14 @@ def handle_settings(message):
 @bot.message_handler(commands=['group_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_group_settings(message):
     bot.send_message(chat_id=message.chat.id, text=settings.group_settings_string, reply_markup=group_settings_markup(), parse_mode="HTML")
 
 @bot.message_handler(commands=['user_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_settings(message):
     if message.chat.type != 'private':
         bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
@@ -1587,6 +1576,7 @@ def handle_user_settings(message):
 @bot.message_handler(commands=['reset_user_settings'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_settings_reset(message):
     """
     Resets user settings
@@ -1856,6 +1846,7 @@ def handle_callback(call):
 @bot.message_handler(commands=['set_name'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_agent_name_setting(message):
     """
     sets the agent's name
@@ -1886,6 +1877,7 @@ def handle_agent_name_setting(message):
 @bot.message_handler(commands=['user_set_openai_key'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_user_set_openai_apikey(message):
     """
     handle_user_openai_apikey(message): sets openAI key for the user
@@ -1919,6 +1911,7 @@ def handle_user_set_openai_apikey(message):
 
 @bot.message_handler(commands=['group_set_openai_key'])
 @is_bot_active
+@is_on_watchlist
 @is_valid_user
 def handle_group_set_openai_apikey(message):
     """
@@ -1965,6 +1958,7 @@ def handle_group_set_openai_apikey(message):
 @bot.message_handler(commands=['set_temperature'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_temperature(message):
     """
     Sets the language model temperature for a user or chat. Valid range is between 0 and 2.
@@ -2006,6 +2000,7 @@ def handle_set_temperature(message):
 @bot.message_handler(commands=['set_t1'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t1(message):
     """
     Sets the translation 1 preset of the group.
@@ -2044,6 +2039,7 @@ def handle_set_t1(message):
 @bot.message_handler(commands=['set_t2'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t2(message):
     """
     Sets the translation 2 preset of the group.
@@ -2080,6 +2076,7 @@ def handle_set_t2(message):
 @bot.message_handler(commands=['set_t3'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_t2(message):
     """
     Sets the translation 3 preset of the group.
@@ -2123,6 +2120,7 @@ def handle_set_t2(message):
 @bot.message_handler(commands=['set_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
@@ -2151,6 +2149,7 @@ def handle_set_context_in_group(message):
 @bot.message_handler(commands=['reset_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_reset_context_in_group(message):
     """
     Sets the context for the group, whatever instructions it wants to give.
@@ -2177,6 +2176,7 @@ def handle_reset_context_in_group(message):
 @bot.message_handler(commands=['set_user_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_set_user_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2198,6 +2198,7 @@ def handle_set_user_context(message):
 @bot.message_handler(commands=['reset_user_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def handle_reset_user_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2221,6 +2222,7 @@ def handle_reset_user_context(message):
 @bot.message_handler(commands=['check_context'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def check_context(message):
     """
     Sets the context for the user, whatever instructions it wants to give.
@@ -2300,6 +2302,7 @@ def generate_txid(user_id):
 @bot.message_handler(commands=['subscribe'])
 @is_bot_active
 @is_valid_user
+@is_on_watchlist
 def command_pay(message):
     
     title = "🌟OpenAIssistant Premium Subscription🌟"
@@ -2355,59 +2358,34 @@ def got_payment(message):
 #### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
 
-# watchlist user
-@bot.message_handler(commands=['watchlist'])
-@is_bot_active
-@is_admin
-@is_in_reply
-def watchlist_user(message):
-    """
-    
-    """
-    try:
-        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        if message.reply_to_message:
-            user_id_banned = message.reply_to_message.from_user.id
-        elif helper_functions.extract_body(message) != "":
-            user_id_banned = helper_functions.extract_body(message)
-        else:
-            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
-            return
-        
-        if user_id_banned not in system_config['watchlist']:
-            system_config['watchlist'].append(user_id_banned)
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User has been successfully put on watchlist.")
-
-    except Exception as e:
-        bot.reply_to(message, "Failed to complete command, please see logs")
-        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
-
-# ban user; function
+# ban user
 @bot.message_handler(commands=['ban'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def ban_user(message):
-    """
-    
-    """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        target_user_id = helper_functions.extract_body(message.text)
+        # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
-            user_id_banned = message.reply_to_message.from_user.id
-        elif helper_functions.extract_body(message) != "":
-            user_id_banned = helper_functions.extract_body(message)
-        else:
-            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
-            return
+            target_user_id = message.reply_to_message.from_user.id
         
-        if user_id_banned not in system_config['banned_users']:
-            system_config['banned_users'].append(user_id_banned)
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-        bot.reply_to(message, f"User has been successfully banned.")
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            try:
+                target_user_id = int(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+        
+        if target_user_id not in system_config['banned_users']:
+            system_config['banned_users'].append(target_user_id)
+            print(system_config)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully banned.")
+        else:
+            print("target id is already in banned list")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
@@ -2415,31 +2393,30 @@ def ban_user(message):
 
 
 # unban user
-        
 @bot.message_handler(commands=['unban'])
 @is_bot_active
 @is_admin
-@is_in_reply
 def unban_user(message):
-    """
-    
-    """
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        target_user_id = helper_functions.extract_body(message.text)
+        # if it is in reply to, the reply to user_id is used
         if message.reply_to_message:
-            user_id_banned = message.reply_to_message.from_user.id
-        elif helper_functions.extract_body(message) != "":
-            user_id_banned = helper_functions.extract_body(message)
-        else:
-            bot.reply_to(message, f"Invalid, either reply to a user's message OR provide their user ID.")
-            return
+            target_user_id = message.reply_to_message.from_user.id
         
-        if user_id_banned not in system_config['banned_users']:
-            system_config['banned_users'].remove(user_id_banned)
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            try:
+                target_user_id = int(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+        
+        if target_user_id in system_config['banned_users']:
+            system_config['banned_users'].remove(target_user_id)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
             bot.reply_to(message, f"User has been successfully unbanned.")
         else:
-            bot.reply_to(message, f"User is not in bannedl ist")
+            bot.reply_to(message, f"User is not in banned list")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
@@ -2448,26 +2425,70 @@ def unban_user(message):
 
 
 
-@bot.message_handler(commands=['unban'])
+
+
+
+# watchlist user
+@bot.message_handler(commands=['watchlist'])
 @is_bot_active
 @is_admin
-@is_in_reply
-def ban_user(message):
+def watchlist_user(message):
     try:
         system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
-        user_id_banned = message.reply_to_message.from_user.id
+        target_user_id = helper_functions.extract_body(message.text)
+        # if it is in reply to, the reply to user_id is used
+        if message.reply_to_message:
+            target_user_id = message.reply_to_message.from_user.id
         
-        if user_id_banned in system_config['banned_users']:
-            system_config['banned_users'].remove(user_id_banned)
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            try:
+                target_user_id = int(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+        
+        if target_user_id not in system_config['watchlist']:
+            system_config['watchlist'].append(target_user_id)
             config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
-            bot.reply_to(message, f"User has been successfully unbanned.")
+            bot.reply_to(message, f"User has been successfully put on watchlist.")
         else:
-            bot.reply_to(message, f"User is not in banned user list!")
-            
+            bot.reply_to(message, f"User is already in watchlist")
+
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
+
+@bot.message_handler(commands=['unwatchlist'])
+@is_bot_active
+@is_admin
+def unwatchlist_user(message):
+    try:
+        system_config = get_or_create_chat_config(OWNER_USER_ID, 'owner')
+        target_user_id = helper_functions.extract_body(message.text)
+        # if it is in reply to, the reply to user_id is used
+        if message.reply_to_message:
+            target_user_id = message.reply_to_message.from_user.id
+        
+        elif target_user_id: # this elif code runs only if the if statement above does not run
+            try:
+                target_user_id = int(target_user_id)
+            except ValueError:
+                bot.reply_to(message, "UserIDs can only contain numbers")
+                return
+
+        if target_user_id in system_config['watchlist']:
+            system_config['watchlist'].remove(target_user_id)
+            config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+            bot.reply_to(message, f"User has been successfully removed from watchlist.")
+        else:
+            bot.reply_to(message, f"User is not in watchlist")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
+
 
 
 
