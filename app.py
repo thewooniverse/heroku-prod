@@ -285,10 +285,6 @@ After documentations, string formatting once again to link docs.
 
 
 
-
-
-
-
 --------
 1. Gitbook write up with feature examples: why its useful etc... and examples
 2. Settings string reformatting.
@@ -1567,7 +1563,7 @@ def handle_group_settings(message):
 @is_on_watchlist
 def handle_user_settings(message):
     if message.chat.type != 'private':
-        bot.reply_to(message, "You cannot change user specific settings in a group, you can only do it in private DM sessions.", parse_mode="HTML")
+        bot.reply_to(message, "You cannot change user settings in a group, you can only do it in private DM conversation directly with the bot. Please call this command in a direct message with the bot", parse_mode="HTML")
         return
     else:
         bot.send_message(chat_id=message.chat.id, text=settings.user_settings_string, reply_markup=user_settings_markup(), parse_mode="HTML")
