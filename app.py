@@ -247,6 +247,53 @@ Variate feature fix -> as it is is not very useful, need to do image recognition
 2. Do the same for fixing banned users, watchlists etc... how that is handled
 
 
+--- Notes V1 ---
+2. Decide on the architecture and caching strategy:
+2. a. What to cache, what is being used frequently (reading and writing)
+2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
+2. c. Cache Invalidation: Update the cache when user configurations are updated or deleted.
+3. Fallback policites (interacting with the database directly)
+- I think it will be like this:
+-- Get and set config should be abstracted to a functionality (it already is, thankfully)
+-- This will now include some degree of redis logic;
+---- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
+---- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
+4. Decide on cache eviction policies
+SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
+- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
+every now and then.
+>>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
+X. Overhaul on how configs are called and stored; they should be called for users and stored in redis / in-memory and functions around how to handle this
+X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
+-. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
+---> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
+-------
+
+Bug Fixes and shipping:
+1. Handling chat requests and response objects that require it to search the web or a search engine.
+2. Logging upgrades and tidy up of print statements
+3. Baseline testing
+4. Redeploy onto new Heroku environment thats NOT AB69 / Telebot; 
+5. Hosting it onto a website TeleGPT.bot, new bot token etc...
+--> although I can just change the endpoint to another bot API token, redploying is good practice for backend skills.
+
+Potential future features:
+- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler. This should be in setting.
+- Voice agent / type options for
+- Free users getting up to 10 free requests of any type;
+- Then make it available / tidy everything up, and put up a marketing video that is generated using AI.
+
+--- up to here today ---
+X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
+Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
+--> Wooniverse bot will interact with my webpages etc...
+
+That then marks the end of it;
+Additional optional features:
+Context aware voice messages;
+==========================================
+Security features:
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
@@ -265,7 +312,8 @@ Feature Icebox:
 
 4. Ads
 5. 1000 free calls for premium users
-Context aware voice messages;
+- Context saving from pictures;
+- error fix on check context when context is empty
 
 SECURITY:
 - Rate limiting + auto putting them on watchlist
@@ -273,16 +321,11 @@ SECURITY:
 
 
 
-
-
-
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
-Security features:
+
 >> back to documentations!
-After documentations, string formatting once again to link docs.
-
-
+After documentations, string formatting once again to link relevant functions and strings to docs
 
 
 --------
@@ -317,59 +360,6 @@ Link the gitbook to the website + deploy a simple app
 
 
 
---- Notes V1 ---
-2. Decide on the architecture and caching strategy:
-2. a. What to cache, what is being used frequently (reading and writing)
-2. b. When to cache from the database, Populate the cache after a database query if the data isn't already present in the cache.
-2. c. Cache Invalidation: Update the cache when user configurations are updated or deleted.
-3. Fallback policites (interacting with the database directly)
-- I think it will be like this:
--- Get and set config should be abstracted to a functionality (it already is, thankfully)
--- This will now include some degree of redis logic;
----- Get checks whether the configuration is stored in data, if it is not it calls it and stores it in memory.
----- Set/Update calls (which should be in the param) - will have another logic flow to update both the in-memory and database with new configurations.
-4. Decide on cache eviction policies
-SCALABILITY IMPROVEMENT --> CONFIGS (notes first):
-- Deprecate user config and chat configs totally, save everything into system configs and per user configurations that is stored within redis and updated 
-every now and then.
->>>> REFACTOR CONFIGS SO THAT FREE TRIAL CREDITS WITH USER ID IS STORED IN SYSTEM CONFIG AS A TABLE (and used in-memory, while updating every now and then)
-X. Overhaul on how configs are called and stored; they should be called for users and stored in redis / in-memory and functions around how to handle this
-X. If it is in memory, if it is not, and handling long term database config updates / storage in shutdowns
--. Address users being able to reset their user settings, this should be stored in system config that is stored in-memory?
----> should their free trial credits be stored in system config -> redis and checked in this way, such that reading + writing is more convenient?
--------
-
-
-
-
-
-
-
-
-Bug Fixes and shipping:
-1. Handling chat requests and response objects that require it to search the web or a search engine.
-2. Logging upgrades and tidy up of print statements
-3. Baseline testing
-4. Redeploy onto new Heroku environment thats NOT AB69 / Telebot; 
-5. Hosting it onto a website TeleGPT.bot, new bot token etc...
---> although I can just change the endpoint to another bot API token, redploying is good practice for backend skills.
-
-
-Potential future features:
-- "Hey Siri" type voice message prompts enabled; you can customize and set up your own voice agent that doesn't require a command handler. This should be in setting.
-- Voice agent / type options for
-- Free users getting up to 10 free requests of any type;
-- Then make it available / tidy everything up, and put up a marketing video that is generated using AI.
-
---- up to here today ---
-X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
-Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
---> Wooniverse bot will interact with my webpages etc...
-
-That then marks the end of it;
-Additional optional features:
-- Context saving from pictures;
-==========================================
 
 """
 
