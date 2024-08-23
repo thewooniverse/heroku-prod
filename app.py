@@ -319,7 +319,8 @@ SECURITY:
 - Rate limiting + auto putting them on watchlist
 - All new users watchlist pairs? -> well they are all on the stuff so;
 
-
+- Group admins check
+- In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
@@ -2217,8 +2218,8 @@ def check_context(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_context = user_config['user_context']
-        chat_context = chat_config['contexts'][str(message.from_user.id)]
+        user_context = user_config.get(['user_context'], '')
+        chat_context = chat_config.get(['contexts'][str(message.from_user.id)], '')
 
         bot.reply_to(message, f"User Context (all groups):\n{user_context} \n\n\n Chat context:\n{chat_context}")
     except Exception as e:
@@ -2239,6 +2240,9 @@ def check_context(message):
 
  
 # Handler for managing chat history as context for the given group;
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
 @bot.message_handler(commands=['clear_history'])
 def handle_clear_chat_history(message):
     """
@@ -2250,11 +2254,13 @@ def handle_clear_chat_history(message):
         return
     
     # check whether the person requesting the clear_history request is an administrator with delete permissions
-
-    # if so - go to the namespace in pinecone and delete the chat.
+    ai_commands.reset_history(message, OPENAI_API_KEY, PINECONE_KEY, index_name="telegpt-staging")
 
 
  
+
+
+
 
 
 
