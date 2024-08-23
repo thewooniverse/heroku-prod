@@ -2218,13 +2218,13 @@ def check_context(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_context = user_config.get(['user_context'], '')
-        chat_context = chat_config.get(['contexts'][str(message.from_user.id)], '')
+        user_context = user_config.get('user_context', '')
+        chat_context = chat_config['contexts'].get(str(message.from_user.id), '')
 
         bot.reply_to(message, f"User Context (all groups):\n{user_context} \n\n\n Chat context:\n{chat_context}")
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        bot.reply_to(message, "Failed to retrieve context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
@@ -2255,6 +2255,7 @@ def handle_clear_chat_history(message):
     
     # check whether the person requesting the clear_history request is an administrator with delete permissions
     ai_commands.reset_history(message, OPENAI_API_KEY, PINECONE_KEY, index_name="telegpt-staging")
+    bot.reply_to(message, "Your chat history in this conversation has been cleared.")
 
 
  
