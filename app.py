@@ -2250,14 +2250,13 @@ def handle_clear_chat_history(message):
     - clear_group_history -> delete the whole group's chat history, only available to admins with delete permissions.
     """
     # deletes the namespace
-    if message.from_user.is_bot:
-        return
-    
     # check whether the person requesting the clear_history request is an administrator with delete permissions
-    ai_commands.reset_history(message, OPENAI_API_KEY, PINECONE_KEY, index_name="telegpt-staging")
-    bot.reply_to(message, "Your chat history in this conversation has been cleared.")
-
-
+    try:
+        ai_commands.reset_history(message, OPENAI_API_KEY, PINECONE_KEY, index_name="telegpt-staging")
+        bot.reply_to(message, "Your chat history in this conversation has been cleared.")
+    except Exception as e:
+        bot.reply_to(message, "Your chat history could not be cleared.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
  
 
 
