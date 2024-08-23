@@ -319,7 +319,8 @@ SECURITY:
 - Rate limiting + auto putting them on watchlist
 - All new users watchlist pairs? -> well they are all on the stuff so;
 
-
+- Group admins check
+- In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
@@ -2217,13 +2218,13 @@ def check_context(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        user_context = user_config['user_context']
-        chat_context = chat_config['contexts'][str(message.from_user.id)]
+        user_context = user_config.get('user_context', '')
+        chat_context = chat_config['contexts'].get(str(message.from_user.id), '')
 
         bot.reply_to(message, f"User Context (all groups):\n{user_context} \n\n\n Chat context:\n{chat_context}")
     except Exception as e:
         # Generic error handling
-        bot.reply_to(message, "Failed to set context for user in chat group, please contact admin.")
+        bot.reply_to(message, "Failed to retrieve context for user in chat group, please contact admin.")
         logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
@@ -2239,6 +2240,9 @@ def check_context(message):
 
  
 # Handler for managing chat history as context for the given group;
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
 @bot.message_handler(commands=['clear_history'])
 def handle_clear_chat_history(message):
     """
@@ -2246,15 +2250,17 @@ def handle_clear_chat_history(message):
     - clear_group_history -> delete the whole group's chat history, only available to admins with delete permissions.
     """
     # deletes the namespace
-    if message.from_user.is_bot:
-        return
-    
     # check whether the person requesting the clear_history request is an administrator with delete permissions
-
-    # if so - go to the namespace in pinecone and delete the chat.
-
-
+    try:
+        ai_commands.reset_history(message, OPENAI_API_KEY, PINECONE_KEY, index_name="telegpt-staging")
+        bot.reply_to(message, "Your chat history in this conversation has been cleared.")
+    except Exception as e:
+        bot.reply_to(message, "Your chat history could not be cleared.")
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
  
+
+
+
 
 
 

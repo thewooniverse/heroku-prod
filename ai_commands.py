@@ -354,7 +354,33 @@ def create_and_upsert_embeddings(message, target_text, openai_api_key, pinecone_
             index.upsert(vectors=[to_upsert], namespace=chatid_namespace)
     except Exception as e:
         print(e)
+
+
+def reset_history(message, openai_api_key, pinecone_api_key, index_name="telegpt-staging"):
+    """
     
+    """
+    try:
+        # create the OpenAI client and the index
+        client = OpenAI(api_key=openai_api_key)
+        index = get_or_create_index(pinecone_api_key, index_name)
+
+        # generate the metadata from the received message for upserting
+        chatid_namespace = str(message.chat.id)
+        # user_id = str(message.from_user.id)
+        # msg_id = str(message.message_id)
+
+        # delete the namespace
+        index.delete(delete_all=True, namespace=chatid_namespace)
+        print("namespace has been deleted")
+    except Exception as e:
+        print(e)
+
+
+
+
+
+
 
 def create_embeddings(text, openai_api_key, model="text-embedding-ada-002"):
     """
