@@ -322,6 +322,8 @@ SECURITY:
 - Group admins check
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
+- Administrative tools -> querying and checking users
+
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
 
