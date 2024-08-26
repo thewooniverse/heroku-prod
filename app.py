@@ -283,6 +283,9 @@ Potential future features:
 - Free users getting up to 10 free requests of any type;
 - Then make it available / tidy everything up, and put up a marketing video that is generated using AI.
 
+Develop the clear history functionality
+
+
 --- up to here today ---
 X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
 Then you can drop AB69 staging, and build on the main environment, and fork it again for Wooniverse_bot that is gated;
@@ -311,7 +314,7 @@ Feature Icebox:
 3. Deploy simple webpage for TS Systems
 
 4. Ads
-5. 1000 free calls for premium users
+5. 1000 free calls for premium users + resetting the limitations every month; <- every month there is a regular process to do X on the server side.
 - Context saving from pictures;
 - error fix on check context when context is empty
 
@@ -323,22 +326,20 @@ SECURITY:
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 - Administrative tools -> querying and checking users
+- Notepad feature for storing context / information
 
+Various testing: unit testing, system testing
 ---------------------------------------------------------------------------------------------------------
 Current Focus:
 
 >> back to documentations!
-After documentations, string formatting once again to link relevant functions and strings to docs
-
-
---------
 1. Gitbook write up with feature examples: why its useful etc... and examples
+After documentations, string formatting once again to link relevant functions and strings to docs
 2. Settings string reformatting.
-
 Setting string tidy up / reformatting  <--- string is fine, but need to do in hand with gitbook. Keep messages as short as possible, messy / hard to read.
 
+
 ----
-Develop the clear history functionality
 Develop testing modules
 Callback limitations
 ----
