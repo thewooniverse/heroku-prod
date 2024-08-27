@@ -178,6 +178,8 @@ def decode_bytestring(byte_string):
 
 
 
+
+
 def chunk_text_spacy(text, max_words=350):
     nlp = spacy.load('en_core_web_sm')
     doc = nlp(text)
@@ -220,21 +222,24 @@ def safe_send(message, bot, text):
     formatting error occurs, it falls back to sending the chunk as plain text.
     """
     chunks = []
-    if len(text) > 3500:
-        # Assuming chunk_text_spacy is a function that splits text while respecting
-        # sentence boundaries and does not break words inappropriately.
-        chunks = chunk_text_spacy(text)  # Splitting text into smaller parts
-    else:
-        chunks.append(text)
-    
-    for chunk in chunks:
-        try:
-            bot.reply_to(message, text=chunk, parse_mode='Markdown')
-        except Exception as e:
-            # Assuming the exception 'e' is due to Markdown parse errors,
-            # logs the error and falls back to plain text sending
-            print(f"Failed to send markdown message: {e}. Sending as plain text.")
-            bot.reply_to(message, text=chunk)
+    try:
+        if len(text) > 3500:
+            # Assuming chunk_text_spacy is a function that splits text while respecting
+            # sentence boundaries and does not break words inappropriately.
+            chunks = chunk_text_spacy(text)  # Splitting text into smaller parts
+        else:
+            chunks.append(text)
+        
+        for chunk in chunks:
+            try:
+                bot.reply_to(message, text=chunk, parse_mode='Markdown')
+            except Exception as e:
+                # Assuming the exception 'e' is due to Markdown parse errors,
+                # logs the error and falls back to plain text sending
+                print(f"Failed to send markdown message: {e}. Sending as plain text.")
+                bot.reply_to(message, text=chunk)
+    except Exception as e:
+        print(f"Erorr has occured: {e}")
 
 
 
