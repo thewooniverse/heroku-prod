@@ -85,16 +85,19 @@ Below is the current image mask settings; 1 is the section of the image where yo
 
 
 lm_settings_string = """💬Language Model Settings💬
+
 GPT 3.5 turbo - Baseline model for OpenAI's ChatGPT. Fast and cheaper.
 GPT 4 - Premium model for OpenAI's ChatGPT. Better logic and conversational capabilities.
 """
 
 agent_voice_string = """🎤Agent Voice Menu🎤
+
 Experiment with different voices (alloy, echo, fable, onyx, nova, and shimmer) to find one that matches your desired tone and audience. 
 The current voices are optimized for English.
 """
 
 translation_presets_string = """🌐Language Presets🌐
+
 Translations /t1 /t2 /t3 [prompt] translates any prompt entered to a preset language without the need to ask GPT to "translate X into Y"
 
 <b>-- Button Settings --</b>
