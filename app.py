@@ -326,7 +326,10 @@ SECURITY:
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 - Administrative tools -> querying and checking users
-- Notepad feature for storing context / information
+- Notepad feature for storing context / information <- you can often use this as context to recall.
+
+
+
 
 Various testing: unit testing, system testing
 ---------------------------------------------------------------------------------------------------------
@@ -607,7 +610,7 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         # print(intkey_dict)
         system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
         # print(system_config['user_credit_dict'])
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config) # set the config
         return api_keys
     except Exception as e:
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -695,6 +698,82 @@ def handle_chat(message):
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+
+
+@bot.message_handler(commands=['set_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def set_notepad(message):
+    try:
+# import the chat configs
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        intkey_dict[message.from_user.id] = new_note # overwrite the existing, if it does not exist, it creates it.
+        chat_config['notepads'] = {str(k): v for k, v in intkey_dict.items()} # convert the intkey dict back to stringkeys with the new note entry, save it in the chat config
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.") # respond state to user
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+@bot.message_handler(commands=['append_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def append_notepad(message):
+    try:
+# import the chat configs
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        existing_note = intkey_dict.get(message.from_user.id, "") # get the existing note
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        intkey_dict[message.from_user.id] = existing_note + new_note # append to the the existing, if it does not exist, it creates it.
+        chat_config['notepads'] = {str(k): v for k, v in intkey_dict.items()} # convert the intkey dict back to stringkeys with the new note entry, save it in the chat config
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.") # respond state to user
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+@bot.message_handler(commands=['get_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def get_notepad(message):
+    try:
+        # import the chat configs
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        
+        # retrieve the notepad for the given user, keying off of the user id
+        user_notepad = intkey_dict.get(message.from_user.id, "")
+        bot.reply_to(message, user_notepad)
+
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+
+
+
+
 
 
 
@@ -2344,14 +2423,22 @@ def got_payment(message):
 
 
 #########################################################
-################## PAYMENTS FUNCTIONS: ##################
+################### ADMIN FUNCTIONS: ####################
 #########################################################
 # - Where will Admin user_ids be stored? Perhaps in system configurations, where I can turn the bot on and off and all commands are handled by that; I think that will be p cool.
-    
 
-# Admin features
-#### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
+@bot.message_handler(commands=['reset_chat_config'])
+@is_bot_active
+@is_admin
+def reset_chat_config(message):
+    try:
+        config_db_helper.set_new_config(message.chat.id, 'chat', config_db_helper.default_chat_config)
+        bot.reply_to(message, "Chat configurations and settings have been reset to defaults.")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 

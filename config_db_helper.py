@@ -94,7 +94,7 @@ default_system_config = {
 }
 
 default_chat_config = {
-    "version": "0.1.1", # the version determines the current version of the configs
+    "version": "0.1.3", # the version determines the current version of the configs
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     # "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
@@ -106,7 +106,8 @@ default_chat_config = {
     "t2": "chi", # translation 2
     "t3": "kor", # translation 3
     "contexts": {}, # contexts for users given a chat group, it is created in a;
-    "agent_voice": "alloy"
+    "agent_voice": "alloy",
+    "notepads": {} # notepads for users to use for various usecases.
   }
 
 default_user_config = {
