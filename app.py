@@ -710,11 +710,15 @@ def handle_chat(message):
 @is_on_watchlist
 def set_notepad(message):
     try:
+# import the chat configs
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        body_text = helper_functions.extract_body(message.text)
-        chat_config['notepads'][str(message.from_user.id)] = body_text
-        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # this will save the note in a int key format, i need to save it in a stirng format.
-        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.")
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        intkey_dict[message.from_user.id] = new_note # overwrite the existing, if it does not exist, it creates it.
+        chat_config['notepads'] = {str(k): v for k, v in intkey_dict.items()} # convert the intkey dict back to stringkeys with the new note entry, save it in the chat config
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.") # respond state to user
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -726,10 +730,15 @@ def set_notepad(message):
 @is_on_watchlist
 def get_notepad(message):
     try:
+        # import the chat configs
         chat_config = get_or_create_chat_config(message.chat.id, 'chat')
-        notepad = chat_config['notepads'][str(message.from_user.id)]
-        bot.reply_to(message, notepad)
-        # config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # this will save the note in a int key format, i need to save it in a stirng format.
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        
+        # retrieve the notepad for the given user, keying off of the user id
+        user_notepad = intkey_dict.get(message.from_user.id, "")
+        bot.reply_to(message, user_notepad)
+
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
