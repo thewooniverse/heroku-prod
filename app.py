@@ -724,6 +724,30 @@ def set_notepad(message):
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
 
 
+
+@bot.message_handler(commands=['append_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def append_notepad(message):
+    try:
+# import the chat configs
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        # convert the existing dictionary into a dict with integer keys instead of string
+        intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
+        existing_note = intkey_dict.get(message.from_user.id, "") # get the existing note
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        intkey_dict[message.from_user.id] = existing_note + new_note # append to the the existing, if it does not exist, it creates it.
+        chat_config['notepads'] = {str(k): v for k, v in intkey_dict.items()} # convert the intkey dict back to stringkeys with the new note entry, save it in the chat config
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.") # respond state to user
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
 @bot.message_handler(commands=['get_note'])
 @is_bot_active
 @is_valid_user
@@ -742,6 +766,9 @@ def get_notepad(message):
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
 
 
 
@@ -2407,7 +2434,7 @@ def got_payment(message):
 def reset_chat_config(message):
     try:
         config_db_helper.set_new_config(message.chat.id, 'chat', config_db_helper.default_chat_config)
-        bot.reply_to(message, "Chatconfigurations and settings have been reset to defaults.")
+        bot.reply_to(message, "Chat configurations and settings have been reset to defaults.")
 
     except Exception as e:
         bot.reply_to(message, "Failed to complete command, please see logs")
