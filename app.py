@@ -326,7 +326,10 @@ SECURITY:
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 - Administrative tools -> querying and checking users
-- Notepad feature for storing context / information
+- Notepad feature for storing context / information <- you can often use this as context to recall.
+
+
+
 
 Various testing: unit testing, system testing
 ---------------------------------------------------------------------------------------------------------
@@ -607,7 +610,7 @@ def check_and_get_valid_apikeys(message, user_cfg, chat_cfg):
         # print(intkey_dict)
         system_config['user_credit_dict'] = {str(k): v for k, v in intkey_dict.items()}
         # print(system_config['user_credit_dict'])
-        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config)
+        config_db_helper.set_new_config(OWNER_USER_ID, 'owner', system_config) # set the config
         return api_keys
     except Exception as e:
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
@@ -695,6 +698,46 @@ def handle_chat(message):
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+
+
+@bot.message_handler(commands=['set_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def set_notepad(message):
+    try:
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        body_text = helper_functions.extract_body(message.text)
+        chat_config['notepads'][str(message.from_user.id)] = body_text
+        config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # this will save the note in a int key format, i need to save it in a stirng format.
+        bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.")
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+@bot.message_handler(commands=['get_note'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def get_notepad(message):
+    try:
+        chat_config = get_or_create_chat_config(message.chat.id, 'chat')
+        notepad = chat_config['notepads'][str(message.from_user.id)]
+        bot.reply_to(message, notepad)
+        # config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # this will save the note in a int key format, i need to save it in a stirng format.
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+
+
 
 
 
