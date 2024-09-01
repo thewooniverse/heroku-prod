@@ -2396,14 +2396,22 @@ def got_payment(message):
 
 
 #########################################################
-################## PAYMENTS FUNCTIONS: ##################
+################### ADMIN FUNCTIONS: ####################
 #########################################################
 # - Where will Admin user_ids be stored? Perhaps in system configurations, where I can turn the bot on and off and all commands are handled by that; I think that will be p cool.
-    
 
-# Admin features
-#### ---> this code still needs testing + rework; also ask GPT in what format user_ids are stored in Telebot, is it string? is it number;
 
+@bot.message_handler(commands=['reset_chat_config'])
+@is_bot_active
+@is_admin
+def reset_chat_config(message):
+    try:
+        config_db_helper.set_new_config(message.chat.id, 'chat', config_db_helper.default_chat_config)
+        bot.reply_to(message, "Chatconfigurations and settings have been reset to defaults.")
+
+    except Exception as e:
+        bot.reply_to(message, "Failed to complete command, please see logs")
+        logger.error(helper_functions.construct_logs(message, f"Error: {str(e)}"))
 
 
 
