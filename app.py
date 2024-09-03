@@ -326,7 +326,17 @@ SECURITY:
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 - Administrative tools -> querying and checking users
+
+
 - Notepad feature for storing context / information <- you can often use this as context to recall.
+--- Notepad feature use cases + documentation
+
+
+--------
+Preset agents;
+- Coding teacher
+- Health agent
+---> customized features
 
 
 
