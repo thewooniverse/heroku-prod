@@ -111,7 +111,7 @@ default_chat_config = {
   }
 
 default_user_config = {
-    "version": "0.1.5", # the version determines the current version of the configs
+    "version": "0.1.6", # the version determines the current version of the configs
 
     # below are changeable by users / system
     # user configurations determines how the bot interacts with commands requested by the user
