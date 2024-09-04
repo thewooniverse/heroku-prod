@@ -128,6 +128,7 @@ default_user_config = {
     "user_context": "", # user context allows user to have context about themselves that persist between chat groups.
     "speech_chat": False, # whether the user wants the bot
     "speech_assistant_name": "GPT",
+    "notepads" : "", # personal note
     "premium_image_mask_map": [ # determines how each user wants to edit the images
           [0, 0, 0, 0, 0],
           [0, 0, 0, 0, 0],

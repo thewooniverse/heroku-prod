@@ -747,7 +747,7 @@ def append_notepad(message):
         intkey_dict = {int(k): v for k, v in chat_config['notepads'].items()} # returns a key:value dict with the user IDs being the keys
         existing_note = intkey_dict.get(message.from_user.id, "") # get the existing note
         new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
-        intkey_dict[message.from_user.id] = existing_note + new_note # append to the the existing, if it does not exist, it creates it.
+        intkey_dict[message.from_user.id] = existing_note + "\n" + new_note # append to the the existing, if it does not exist, it creates it.
         chat_config['notepads'] = {str(k): v for k, v in intkey_dict.items()} # convert the intkey dict back to stringkeys with the new note entry, save it in the chat config
         config_db_helper.set_new_config(message.chat.id, 'chat', chat_config) # rewrite it back to the config in the database + cache
         bot.reply_to(message, "Note has been set, use /get_note to bring this up and use as context.") # respond state to user
@@ -772,6 +772,58 @@ def get_notepad(message):
         # retrieve the notepad for the given user, keying off of the user id
         user_notepad = intkey_dict.get(message.from_user.id, "")
         bot.reply_to(message, user_notepad)
+
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+@bot.message_handler(commands=['set_pnote'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def set_pnotepad(message):
+    try:
+# import the chat configs
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        user_config['notepads'] = new_note
+        config_db_helper.set_new_config(message.from_user.id, 'user', user_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been set, use /get_pnote to bring this up and use as context.") # respond state to user
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+@bot.message_handler(commands=['append_pnote'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def set_pnotepad(message):
+    try:
+# import the chat configs
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        new_note = helper_functions.extract_body(message.text) # get the new note, which is the body text of the message.
+        existing_note = user_config['notepads']
+        user_config['notepads'] = existing_note + "\n" + new_note
+        config_db_helper.set_new_config(message.from_user.id, 'user', user_config) # rewrite it back to the config in the database + cache
+        bot.reply_to(message, "Note has been appended, use /get_pnote to bring this up and use as context.") # respond state to user
+    except Exception as e:
+        helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
+        logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
+
+
+
+@bot.message_handler(commands=['get_pnote'])
+@is_bot_active
+@is_valid_user
+@is_on_watchlist
+def get_pnotepad(message):
+    try:
+        user_config = get_or_create_chat_config(message.from_user.id, 'user')
+        user_notes = user_config['notepads']
+        bot.reply_to(message, user_notes)
 
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
