@@ -297,6 +297,13 @@ Context aware voice messages;
 ==========================================
 Security features:
 
+
+
+- Notepad feature for storing context / information <- you can often use this as context to recall.
+--- Notepad feature use cases + documentation
+
+
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
@@ -326,10 +333,6 @@ SECURITY:
 - In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
 
 - Administrative tools -> querying and checking users
-
-
-- Notepad feature for storing context / information <- you can often use this as context to recall.
---- Notepad feature use cases + documentation
 
 
 --------
@@ -828,8 +831,6 @@ def get_pnotepad(message):
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
