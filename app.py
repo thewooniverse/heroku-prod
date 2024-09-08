@@ -340,6 +340,8 @@ Preset agents;
 - Coding teacher
 - Health agent
 ---> customized features
+---> Press a button to check
+
 
 
 
@@ -825,7 +827,7 @@ def set_pnotepad(message):
 def get_pnotepad(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        user_notes = user_config['notepads']
+        user_notes = user_config.get('notepads', "none")
         bot.reply_to(message, user_notes)
 
     except Exception as e:
