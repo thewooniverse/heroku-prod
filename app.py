@@ -297,6 +297,13 @@ Context aware voice messages;
 ==========================================
 Security features:
 
+
+
+- Notepad feature for storing context / information <- you can often use this as context to recall.
+--- Notepad feature use cases + documentation
+
+
+
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
 =========================================================================================================
 ----- done above ---------- done above ---------- done above ---------- done above ---------- done above -----
@@ -328,15 +335,13 @@ SECURITY:
 - Administrative tools -> querying and checking users
 
 
-- Notepad feature for storing context / information <- you can often use this as context to recall.
---- Notepad feature use cases + documentation
-
-
 --------
 Preset agents;
 - Coding teacher
 - Health agent
 ---> customized features
+---> Press a button to check
+
 
 
 
@@ -822,14 +827,12 @@ def set_pnotepad(message):
 def get_pnotepad(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
-        user_notes = user_config['notepads']
-        bot.reply_to(message, user_notes)
+        user_notes = user_config.get('notepads', "none")
+        bot.reply_to(message, "Personal Note :\n" + user_notes)
 
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
         logger.error(helper_functions.construct_logs(message, f"Error: {e}"))
-
-
 
 
 
