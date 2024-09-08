@@ -828,7 +828,7 @@ def get_pnotepad(message):
     try:
         user_config = get_or_create_chat_config(message.from_user.id, 'user')
         user_notes = user_config.get('notepads', "none")
-        bot.reply_to(message, user_notes)
+        bot.reply_to(message, " " + user_notes)
 
     except Exception as e:
         helper_functions.handle_error_output(bot, message, exception=e, notify_admin=True, notify_user=True)
