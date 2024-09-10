@@ -316,31 +316,30 @@ Feature Icebox:
 --
 1. Command suggestions + settings screen tidy up + write up the gitbook
 1.a. Why its different, why its useful.
-
 2. Redeploy to production stack / correct bot handle / features and separate the repository from staging (a single build is enough)
 3. Deploy simple webpage for TS Systems
-
-4. Ads
+-----
 5. 1000 free calls for premium users + resetting the limitations every month; <- every month there is a regular process to do X on the server side.
 - Context saving from pictures;
 - error fix on check context when context is empty
-
+-----
 SECURITY:
 - Rate limiting + auto putting them on watchlist
 - All new users watchlist pairs? -> well they are all on the stuff so;
-
 - Group admins check
-- In-reply chain (while there is in-reply) etc... feature for continuous conversations. ++ docs for this
-
 - Administrative tools -> querying and checking users
-
-
+-----
+Multiple notepads; get_note2 <- perhaps multiple notebooks are good, and is there a way for bot to make decision?
+Perhaps develop a toolkit even for the bot to do certain things.
+Multiple notepads
 --------
 Preset agents;
 - Coding teacher
 - Health agent
 ---> customized features
 ---> Press a button to check
+---> note contexts are preset, or basically an existing agent / chat's format is copied.
+
 
 
 
