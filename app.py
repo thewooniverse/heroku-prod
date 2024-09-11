@@ -331,7 +331,10 @@ SECURITY:
 -----
 Multiple notepads; get_note2 <- perhaps multiple notebooks are good, and is there a way for bot to make decision?
 Perhaps develop a toolkit even for the bot to do certain things.
-Multiple notepads
+Multiple notepads?
+
+
+
 --------
 Preset agents;
 - Coding teacher
@@ -340,7 +343,7 @@ Preset agents;
 ---> Press a button to check
 ---> note contexts are preset, or basically an existing agent / chat's format is copied.
 
-
+ 
 
 
 
