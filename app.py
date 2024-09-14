@@ -313,6 +313,11 @@ Security features:
 
 
 Feature Icebox:
+**** BUG ****
+1. Save-through, configs not updating from current caching logic.
+
+
+*************
 --
 1. Command suggestions + settings screen tidy up + write up the gitbook
 1.a. Why its different, why its useful.
