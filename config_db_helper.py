@@ -94,7 +94,7 @@ default_system_config = {
 }
 
 default_chat_config = {
-    "version": "0.1.4", # the version determines the current version of the configs
+    "version": "0.1.5", # the version determines the current version of the configs
     # below are changeable by users / system
     # chat configuration determines the behaviour of the bot within a chat group
     # "persistence": False, # determines whether a the bot keeps chat history for a given chat has persistence and context awareness within that chat
