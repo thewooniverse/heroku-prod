@@ -285,6 +285,10 @@ Potential future features:
 
 Develop the clear history functionality
 
+--
+Multiple notepads; get_note2 <- perhaps multiple notebooks are good, and is there a way for bot to make decision?
+Perhaps develop a toolkit even for the bot to do certain things.
+Multiple notepads?
 
 --- up to here today ---
 X. Forking it into TeleGPT.bot -> host the website and making the bot public for usage; @TeleGPT_dot_bot.
@@ -296,7 +300,6 @@ Additional optional features:
 Context aware voice messages;
 ==========================================
 Security features:
-
 
 
 - Notepad feature for storing context / information <- you can often use this as context to recall.
@@ -315,7 +318,10 @@ Security features:
 Feature Icebox:
 **** BUG ****
 1. Save-through, configs not updating from current caching logic.
+---
+Then multi notepads and usecases written <- develop preset agent with copy and paste functionality, then documetnation for that.
 
+test
 
 *************
 --
@@ -328,10 +334,6 @@ Feature Icebox:
 - Context saving from pictures;
 - error fix on check context when context is empty
 
-
-
-
-
 -----
 SECURITY:
 - Rate limiting + auto putting them on watchlist
@@ -339,9 +341,7 @@ SECURITY:
 - Group admins check
 - Administrative tools -> querying and checking users
 -----
-Multiple notepads; get_note2 <- perhaps multiple notebooks are good, and is there a way for bot to make decision?
-Perhaps develop a toolkit even for the bot to do certain things.
-Multiple notepads?
+
 
 Ability for agents to take actions, like determine XYZ -> if I need to call up something, and something else;
 Say for example
